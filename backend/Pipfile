@@ -1,0 +1,41 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[requires]
+python_version = "3.11"
+
+[packages]
+aiohttp = "*"
+alembic = "*"
+botocore = "*"
+click = "*"
+quart = "*"
+quart-cors = "*"
+gunicorn = "*"
+lightspark = "*"
+psycopg = {extras = ["binary"], version = "*"}
+pyjwt = "*"
+pyopenssl = "*"
+python-dotenv = "*"
+requests = "*"
+ruff = "*"
+alembic-postgresql-enum = "*"
+uma-auth-api = "*"
+bolt11 = "*"
+uma-sdk = "*"
+cffi = "*"
+typing-extensions = "*"
+sqlalchemy = "*"
+aiocache = "*"
+
+[dev-packages]
+black = "*"
+importlib_metadata = "*"
+isort = "*"
+pylint = "*"
+pyre-check = "*"
+pytest = "*"
+typed-ast = "*"
+unidiff = "*"

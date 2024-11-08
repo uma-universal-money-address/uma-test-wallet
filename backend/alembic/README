@@ -1,0 +1,10 @@
+Generic single-database configuration.
+
+Running migrations:
+
+1. `alembic revision --autogenerate -m "add ..."`
+2. `alembic upgrade head`
+
+The alembic_version table should have a version_num equal to one of the revisions.
+
+Upgrading the head updates this version_num.
