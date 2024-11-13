@@ -1,20 +1,18 @@
 import os
-from os.path import dirname
 import json
 import logging
 from datetime import datetime, timezone
-from typing import cast
 
-from quart import (
-    Quart,
+from flask import (
+    Flask,
     Response,
     current_app,
     jsonify,
     redirect,
     request,
 )
-from aiocache import Cache
-from aiocache.base import BaseCache
+from flask_caching import Cache
+from flask_cors import CORS
 from uma import (
     INonceCache,
     InMemoryNonceCache,
@@ -48,18 +46,24 @@ from lightspark import LightsparkSyncClient as LightsparkClient
 log: logging.Logger = logging.getLogger(__name__)
 
 
-def create_app() -> Quart:
+def create_app() -> Flask:
     # create and configure the app
-    app: Quart = Quart(
-        __name__,
-        root_path=f"{dirname(__file__)}/config/",
-    )
+    app: Flask = Flask(__name__)
 
-    app.config.from_envvar("QUART_CONFIG")
+    app.config.from_envvar("FLASK_CONFIG")
     app.config["CACHE_TYPE"] = "FileSystemCache"
     app.config["CACHE_DIR"] = "/tmp"
 
-    cache = cast(BaseCache, Cache(Cache.MEMORY))
+    cache = Cache(app)
+
+    CORS(
+        app,
+        resources={
+            r"/*": {"origins": "*"},
+        },
+        allow_headers=["access-control-allow-origin", "Content-Type"],
+        supports_credentials=True,
+    )
 
     app.static_url_path = ""
 
@@ -75,7 +79,7 @@ def create_app() -> Quart:
         setup_rds_iam_auth(db.engine)
 
     host = get_http_host()
-    config = Config.get(app.config)
+    config = Config.get()
 
     lightspark_client = LightsparkClient(
         api_token_client_id=config.api_token_client_id,
@@ -204,7 +208,7 @@ def create_app() -> Quart:
         """
         return redirect_to_nwc()
 
-    @app.route("/oauth/token", methods=["POST"])
+    @app.post("/oauth/token")
     def oauth_token() -> WerkzeugResponse:
         """
         Redirect to the NWC app oauth page.

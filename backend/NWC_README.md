@@ -10,7 +10,7 @@ yarn dev
 Then run the UMA Sandbox backend:
 
 ```bash
-QUART_CONFIG="local-dev.py" pipenv run quart run
+sh run_backend.sh
 ```
 
 Then run the uma-nwc-server app by following instructions here https://github.com/uma-universal-money-address/uma-nwc-server

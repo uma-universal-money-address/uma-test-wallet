@@ -1,4 +1,4 @@
-from quart import current_app
+from flask import current_app
 from cryptography.hazmat.primitives.asymmetric import ec
 from OpenSSL import crypto
 

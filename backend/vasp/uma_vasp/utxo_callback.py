@@ -1,6 +1,6 @@
 import json
 
-from quart import Blueprint, request
+from flask import Blueprint, request
 from uma import (
     INonceCache,
     IPublicKeyCache,
@@ -18,7 +18,7 @@ def construct_blueprint(
 ) -> Blueprint:
     bp = Blueprint("utxo_callback", __name__, url_prefix="/api/uma")
 
-    @bp.route("/utxoCallback", methods=["POST"])
+    @bp.post("/utxoCallback")
     def handle_utxo_callback() -> str:
         print(f"Received UTXO callback for {request.args.get('txid')}:")
         try:

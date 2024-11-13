@@ -1,4 +1,4 @@
-from quart import abort
+from flask import abort
 
 
 def get_domain_from_uma_address(uma_address: str) -> str:

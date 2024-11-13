@@ -1,7 +1,6 @@
 import os
 from typing import Optional
 
-from quart import config
 from lightspark import ComplianceProvider
 from uma import is_domain_local
 
@@ -12,23 +11,20 @@ class Config:
     """Constructs config instance from registered vasp in db and exposes them to the rest of the app."""
 
     @classmethod
-    def get(cls, app_config: config.Config) -> "Config":
+    def get(cls) -> "Config":
         return Config(
-            api_token_client_id=app_config.get("LIGHTSPARK_API_TOKEN_CLIENT_ID"),
-            api_token_client_secret=app_config.get(
-                "LIGHTSPARK_API_TOKEN_CLIENT_SECRET"
-            ),
-            node_id=app_config.get("LIGHTSPARK_NODE_ID"),
-            encryption_cert_chain=app_config.get(
-                "LIGHTSPARK_UMA_ENCRYPTION_CERT_CHAIN"
-            ),
-            encryption_pubkey_hex=app_config.get("LIGHTSPARK_UMA_ENCRYPTION_PUBKEY"),
-            encryption_privkey_hex=app_config.get("LIGHTSPARK_UMA_ENCRYPTION_PRIVKEY"),
-            signing_cert_chain=app_config.get("LIGHTSPARK_UMA_SIGNING_CERT_CHAIN"),
-            signing_pubkey_hex=app_config.get("LIGHTSPARK_UMA_SIGNING_PUBKEY"),
-            signing_privkey_hex=app_config.get("LIGHTSPARK_UMA_SIGNING_PRIVKEY"),
+            api_token_client_id=require_env("LIGHTSPARK_API_TOKEN_CLIENT_ID"),
+            api_token_client_secret=require_env("LIGHTSPARK_API_TOKEN_CLIENT_SECRET"),
+            node_id=require_env("LIGHTSPARK_NODE_ID"),
+            encryption_cert_chain=require_env("LIGHTSPARK_UMA_ENCRYPTION_CERT_CHAIN"),
+            encryption_pubkey_hex=require_env("LIGHTSPARK_UMA_ENCRYPTION_PUBKEY"),
+            encryption_privkey_hex=require_env("LIGHTSPARK_UMA_ENCRYPTION_PRIVKEY"),
+            signing_cert_chain=require_env("LIGHTSPARK_UMA_SIGNING_CERT_CHAIN"),
+            signing_pubkey_hex=require_env("LIGHTSPARK_UMA_SIGNING_PUBKEY"),
+            signing_privkey_hex=require_env("LIGHTSPARK_UMA_SIGNING_PRIVKEY"),
             base_url=BASE_URL,
-            osk_node_signing_key_password=app_config.get(
+            bitcoin_network=require_env("BITCOIN_NETWORK"),
+            osk_node_signing_key_password=require_env(
                 "LIGHTSPARK_OSK_NODE_SIGNING_KEY_PASSWORD"
             ),
         )
@@ -44,6 +40,7 @@ class Config:
         signing_cert_chain: str,
         signing_pubkey_hex: str,
         signing_privkey_hex: str,
+        bitcoin_network: str,
         base_url: Optional[str] = None,
         osk_node_signing_key_password: Optional[str] = None,
         remote_signing_node_master_seed: Optional[str] = None,
@@ -58,6 +55,7 @@ class Config:
         self.signing_cert_chain = signing_cert_chain
         self.signing_pubkey_hex = signing_pubkey_hex
         self.signing_privkey_hex = signing_privkey_hex
+        self.bitcoin_network = bitcoin_network
         self.base_url = base_url
         self.osk_node_signing_key_password = osk_node_signing_key_password
         self.remote_signing_node_master_seed = remote_signing_node_master_seed

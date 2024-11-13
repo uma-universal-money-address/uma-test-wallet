@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from quart import Blueprint, current_app
+from flask import Blueprint, current_app
 from uma import create_pubkey_response, is_domain_local
 from uma.protocol.pubkey_response import PubkeyResponse
 
@@ -11,7 +11,7 @@ bp = Blueprint("well_known", __name__, url_prefix="/.well-known")
 
 @bp.route("/lnurlpubkey")
 def handle_public_key_request() -> PubkeyResponse:
-    config = Config.get(current_app.config)
+    config = Config.get()
     return create_pubkey_response(
         config.signing_cert_chain, config.encryption_cert_chain
     )

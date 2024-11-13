@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 import logging
 
 from typing import List, Optional
-from quart import Blueprint, current_app, request, session, redirect
+from flask import Blueprint, current_app, request, session, redirect
 
 from enum import Enum
 from vasp.utils import get_vasp_domain
@@ -78,7 +78,7 @@ def register_user(
             abort_with_error(500, error)
 
 
-@bp.route("/register", methods=["POST"])
+@bp.post("/register")
 def register() -> User:
     uma_user_name = request.args.get("uma_user_name")
     currencies_string = request.args.get("currencies")
@@ -95,7 +95,7 @@ def register() -> User:
     return register_user(uma_user_name, email_address, currencies, kyc_status)
 
 
-@bp.route("/nwcsession", methods=["GET"])
+@bp.get("/nwcsession")
 def nwc_login() -> WerkzeugResponse:
     user_id = session.get("user_id")
     redirect_url = request.args.get("redirect_uri")

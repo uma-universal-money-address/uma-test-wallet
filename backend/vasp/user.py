@@ -5,7 +5,7 @@ from sqlalchemy.sql import or_
 import base64
 
 
-from quart import Blueprint, Response, request, session, jsonify
+from flask import Blueprint, Response, request, session, jsonify
 
 from vasp.db import db
 from vasp.models.User import User as UserModel
@@ -33,17 +33,17 @@ def construct_blueprint(
 ) -> Blueprint:
     bp = Blueprint("user", __name__, url_prefix="/user")
 
-    @bp.route("/id", methods=["GET"])
+    @bp.get("/id")
     def get_user_id() -> Response:
         user_id = session.get("user_id")
         return jsonify({"id": user_id})
 
-    @bp.route("/balance", methods=["GET"])
+    @bp.get("/balance")
     def balance() -> Response:
         balance = ledger_service.get_user_balance()
         return jsonify(balance)
 
-    @bp.route("/contacts", methods=["GET"])
+    @bp.get("/contacts")
     def contacts() -> Response:
         # TODO: get contacts from past transactions
         with Session(db.engine) as db_session:
@@ -62,7 +62,7 @@ def construct_blueprint(
             ]
             return jsonify(response)
 
-    @bp.route("/username", methods=["GET"])
+    @bp.get("/username")
     def username() -> Response:
         user_id = session.get("user_id")
         with Session(db.engine) as db_session:
@@ -73,7 +73,7 @@ def construct_blueprint(
                 abort_with_error(404, f"User {user_id} not found.")
             return jsonify({"username": user_model.username})
 
-    @bp.route("/avatar/<user_id>", methods=["GET"])
+    @bp.get("/avatar/<user_id>")
     def avatar_uma_user_name(user_id: str) -> Response:
         with Session(db.engine) as db_session:
             user_model = db_session.scalars(
@@ -96,7 +96,7 @@ def construct_blueprint(
             if user_model is None:
                 abort_with_error(404, f"User {user_id} not found.")
             if request.method == "POST":
-                request_files = await request.files
+                request_files = request.files
                 fs = request_files.get("avatar")
                 if fs:
                     data = fs.stream.read()
@@ -133,7 +133,7 @@ def construct_blueprint(
                 response.status_code = 201
                 return response
 
-    @bp.route("/device-token", methods=["POST"])
+    @bp.post("/device-token")
     async def device_token() -> Response:
         user_id = session.get("user_id")
         with Session(db.engine) as db_session:
@@ -188,7 +188,7 @@ def construct_blueprint(
 
                 return jsonify({"uma": uma})
 
-    @bp.route("/umas", methods=["GET"])
+    @bp.get("/umas")
     def umas() -> Response:
         user_id = session.get("user_id")
 
@@ -197,7 +197,7 @@ def construct_blueprint(
             abort_with_error(404, f"User {user_id} not found.")
         return jsonify({"uma": user.umas})
 
-    @bp.route("/transactions", methods=["GET"])
+    @bp.get("/transactions")
     def transactions() -> Response:
         user_id = session.get("user_id")
         user = User.from_id(user_id)

@@ -2,7 +2,7 @@ import logging
 from time import monotonic
 from typing import Any
 
-from quart import Quart
+from flask import Flask
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from botocore.client import BaseClient
@@ -13,7 +13,7 @@ log: logging.Logger = logging.getLogger(__name__)
 class SQLAlchemyDB:
     _engine = None
 
-    def init_app(self, app: Quart) -> None:
+    def init_app(self, app: Flask) -> None:
         self._engine = create_engine(app.config["DATABASE_URI"])
 
     @property
