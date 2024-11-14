@@ -545,9 +545,8 @@ def construct_blueprint(
 ) -> Blueprint:
     bp = Blueprint("umanwc", __name__, url_prefix="/umanwc")
 
-    def get_nwc_bridge(user_id: int) -> UmaNwcBridge:
+    def get_nwc_bridge() -> UmaNwcBridge:
         sending_vasp = get_sending_vasp(
-            user_id=user_id,
             config=config,
             lightspark_client=lightspark_client,
             user_service=user_service,
@@ -610,37 +609,37 @@ def construct_blueprint(
 
     @bp.get("/payments")
     def transactions() -> Response:
-        return get_nwc_bridge(session["user_id"]).transactions()
+        return get_nwc_bridge().transactions()
 
     @bp.post("/payments/bolt11")
     async def handle_pay_invoice() -> dict[str, Any]:
-        return await get_nwc_bridge(session["user_id"]).handle_pay_invoice()
+        return await get_nwc_bridge().handle_pay_invoice()
 
     @bp.post("/invoice")
     async def handle_create_invoice() -> dict[str, Any]:
-        return await get_nwc_bridge(session["user_id"]).handle_create_invoice()
+        return await get_nwc_bridge().handle_create_invoice()
 
     @bp.route("/invoices/<payment_hash>")
     def handle_get_invoice(payment_hash: str) -> dict[str, Any]:
-        return get_nwc_bridge(session["user_id"]).handle_get_invoice(payment_hash)
+        return get_nwc_bridge().handle_get_invoice(payment_hash)
 
     @bp.route("/receiver/<receiver_type>/<receiver_uma>")
     def handle_lookup_user(receiver_type: str, receiver_uma: str) -> dict[str, Any]:
         if receiver_type != "lud16":
             abort_with_error(400, "Only UMA receivers are supported")
-        return get_nwc_bridge(session["user_id"]).handle_lookup_user(receiver_uma)
+        return get_nwc_bridge().handle_lookup_user(receiver_uma)
 
     @bp.route("/quote/lud16")
     def handle_get_quote() -> dict[str, Any]:
-        return get_nwc_bridge(session["user_id"]).handle_get_quote()
+        return get_nwc_bridge().handle_get_quote()
 
     @bp.post("/quote/<payment_hash>")
     def handle_execute_quote(payment_hash: str) -> dict[str, Any]:
-        return get_nwc_bridge(session["user_id"]).handle_execute_quote(payment_hash)
+        return get_nwc_bridge().handle_execute_quote(payment_hash)
 
     @bp.post("/payments/lud16")
     async def handle_pay_address() -> dict[str, Any]:
-        return await get_nwc_bridge(session["user_id"]).handle_pay_to_address()
+        return await get_nwc_bridge().handle_pay_to_address()
 
     @bp.post("/payments/keysend")
     def handle_pay_keysend() -> Tuple[Response, int]:
@@ -649,7 +648,7 @@ def construct_blueprint(
 
     @bp.route("/info")
     def handle_info() -> dict[str, Any]:
-        return get_nwc_bridge(session["user_id"]).handle_get_info()
+        return get_nwc_bridge().handle_get_info()
 
     @bp.post("/token")
     async def handle_token_exchange() -> Response:

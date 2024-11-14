@@ -1,6 +1,7 @@
 from flask import current_app
 from cryptography.hazmat.primitives.asymmetric import ec
 from OpenSSL import crypto
+from uuid import uuid4
 
 
 def get_vasp_domain() -> str:
@@ -32,3 +33,7 @@ def cert_gen(
     cert.set_pubkey(k)
     cert.sign(k, "sha256")
     return crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("utf-8")
+
+
+def generate_uuid() -> str:
+    return str(uuid4())

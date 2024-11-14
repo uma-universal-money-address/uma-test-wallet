@@ -4,6 +4,7 @@ from sqlalchemy import String, ForeignKey, Integer, DateTime
 from sqlalchemy.sql import func
 from vasp.models.Base import Base
 from typing import TYPE_CHECKING
+from vasp.utils import generate_uuid
 
 if TYPE_CHECKING:
     from vasp.models.User import User
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
 class Transaction(Base):
     __tablename__ = "transaction"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[str] = mapped_column(primary_key=True, default=generate_uuid)
 
     # User who either sent or received the transaction.
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))

@@ -22,7 +22,7 @@ def get_default_uma(umas: List[UmaModel]) -> Optional[UmaModel]:
 
 @dataclass
 class User:
-    id: int
+    id: str
     umas: List["UmaModel"]
     kyc_status: KycStatus
     email_address: Optional[str]

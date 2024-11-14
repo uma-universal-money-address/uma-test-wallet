@@ -504,7 +504,7 @@ def register_routes(
     pubkey_cache: IPublicKeyCache,
     nonce_cache: INonceCache,
 ) -> None:
-    def get_receiving_vasp(user_id: int) -> ReceivingVasp:
+    def get_receiving_vasp() -> ReceivingVasp:
         return ReceivingVasp(
             lightspark_client=lightspark_client,
             user_service=user_service,
@@ -521,7 +521,7 @@ def register_routes(
         user = user_service.get_user_from_uma(username)
         if not user:
             abort_with_error(404, f"Cannot find user {username}")
-        receiving_vasp = get_receiving_vasp(user.id)
+        receiving_vasp = get_receiving_vasp()
         return receiving_vasp.handle_lnurlp_request(username)
 
     @app.post(PAY_REQUEST_CALLBACK + "<user_id>")
@@ -530,7 +530,7 @@ def register_routes(
             user_id_int = int(user_id)
         except ValueError:
             raise UmaException(f"Invalid user_id {user_id}", status_code=400)
-        receiving_vasp = get_receiving_vasp(user_id_int)
+        receiving_vasp = get_receiving_vasp()
         return await receiving_vasp.handle_pay_request_callback(user_id_int)
 
     @app.get(PAY_REQUEST_CALLBACK + "<user_id>")
@@ -539,7 +539,7 @@ def register_routes(
             user_id_int = int(user_id)
         except ValueError:
             raise UmaException(f"Invalid user_id {user_id}", status_code=400)
-        receiving_vasp = get_receiving_vasp(user_id_int)
+        receiving_vasp = get_receiving_vasp()
         return await receiving_vasp.handle_pay_request_callback(user_id_int)
 
     @app.post("/api/uma/create_invoice")
@@ -551,7 +551,7 @@ def register_routes(
                 f"Cannot find user {user_id}",
                 status_code=404,
             )
-        receiving_vasp = get_receiving_vasp(user_id)
+        receiving_vasp = get_receiving_vasp()
         return await receiving_vasp.handle_create_uma_invoice(user_id)
 
     @app.post("/api/uma/create_and_send_invoice")
@@ -563,5 +563,5 @@ def register_routes(
                 f"Cannot find user {user_id}",
                 status_code=404,
             )
-        receiving_vasp = get_receiving_vasp(user_id)
+        receiving_vasp = get_receiving_vasp()
         return await receiving_vasp.create_and_send_invoice(user_id)

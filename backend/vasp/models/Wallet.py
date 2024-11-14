@@ -4,6 +4,7 @@ from sqlalchemy import ForeignKey, Integer, String, Enum
 from typing import Optional
 from vasp.models.Base import Base
 from typing import TYPE_CHECKING
+from vasp.utils import generate_uuid
 
 if TYPE_CHECKING:
     from vasp.models.User import User
@@ -28,16 +29,15 @@ class Color(enum.Enum):
 class Wallet(Base):
     __tablename__ = "wallet"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
-    uma_id: Mapped[int] = mapped_column(ForeignKey("uma.id"))
+    id: Mapped[str] = mapped_column(primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(ForeignKey("user.id"))
     # Amount in the lowest denomination of the currency, e.g. 1234 for $12.34
     amount_in_lowest_denom: Mapped[int] = mapped_column(Integer)
     color: Mapped[Color] = mapped_column(Enum(Color))
 
     device_token: Mapped[Optional[str]] = mapped_column(String)
 
-    user: Mapped["User"] = relationship(back_populates="wallet")
+    user: Mapped["User"] = relationship(back_populates="wallet", foreign_keys=[user_id])
     uma: Mapped["Uma"] = relationship(back_populates="wallet")
 
     def __repr__(self) -> str:
