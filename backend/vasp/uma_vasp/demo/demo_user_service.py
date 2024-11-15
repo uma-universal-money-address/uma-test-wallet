@@ -1,12 +1,17 @@
 from typing import Optional
-from flask import session
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from flask_login import current_user
 
 from vasp.db import db
 from vasp.uma_vasp.user import User
 from vasp.uma_vasp.interfaces.user_service import IUserService
 from vasp.models.Currency import Currency
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    current_user: User
 
 
 class DemoUserService(IUserService):
@@ -16,13 +21,11 @@ class DemoUserService(IUserService):
             uma_user_name = uma_user_name[1:]
         return User.from_model_uma(uma_user_name)
 
-    def get_user_from_id(self, user_id: int) -> Optional[User]:
+    def get_user_from_id(self, user_id: str) -> Optional[User]:
         return User.from_id(user_id)
 
     def get_currency_preferences_for_user(self) -> list[Currency]:
-        user_id = session["user_id"]
-
         with Session(db.engine) as db_session:
             return db_session.scalars(
-                select(Currency).where(Currency.user_id == user_id)
+                select(Currency).where(Currency.user_id == current_user.id)
             ).all()

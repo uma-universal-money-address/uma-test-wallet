@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 import logging
 
 from typing import Optional
-from flask import Blueprint, current_app, request, session, redirect
+from flask import Blueprint, current_app, request, redirect
+from flask_login import login_user, login_required, logout_user, current_user
+from vasp.redirect import redirect_frontend
 
 from enum import Enum
 from vasp.utils import get_vasp_domain
@@ -18,6 +20,11 @@ from vasp.models.Currency import Currency
 from vasp.uma_vasp.currencies import CURRENCIES
 import json
 from werkzeug.wrappers import Response as WerkzeugResponse
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    current_user: User
 
 log: logging.Logger = logging.getLogger(__name__)
 
@@ -31,8 +38,8 @@ class AuthMethod(Enum):
 
 
 @bp.get("/nwcsession")
+@login_required
 def nwc_login() -> WerkzeugResponse:
-    user_id = session.get("user_id")
     redirect_url = request.args.get("redirect_uri")
     if not redirect_url:
         abort_with_error(400, "Redirect URL is required.")
@@ -45,12 +52,9 @@ def nwc_login() -> WerkzeugResponse:
             f"Invalid redirect URL: {parsed_url.netloc}. Domain should be {expected_domain}",
         )
 
-    user = User.from_id(user_id)
-    if user is None:
-        abort_with_error(404, f"User {user_id} not found.")
     with Session(db.engine) as db_session:
         currency = db_session.scalars(
-            select(Currency).where(Currency.user_id == user_id)
+            select(Currency).where(Currency.user_id == current_user.id)
         ).first()
 
     jwt_private_key = current_app.config.get("NWC_JWT_PRIVKEY")
@@ -59,11 +63,11 @@ def nwc_login() -> WerkzeugResponse:
 
     user_nwc_jwt = jwt.encode(
         {
-            "sub": str(user_id),
+            "sub": str(current_user.id),
             "aud": get_vasp_domain(),
             "exp": datetime.timestamp(datetime.now() + timedelta(minutes=10)),
             "iss": get_vasp_domain(),
-            "address": user.get_default_uma_address(),
+            "address": current_user.get_default_uma_address(),
         },
         jwt_private_key,
         algorithm="ES256",
@@ -87,32 +91,28 @@ def nwc_login() -> WerkzeugResponse:
     return redirect(str(new_url))
 
 
-@bp.before_app_request
-async def load_logged_in_user() -> None:
-    if (
-        request.full_path.startswith("/.well-known/")
-        or request.full_path.startswith("/api/uma/")
-        or request.full_path.startswith("/-/")
-        or request.full_path.startswith("/umanwc/")
-        or request.full_path.startswith("/apps/new")
-        or request.full_path.startswith("/uma")
-    ):
-        return
+@bp.route("/login", methods=["GET", "POST"])
+def login() -> None:
+    user_id = None
+    if request.method == "POST":
+        user_id = request.get_json()["user_id"]
+    elif request.method == "GET":
+        user_id = request.args.get("user_id")
 
-    user_id = session.get("user_id")
-    if isinstance(user_id, str):
-        try:
-            user_id = int(user_id)
-        except ValueError:
-            session.pop("user_id", None)
-            user_id = None
+    if not user_id:
+        abort_with_error(400, "User ID is required.")
 
-    if user_id is None:
-        user = await get_user_for_login()
-        if user is None:
-            abort_with_error(401, "Unauthorized")
+    # TODO: Implement login
+    user = User.from_id(user_id)
+    login_user(user)
+    redirect_frontend("/")
 
-        session["user_id"] = user.id
+
+@bp.route("/logout")
+@login_required
+def logout() -> None:
+    logout_user()
+    redirect_frontend("/login")
 
 
 async def get_user_for_login() -> Optional[User]:

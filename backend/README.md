@@ -4,9 +4,10 @@ A VASP implementation for simulating UMA transactions.
 
 ## Run the flask server locally
 
-Create a `.env` file with the following Lightspark environment variables:
+Create a `.env` file with the following environment variables:
 
 ```bash
+FLASK_SECRET_KEY=
 LIGHTSPARK_API_TOKEN_CLIENT_ID=
 LIGHTSPARK_API_TOKEN_CLIENT_SECRET=
 BITCOIN_NETWORK="REGTEST"
@@ -19,6 +20,8 @@ LIGHTSPARK_UMA_SIGNING_PRIVKEY=
 LIGHTSPARK_UMA_ENCRYPTION_CERT_CHAIN=
 LIGHTSPARK_UMA_SIGNING_CERT_CHAIN=
 ```
+
+`FLASK_SECRET_KEY` is used to sign session cookies: https://flask.palletsprojects.com/en/latest/quickstart/#sessions
 
 Install dependencies:
 

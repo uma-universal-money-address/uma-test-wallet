@@ -1,5 +1,6 @@
 "use client";
 import { UmaInput } from "@/components/UmaInput";
+import { useUma } from "@/hooks/useUma";
 import { checkUmaAvailability, createUma } from "@/lib/uma";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -9,6 +10,8 @@ export default function Home() {
   const [uma, setUma] = useState("");
   const [umaError, setUmaError] = useState<string | undefined>();
   const [umaInputMessage, setUmaInputMessage] = useState<string | undefined>();
+  const { umas: userUmas } = useUma();
+  console.log("userUmas", userUmas);
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;

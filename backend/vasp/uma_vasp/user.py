@@ -4,6 +4,7 @@ from sqlalchemy import LargeBinary
 from uma import KycStatus
 from sqlalchemy.orm import Session
 import logging
+from flask_login import UserMixin
 
 from vasp.utils import get_vasp_domain
 from vasp.db import db
@@ -21,8 +22,11 @@ def get_default_uma(umas: List[UmaModel]) -> Optional[UmaModel]:
 
 
 @dataclass
-class User:
+class User(UserMixin):
     id: str
+    google_id: Optional[str]
+    phone_number: Optional[str]
+    webauthn_id: Optional[str]
     umas: List["UmaModel"]
     kyc_status: KycStatus
     email_address: Optional[str]
@@ -30,7 +34,10 @@ class User:
     currencies: List["Currency"]
     avatar: Optional[LargeBinary] = None
 
-    def get_default_uma(self) -> Optional[UmaModel]:
+    def get_id(self) -> str:
+        return self.id
+
+    def get_default_uma(self) -> UmaModel:
         default_uma = get_default_uma(self.umas)
         if default_uma is None:
             log.error(f"User {self.id} has no default UMA.")
@@ -38,15 +45,10 @@ class User:
                 f"User {self.id} has no default UMA.",
                 status_code=400,
             )
+        return default_uma
 
     def get_default_uma_address(self) -> str:
         default_uma = self.get_default_uma()
-        if default_uma is None:
-            log.error(f"User {self.id} has no default UMA.")
-            raise UmaException(
-                f"User {self.id} has no default UMA.",
-                status_code=400,
-            )
         return f"${default_uma.username}@{get_vasp_domain()}"
 
     @classmethod
@@ -54,6 +56,9 @@ class User:
         # Assumes there's a valid session
         return cls(
             id=user_model.id,
+            google_id=user_model.google_id,
+            phone_number=user_model.phone_number,
+            webauthn_id=user_model.webauthn_id,
             umas=user_model.umas,
             kyc_status=KycStatus(user_model.kyc_status),
             email_address=user_model.email_address,
@@ -63,12 +68,15 @@ class User:
         )
 
     @classmethod
-    def from_id(cls, user_id: int) -> Optional["User"]:
+    def from_id(cls, user_id: str) -> Optional["User"]:
         with Session(db.engine) as db_session:
             user_model: UserModel = db_session.get(UserModel, user_id)
             if user_model:
                 return cls(
                     id=user_model.id,
+                    google_id=user_model.google_id,
+                    phone_number=user_model.phone_number,
+                    webauthn_id=user_model.webauthn_id,
                     umas=user_model.umas,
                     kyc_status=user_model.kyc_status,
                     email_address=user_model.email_address,

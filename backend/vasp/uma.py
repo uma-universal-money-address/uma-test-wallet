@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from typing import List
 from flask import Blueprint, request, Response, jsonify
+from flask_login import login_user
 
 from vasp.db import db
 from vasp.models.Uma import Uma as UmaModel
@@ -86,6 +87,8 @@ def create_uma() -> Response:
     kyc_status = KycStatus.VERIFIED
 
     user = register_uma(uma_user_name, currencies, kyc_status)
+    login_user(user, remember=True)
+
     return jsonify({"user_id": user.id})
 
 

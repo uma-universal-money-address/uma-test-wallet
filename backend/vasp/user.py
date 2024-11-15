@@ -5,7 +5,8 @@ from sqlalchemy.sql import or_
 import base64
 
 
-from flask import Blueprint, Response, request, session, jsonify
+from flask import Blueprint, Response, request, jsonify
+from flask_login import current_user, login_required
 
 from vasp.db import db
 from vasp.models.User import User as UserModel
@@ -21,6 +22,12 @@ from vasp.uma_vasp.interfaces.currency_service import (
     ICurrencyService,
 )
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    current_user: User
+
+
 DEFAULT_PREFERENCES: Dict[PreferenceType, str] = {
     PreferenceType.PUSH_NOTIFICATIONS: "true",
     PreferenceType.WALLET_SKIN: "default",
@@ -34,22 +41,23 @@ def construct_blueprint(
     bp = Blueprint("user", __name__, url_prefix="/user")
 
     @bp.get("/id")
+    @login_required
     def get_user_id() -> Response:
-        user_id = session.get("user_id")
-        return jsonify({"id": user_id})
+        return jsonify({"id": current_user.id})
 
     @bp.get("/balance")
+    @login_required
     def balance() -> Response:
         balance = ledger_service.get_user_balance()
         return jsonify(balance)
 
     @bp.get("/contacts")
+    @login_required
     def contacts() -> Response:
         # TODO: get contacts from past transactions
         with Session(db.engine) as db_session:
-            user_id = session.get("user_id")
             user_models = db_session.scalars(
-                select(UserModel).where(UserModel.id != user_id)
+                select(UserModel).where(UserModel.id != current_user.id)
             ).all()
             users = [User.from_model(user_model) for user_model in user_models]
             response = [
@@ -63,14 +71,14 @@ def construct_blueprint(
             return jsonify(response)
 
     @bp.get("/username")
+    @login_required
     def username() -> Response:
-        user_id = session.get("user_id")
         with Session(db.engine) as db_session:
             user_model = db_session.scalars(
-                select(UserModel).where(UserModel.id == user_id)
+                select(UserModel).where(UserModel.id == current_user.id)
             ).first()
             if user_model is None:
-                abort_with_error(404, f"User {user_id} not found.")
+                abort_with_error(404, f"User {current_user.id} not found.")
             return jsonify({"username": user_model.username})
 
     @bp.get("/avatar/<user_id>")
@@ -87,14 +95,14 @@ def construct_blueprint(
                 return jsonify({"avatar": None})
 
     @bp.route("/avatar", methods=["GET", "POST"])
+    @login_required
     async def avatar() -> Response:
-        user_id = session.get("user_id")
         with Session(db.engine) as db_session:
             user_model = db_session.scalars(
-                select(UserModel).where(UserModel.id == user_id)
+                select(UserModel).where(UserModel.id == current_user.id)
             ).first()
             if user_model is None:
-                abort_with_error(404, f"User {user_id} not found.")
+                abort_with_error(404, f"User {current_user.id} not found.")
             if request.method == "POST":
                 request_files = request.files
                 fs = request_files.get("avatar")
@@ -114,14 +122,14 @@ def construct_blueprint(
                     return jsonify({"avatar": None})
 
     @bp.route("/full-name", methods=["GET", "POST"])
+    @login_required
     async def full_name() -> Response:
-        user_id = session.get("user_id")
         with Session(db.engine) as db_session:
             user_model = db_session.scalars(
-                select(UserModel).where(UserModel.id == user_id)
+                select(UserModel).where(UserModel.id == current_user.id)
             ).first()
             if user_model is None:
-                abort_with_error(404, f"User {user_id} not found.")
+                abort_with_error(404, f"User {current_user.id} not found.")
 
             if request.method == "GET":
                 return jsonify({"full_name": user_model.full_name})
@@ -134,14 +142,14 @@ def construct_blueprint(
                 return response
 
     @bp.post("/device-token")
+    @login_required
     async def device_token() -> Response:
-        user_id = session.get("user_id")
         with Session(db.engine) as db_session:
             wallet = db_session.scalars(
-                select(Wallet).where(Wallet.user_id == user_id)
+                select(Wallet).where(Wallet.user_id == current_user.id)
             ).first()
             if wallet is None:
-                abort_with_error(404, f"Wallet for {user_id} not found.")
+                abort_with_error(404, f"Wallet for {current_user.id} not found.")
 
             request_json = await request.json
             wallet.device_token = request_json.get("device_token")
@@ -151,8 +159,9 @@ def construct_blueprint(
             return response
 
     @bp.route("/uma", methods=["GET", "POST"])
+    @login_required
     async def uma() -> Response:
-        user_id = session.get("user_id")
+        user_id = current_user.id
 
         if request.method == "GET":
             user = User.from_id(user_id)
@@ -189,30 +198,23 @@ def construct_blueprint(
                 return jsonify({"uma": uma})
 
     @bp.get("/umas")
+    @login_required
     def umas() -> Response:
-        user_id = session.get("user_id")
-
-        user = User.from_id(user_id)
-        if user is None:
-            abort_with_error(404, f"User {user_id} not found.")
-        return jsonify({"uma": user.umas})
+        return jsonify({"umas": [uma.to_dict() for uma in current_user.umas]})
 
     @bp.get("/transactions")
+    @login_required
     def transactions() -> Response:
-        user_id = session.get("user_id")
-        user = User.from_id(user_id)
-
-        if user is None:
-            abort_with_error(404, f"User {user_id} not found.")
-
         with Session(db.engine) as db_session:
             # TODO: Add pagination
             transactions = db_session.scalars(
                 select(Transaction)
                 .where(
                     or_(
-                        Transaction.sender_uma == user.get_default_uma_address(),
-                        Transaction.receiver_uma == user.get_default_uma_address(),
+                        Transaction.sender_uma
+                        == current_user.get_default_uma_address(),
+                        Transaction.receiver_uma
+                        == current_user.get_default_uma_address(),
                     )
                 )
                 .order_by(Transaction.created_at.desc())
@@ -225,7 +227,7 @@ def construct_blueprint(
                 {
                     "amountInLowestDenom": (
                         transaction.amount_in_lowest_denom
-                        if transaction.user_id == user_id
+                        if transaction.user_id == current_user.id
                         else -transaction.amount_in_lowest_denom
                     ),
                     "currencyCode": transaction.currency_code,
@@ -238,12 +240,11 @@ def construct_blueprint(
             return jsonify(response)
 
     @bp.route("/preferences", methods=["POST", "GET"])
+    @login_required
     async def preferences() -> Response:
-        user_id = session.get("user_id")
-
         with Session(db.engine) as db_session:
             preferences = db_session.scalars(
-                select(Preference).where(Preference.user_id == user_id)
+                select(Preference).where(Preference.user_id == current_user.id)
             ).all()
 
             if request.method == "GET":
@@ -268,14 +269,14 @@ def construct_blueprint(
             for preference_type, value in request_json.items():
                 preference = db_session.scalars(
                     select(Preference).where(
-                        Preference.user_id == user_id,
+                        Preference.user_id == current_user.id,
                         Preference.preference_type == preference_type.upper(),
                     )
                 ).first()
 
                 if not preference:
                     preference = Preference(
-                        user_id=user_id,
+                        user_id=current_user.id,
                         preference_type=preference_type.upper(),
                         value=value,
                     )
@@ -290,8 +291,9 @@ def construct_blueprint(
             return response
 
     @bp.route("/currencies", methods=["POST", "GET"])
+    @login_required
     async def currencies() -> Response:
-        user_id = session.get("user_id")
+        user_id = current_user.id
 
         with Session(db.engine) as db_session:
             if request.method == "GET":
