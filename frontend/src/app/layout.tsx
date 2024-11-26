@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/toaster";
 import type { Metadata, Viewport } from "next";
 import { Inter, Roboto_Mono } from "next/font/google";
 import "./globals.css";
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
   icons: [
     {
       rel: "icon",
-      url: "/icons/uma-sandbox-icon.svg",
+      url: "/uma-sandbox-icon.svg",
     },
     {
       rel: "apple-touch-icon",
@@ -62,6 +63,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${roboto_mono.variable}`}>
         {children}
+        <Toaster />
       </body>
     </html>
   );

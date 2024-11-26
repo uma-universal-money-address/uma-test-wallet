@@ -3,7 +3,7 @@
   "short_name": "UMA Sandbox",
   "icons": [
     {
-      "src": "/icons/uma-sandbox-icon.png",
+      "src": "/uma-sandbox-icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }
