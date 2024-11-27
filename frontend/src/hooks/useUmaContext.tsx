@@ -1,5 +1,7 @@
+"use client";
 import { getBackendUrl } from "@/lib/backendUrl";
-import { useEffect, useState } from "react";
+import { fetchWithRedirect } from "@/lib/fetchWithRedirect";
+import React, { useEffect, useState } from "react";
 
 export interface RawUma {
   user_id: string;
@@ -13,7 +15,19 @@ export interface Uma {
   default: boolean;
 }
 
-export const useUma = () => {
+export interface UmaContextData {
+  umas: Uma[];
+  error?: string;
+  isLoading: boolean;
+}
+
+const Context = React.createContext<UmaContextData>(null!);
+
+export const UmaContextProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const [umas, setUmas] = useState<Uma[]>([]);
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -22,10 +36,13 @@ export const useUma = () => {
     async function fetchUma() {
       setIsLoading(true);
       try {
-        const response = await fetch(`${getBackendUrl()}/user/umas`, {
-          method: "GET",
-          credentials: "include",
-        }).then((res) => {
+        const response = await fetchWithRedirect(
+          `${getBackendUrl()}/user/umas`,
+          {
+            method: "GET",
+            credentials: "include",
+          },
+        ).then((res) => {
           if (res.ok) {
             return res.json() as Promise<{ umas: RawUma[] }>;
           } else {
@@ -56,9 +73,15 @@ export const useUma = () => {
     };
   }, []);
 
-  return {
-    umas,
-    error,
-    isLoading,
-  };
+  return (
+    <Context.Provider value={{ umas, error, isLoading }}>
+      {children}
+    </Context.Provider>
+  );
 };
+
+export const useUma = () => {
+  return React.useContext(Context);
+};
+
+export default UmaContextProvider;

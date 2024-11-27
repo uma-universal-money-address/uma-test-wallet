@@ -10,7 +10,7 @@ from vasp.utils import get_vasp_domain
 from vasp.db import db
 from vasp.models.Uma import Uma as UmaModel
 from vasp.models.User import User as UserModel
-from vasp.models.Currency import Currency
+from vasp.models.Wallet import Wallet
 from vasp.uma_vasp.uma_exception import UmaException
 
 
@@ -31,7 +31,7 @@ class User(UserMixin):
     kyc_status: KycStatus
     email_address: Optional[str]
     full_name: Optional[str]
-    currencies: List["Currency"]
+    wallets: List["Wallet"]
     avatar: Optional[LargeBinary] = None
 
     def get_id(self) -> str:
@@ -63,7 +63,7 @@ class User(UserMixin):
             kyc_status=KycStatus(user_model.kyc_status),
             email_address=user_model.email_address,
             full_name=user_model.full_name,
-            currencies=user_model.currencies,
+            wallets=user_model.wallets,
             avatar=user_model.avatar,
         )
 
@@ -81,7 +81,7 @@ class User(UserMixin):
                     kyc_status=user_model.kyc_status,
                     email_address=user_model.email_address,
                     full_name=user_model.full_name,
-                    currencies=user_model.currencies,
+                    wallets=user_model.wallets,
                     avatar=user_model.avatar,
                 )
 

@@ -158,8 +158,8 @@ class ReceivingVasp:
             max_sendable_sats=10_000_000,
             payer_data_options=payer_data_options,
             currency_options=[
-                self.currency_service.get_uma_currency(currency.code)
-                for currency in user.currencies
+                self.currency_service.get_uma_currency(wallet.currency.code)
+                for wallet in user.wallets
             ],
             receiver_kyc_status=KycStatus.VERIFIED,
         )
@@ -178,8 +178,8 @@ class ReceivingVasp:
             max_sendable=10_000_000_000,
             encoded_metadata=metadata,
             currencies=[
-                self.currency_service.get_uma_currency(currency.code)
-                for currency in receiver_user.currencies
+                self.currency_service.get_uma_currency(wallet.currency.code)
+                for wallet in receiver_user.wallets
             ],
             required_payer_data=None,
             compliance=None,
@@ -338,9 +338,9 @@ class ReceivingVasp:
         if not currency_code:
             currency_code = "SAT"
         receiver_currencies = [
-            self.currency_service.get_uma_currency(currency.code)
-            for currency in user.currencies
-            if currency.code == currency_code
+            self.currency_service.get_uma_currency(wallet.currency.code)
+            for wallet in user.wallets
+            if wallet.currency.code == currency_code
         ]
         if len(receiver_currencies) == 0:
             raise UmaException(
@@ -399,9 +399,9 @@ class ReceivingVasp:
         if not currency_code:
             currency_code = "SAT"
         receiver_currencies = [
-            self.currency_service.get_uma_currency(currency.code)
-            for currency in user.currencies
-            if currency.code == currency_code
+            self.currency_service.get_uma_currency(wallet.currency.code)
+            for wallet in user.wallets
+            if wallet.currency.code == currency_code
         ]
         if len(receiver_currencies) == 0:
             raise UmaException(

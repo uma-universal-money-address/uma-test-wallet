@@ -43,7 +43,7 @@ def register_uma(
                 new_wallet = WalletModel(
                     id=str(uuid4()),
                     user_id=new_user.id,
-                    amount_in_lowest_denom=100000,
+                    amount_in_lowest_denom=8000,
                     color=Color.ONE,
                 )
                 new_uma = UmaModel(
@@ -56,7 +56,7 @@ def register_uma(
                 db_session.commit()
 
                 for currency in currencies:
-                    currency = Currency(user_id=new_user.id, code=currency)
+                    currency = Currency(wallet_id=new_wallet.id, code=currency)
                     db_session.add(currency)
                 db_session.commit()
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Uma } from "@/hooks/useUma";
+import { Uma } from "@/hooks/useUmaContext";
 import Image from "next/image";
 import { Button } from "./ui/button";
 

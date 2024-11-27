@@ -3,7 +3,6 @@ from sqlalchemy import String, LargeBinary, Enum
 from typing import Optional
 from vasp.models.Base import Base
 from vasp.models.Transaction import Transaction
-from vasp.models.Currency import Currency
 from vasp.models.Uma import Uma
 from vasp.models.Wallet import Wallet
 from vasp.models.Preference import Preference
@@ -24,8 +23,7 @@ class User(Base):
     full_name: Mapped[Optional[str]] = mapped_column(String)
     avatar: Mapped[Optional[LargeBinary]] = mapped_column(LargeBinary)
     umas: Mapped[List[Uma]] = relationship(back_populates="user")
-    currencies: Mapped[List["Currency"]] = relationship(back_populates="user")
-    wallet: Mapped[Wallet] = relationship(back_populates="user")
+    wallets: Mapped[List[Wallet]] = relationship(back_populates="user")
 
     transactions: Mapped[List["Transaction"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
@@ -36,4 +34,4 @@ class User(Base):
     )
 
     def __repr__(self) -> str:
-        return f"User(id={self.id!r}, umas={self.umas!r} kyc_status={self.kyc_status!r}, email_address={self.email_address!r}, currencies={self.currencies!r}"
+        return f"User(id={self.id!r}, umas={self.umas!r} kyc_status={self.kyc_status!r}, email_address={self.email_address!r}"

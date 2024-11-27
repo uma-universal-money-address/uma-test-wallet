@@ -5,9 +5,9 @@ from typing import TYPE_CHECKING
 from vasp.utils import generate_uuid
 
 if TYPE_CHECKING:
-    from vasp.models.User import User
+    from vasp.models.Wallet import Wallet
 
-"""Stores preferred currencies for users."""
+"""Stores currencies for wallets."""
 
 
 class Currency(Base):
@@ -15,10 +15,10 @@ class Currency(Base):
     __tablename__ = "currency"
 
     id: Mapped[str] = mapped_column(primary_key=True, default=generate_uuid)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    wallet_id: Mapped[int] = mapped_column(ForeignKey("wallet.id"))
     code: Mapped[str] = mapped_column(String)
 
-    user: Mapped["User"] = relationship(back_populates="currencies")
+    wallet: Mapped["Wallet"] = relationship(back_populates="currency")
 
     def __repr__(self) -> str:
         return f"Currency(id={self.id!r}, code={self.code!r})"
