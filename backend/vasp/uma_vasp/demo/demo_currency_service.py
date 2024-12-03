@@ -1,11 +1,16 @@
 from typing import Optional
 
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+from vasp.db import db
 from vasp.uma_vasp.interfaces.currency_service import (
     ICurrencyService,
     CurrencyOptions,
 )
 from vasp.uma_vasp.currencies import CURRENCIES
 from uma import Currency
+from vasp.models.Currency import Currency as CurrencyModel
+from vasp.models.Wallet import Wallet as WalletModel
 import time
 
 
@@ -57,6 +62,15 @@ class DemoCurrencyService(ICurrencyService):
             max_sendable=CURRENCIES[currency_code].max_sendable,
             decimals=CURRENCIES[currency_code].decimals,
         )
+
+    def get_uma_currencies_for_user(self, user_id: str) -> list[Currency]:
+        with Session(db.engine) as db_session:
+            currencies = db_session.scalars(
+                select(CurrencyModel)
+                .join(WalletModel)
+                .where(WalletModel.user_id == user_id)
+            ).all()
+            return [self.get_uma_currency(currency.code) for currency in currencies]
 
 
 def _get_currency_multiplier(

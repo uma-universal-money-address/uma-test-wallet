@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import UmaContextProvider, { useUma } from "@/hooks/useUmaContext";
 import { getUmaFromUsername } from "@/lib/uma";
 import Image from "next/image";
+import { useEffect } from "react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -32,23 +33,24 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
     });
   };
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <span>{error}</span>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: `Failed to fetch user uma: ${error}`,
+        variant: "error",
+      });
+    }
+  }, [error, toast]);
 
   return (
     <div className="flex flex-col h-screen">
       <div className="flex items-center justify-between px-4 py-[3px]">
         <div className="flex items-center">
           <span className="text-primary text-[15px] font-semibold leading-5 tracking-[-0.187px]">
-            {isLoadingUmas ? (
+            {isLoadingUmas || !defaultUma ? (
               <Skeleton className="w-[200px] h-[15px] rounded-full" />
             ) : (
-              getUmaFromUsername(defaultUma!.username)
+              getUmaFromUsername(defaultUma.username)
             )}
           </span>
         </div>

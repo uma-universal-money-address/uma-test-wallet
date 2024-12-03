@@ -20,3 +20,7 @@ class ICurrencyService(ABC):
     @abstractmethod
     def get_uma_currency(self, currency_code: str) -> Currency:
         pass
+
+    @abstractmethod
+    def get_uma_currencies_for_user(self, user_id: str) -> list[Currency]:
+        pass

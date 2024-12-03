@@ -152,10 +152,9 @@ class SendingVasp:
         callback_uuid = self.request_cache.save_lnurlp_response_data(
             lnurlp_response=lnurlp_response, receiver_uma=receiver_uma
         )
-        sender_currencies = [
-            self.currency_service.get_uma_currency(wallet.currency.code)
-            for wallet in current_user.wallets
-        ]
+        sender_currencies = self.currency_service.get_uma_currencies_for_user(
+            current_user.get_id()
+        )
 
         return {
             "senderCurrencies": [currency.to_dict() for currency in sender_currencies],
@@ -181,10 +180,9 @@ class SendingVasp:
         callback_uuid = self.request_cache.save_lnurlp_response_data(
             lnurlp_response=lnurlp_response, receiver_uma=receiver_uma
         )
-        sender_currencies = [
-            self.currency_service.get_uma_currency(wallet.currency.code)
-            for wallet in current_user.wallets
-        ]
+        sender_currencies = self.currency_service.get_uma_currencies_for_user(
+            current_user.get_id()
+        )
         return {
             "senderCurrencies": [currency.to_dict() for currency in sender_currencies],
             "receiverCurrencies": (
@@ -496,10 +494,7 @@ class SendingVasp:
         ):
             abort_with_error(403, "Transaction is not allowed.")
 
-        sender_currencies = [
-            self.currency_service.get_uma_currency(wallet.currency.code)
-            for wallet in user.wallets
-        ]
+        sender_currencies = self.currency_service.get_uma_currencies_for_user(user.id)
 
         invoice_data = self.lightspark_client.get_decoded_payment_request(
             payreq_response.encoded_invoice
@@ -543,10 +538,9 @@ class SendingVasp:
         receiving_currency_code: str,
         is_amount_in_msats: bool,
     ) -> SendingVaspPayReqResponse:
-        sender_currencies = [
-            self.currency_service.get_uma_currency(wallet.currency.code)
-            for wallet in current_user.wallets
-        ]
+        sender_currencies = self.currency_service.get_uma_currencies_for_user(
+            current_user.get_id()
+        )
 
         payreq = create_pay_request(
             receiving_currency_code=receiving_currency_code,
@@ -646,31 +640,22 @@ class SendingVasp:
             CurrencyUnit.MILLISATOSHI
         ).preferred_currency_value_rounded
 
-        sending_currency_code = "SAT"
-        currency_preferences = self.user_service.get_currency_preferences_for_user()
-        sending_currency = next(
-            currency
-            for currency in currency_preferences
-            if currency.code == sending_currency_code
+        wallet_balance, wallet_currency_code = self.ledger_service.get_wallet_balance(
+            current_user.get_default_uma_address()
         )
-        if not sending_currency:
+        sending_currency_code = payreq_data.sender_currencies[0].code
+        if sending_currency_code != wallet_currency_code:
             abort_with_error(400, "Sending currency is not supported.")
 
-        # User balance is only in SATs so convert to them
-        sending_currency_multiplier = 1000
+        uma_currency = self.currency_service.get_uma_currency(sending_currency_code)
+        sending_currency_multiplier = uma_currency.millisatoshi_per_unit
         sending_currency_amount = round(
             (amount_as_msats + payreq_data.exchange_fees_msats)
             / sending_currency_multiplier
         )
         sending_max_fee = round(amount_as_msats * 0.0017)
 
-        if (
-            self.ledger_service.get_wallet_balance(
-                current_user.get_default_uma_address()
-            )[0]
-            - sending_currency_amount
-            < 0
-        ):
+        if wallet_balance - sending_currency_amount < 0:
             abort_with_error(400, "Insufficient balance.")
 
         self._load_signing_key()

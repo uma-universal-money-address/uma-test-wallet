@@ -1,8 +1,7 @@
 from typing import Any, Dict
 
-from flask import Blueprint, current_app
+from flask import Blueprint, current_app, Response, jsonify
 from uma import create_pubkey_response, is_domain_local
-from uma.protocol.pubkey_response import PubkeyResponse
 
 from vasp.uma_vasp.config import Config
 
@@ -10,10 +9,12 @@ bp = Blueprint("well_known", __name__, url_prefix="/.well-known")
 
 
 @bp.route("/lnurlpubkey")
-def handle_public_key_request() -> PubkeyResponse:
+def handle_public_key_request() -> Response:
     config = Config.get()
-    return create_pubkey_response(
-        config.signing_cert_chain, config.encryption_cert_chain
+    return jsonify(
+        create_pubkey_response(
+            config.signing_cert_chain, config.encryption_cert_chain
+        ).to_dict()
     )
 
 

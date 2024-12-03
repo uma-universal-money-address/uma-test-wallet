@@ -1,14 +1,14 @@
-<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<mask id="mask0_258_15301" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
-<rect width="24" height="24" fill="url(#paint0_angular_258_15301)"/>
-</mask>
-<g mask="url(#mask0_258_15301)">
-<path d="M12 8V4.5M14.828 9.17162L17.3029 6.69675M16 12H19.5M14.8287 14.8284L17.3036 17.3033M12 16V19.5M9.17201 14.8284L6.69713 17.3033M8 12H4.5M9.1713 9.1716L6.69642 6.69673" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-</g>
-<defs>
-<radialGradient id="paint0_angular_258_15301" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(12 12) rotate(-66.8014) scale(11.4237)">
-<stop/>
-<stop offset="1" stop-opacity="0"/>
-</radialGradient>
-</defs>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+  <mask id="mask0_258_15301" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+    <rect width="24" height="24" fill="url(#paint0_angular_258_15301)"/>
+  </mask>
+  <g mask="url(#mask0_258_15301)">
+    <path d="M12 8V4.5M14.828 9.17162L17.3029 6.69675M16 12H19.5M14.8287 14.8284L17.3036 17.3033M12 16V19.5M9.17201 14.8284L6.69713 17.3033M8 12H4.5M9.1713 9.1716L6.69642 6.69673" stroke="#16171A" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <defs>
+    <radialGradient id="paint0_angular_258_15301" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(12 12) rotate(-66.8014) scale(11.4237)">
+      <stop/>
+      <stop offset="1" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
 </svg>

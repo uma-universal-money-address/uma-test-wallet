@@ -271,16 +271,10 @@ class UmaNwcBridge:
         if user is None:
             abort_with_error(404, f"User {user_id} not found.")
 
-        currencies = (
-            [
-                user_currency_to_uma_auth_currency(
-                    self.currency_service.get_uma_currency(wallet.currency.code)
-                )
-                for wallet in user.wallets
-            ]
-            if user.wallets
-            else []
-        )
+        uma_currencies = self.currency_service.get_uma_currencies_for_user(user_id)
+        currencies = [
+            user_currency_to_uma_auth_currency(currency) for currency in uma_currencies
+        ]
 
         return GetInfoResponse(
             alias="UMA Sandbox",
