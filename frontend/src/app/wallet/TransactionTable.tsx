@@ -137,6 +137,8 @@ export const TransactionTable = () => {
       <LoadingTransactionRow key="loader-1" />,
       <LoadingTransactionRow key="loader-2" />,
       <LoadingTransactionRow key="loader-3" />,
+      <LoadingTransactionRow key="loader-4" />,
+      <LoadingTransactionRow key="loader-5" />,
     ];
   } else if (!transactions) {
     return (

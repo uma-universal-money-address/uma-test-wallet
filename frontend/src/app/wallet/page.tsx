@@ -2,15 +2,14 @@
 
 import { Wallet } from "@/components/Wallet";
 import { useToast } from "@/hooks/use-toast";
-import { useUma } from "@/hooks/useUmaContext";
+import { useWallets } from "@/hooks/useWalletContext";
 import { getUmaFromUsername } from "@/lib/uma";
 import { useEffect } from "react";
 import { TransactionTable } from "./TransactionTable";
 
 export default function Page() {
   const { toast } = useToast();
-  const { umas, isLoading: isLoadingUmas, error } = useUma();
-  const defaultUma = umas.find((uma) => uma.default);
+  const { currentWallet, isLoading: isLoadingWallets, error } = useWallets();
 
   useEffect(() => {
     if (error) {
@@ -24,8 +23,13 @@ export default function Page() {
   return (
     <div className="flex flex-col pt-2 px-6 pb-4 gap-6">
       <Wallet
-        uma={defaultUma ? getUmaFromUsername(defaultUma?.username) : undefined}
-        isLoading={isLoadingUmas}
+        uma={
+          currentWallet
+            ? getUmaFromUsername(currentWallet?.uma.username)
+            : undefined
+        }
+        wallet={currentWallet}
+        isLoading={isLoadingWallets}
       />
       <TransactionTable />
     </div>
