@@ -35,6 +35,16 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --black: #16171a;
+    --blue: #0068c9;
+    --lavender: #7366c5;
+    --lime: #09870e;
+    --night: #222140;
+    --red: #bc1d1d;
+    --fuchsia: #a01da0;
+    --teal: #087a80;
+    --green: #054007;
+    --orange: #b8580e;
   }
   .dark {
     --background: 0 0% 3.9%;

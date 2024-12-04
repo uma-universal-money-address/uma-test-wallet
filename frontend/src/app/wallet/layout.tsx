@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { UmaSwitcherFooter } from "@/components/UmaSwitcherFooter";
 import { useToast } from "@/hooks/use-toast";
 import UmaContextProvider, { useUma } from "@/hooks/useUmaContext";
+import WalletContextProvider, { useWallets } from "@/hooks/useWalletContext";
 import { getUmaFromUsername } from "@/lib/uma";
 import Image from "next/image";
 import { useEffect } from "react";
@@ -12,18 +13,25 @@ import { useEffect } from "react";
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <UmaContextProvider>
-      <LayoutContent>{children}</LayoutContent>
+      <WalletContextProvider>
+        <LayoutContent>{children}</LayoutContent>
+      </WalletContextProvider>
     </UmaContextProvider>
   );
 }
 
 const LayoutContent = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
-  const { umas, isLoading: isLoadingUmas, error } = useUma();
+  const { umas, isLoading: isLoadingUmas, error: umasError } = useUma();
   const defaultUma = umas.find((uma) => uma.default);
+  const {
+    wallets,
+    isLoading: isLoadingWallets,
+    error: walletsError,
+  } = useWallets();
 
   const handleCopy = () => {
-    if (isLoadingUmas) {
+    if (isLoadingUmas || isLoadingWallets) {
       return;
     }
 
@@ -34,20 +42,21 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    if (error) {
+    const anyError = umasError || walletsError;
+    if (anyError) {
       toast({
-        title: `Failed to fetch user uma: ${error}`,
+        title: `Failed to load wallet layout: ${anyError}`,
         variant: "error",
       });
     }
-  }, [error, toast]);
+  }, [umasError, walletsError, toast]);
 
   return (
     <div className="flex flex-col h-screen">
       <div className="flex items-center justify-between px-4 py-[3px]">
         <div className="flex items-center">
           <span className="text-primary text-[15px] font-semibold leading-5 tracking-[-0.187px]">
-            {isLoadingUmas || !defaultUma ? (
+            {isLoadingUmas || isLoadingWallets || !defaultUma ? (
               <Skeleton className="w-[200px] h-[15px] rounded-full" />
             ) : (
               getUmaFromUsername(defaultUma.username)
@@ -74,9 +83,11 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
         </div>
       </div>
       <main className="flex-1 overflow-y-auto">{children}</main>
-      <div className="pt-2 px-4 pb-3 border-[#EBEEF2] border">
-        <UmaSwitcherFooter umas={umas} />
-      </div>
+      {wallets && wallets.length > 0 && (
+        <div className="pt-2 px-4 pb-3 border-[#EBEEF2] border">
+          <UmaSwitcherFooter wallets={wallets} />
+        </div>
+      )}
     </div>
   );
 };

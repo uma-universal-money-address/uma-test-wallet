@@ -1,33 +1,42 @@
 "use client";
 
-import { Uma } from "@/hooks/useUmaContext";
+import { Wallet } from "@/hooks/useWalletContext";
 import Image from "next/image";
+import { SandboxAvatar } from "./SandboxAvatar";
 import { Button } from "./ui/button";
 
 interface Props {
-  umas: Uma[];
+  wallets: Wallet[];
 }
 
-export const UmaSwitcherFooter = ({ umas }: Props) => {
-  const umaButtons = umas.map((uma, index) => {
+export const UmaSwitcherFooter = ({ wallets }: Props) => {
+  const walletButtons = wallets.map((wallet, index) => {
     return (
-      <Button
-        key={uma.username}
-        className={`p-2 text-white bg-primary h-8 w-8 rounded-lg ${
-          uma.default ? "ring-1 ring-offset-8 ring-[#C0C9D6]" : ""
+      <div
+        key={wallet.id}
+        className={`${
+          wallet.uma.default
+            ? "ring-1 ring-offset-8 ring-[#C0C9D6] rounded-xl"
+            : ""
         }`}
         onClick={() => {
-          console.log(`Switching to UMA: ${uma.username}`);
+          console.log(`Switching to wallet: ${wallet.id}`);
         }}
       >
-        {index + 1}
-      </Button>
+        <SandboxAvatar
+          sandboxWallet={{
+            wallet,
+            number: index + 1,
+          }}
+          size="md"
+        />
+      </div>
     );
   });
 
   return (
     <div className="flex flex-row p-4 w-full items-center justify-center gap-4">
-      {umaButtons}
+      {walletButtons}
       <Button className="p-2 bg-[#EBEEF2] hover:bg-gray-300 h-8 w-8 rounded-lg">
         <Image src="/icons/plus.svg" alt="Add UMA" width={24} height={24} />
       </Button>
