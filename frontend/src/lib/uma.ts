@@ -1,3 +1,4 @@
+import { getBackendDomain } from "./backendDomain";
 import { getBackendUrl } from "./backendUrl";
 
 export const checkUmaAvailability = async (umaUserName: string) => {
@@ -18,4 +19,8 @@ export const createUma = async (umaUserName: string) => {
     body: JSON.stringify({ uma_user_name: umaUserName }),
   });
   return response.json();
+};
+
+export const getUmaFromUsername = (umaUserName: string) => {
+  return `$${umaUserName}@${getBackendDomain()}`;
 };

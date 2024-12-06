@@ -3,15 +3,16 @@ import { UmaInput } from "@/components/UmaInput";
 import { useUma } from "@/hooks/useUma";
 import { checkUmaAvailability, createUma } from "@/lib/uma";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 export default function Home() {
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uma, setUma] = useState("");
   const [umaError, setUmaError] = useState<string | undefined>();
   const [umaInputMessage, setUmaInputMessage] = useState<string | undefined>();
   const { umas: userUmas } = useUma();
-  console.log("userUmas", userUmas);
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
@@ -54,6 +55,12 @@ export default function Home() {
       inputRef.current?.focus();
     }, 0);
   });
+
+  useEffect(() => {
+    if (userUmas) {
+      router.push(`/wallet`);
+    }
+  }, [userUmas, router]);
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-inter)]">
@@ -102,53 +109,6 @@ export default function Home() {
           </a>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/icons/terminal.svg"
-            alt="terminal icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/icons/wallet.svg"
-            alt="wallet icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/icons/bell.svg"
-            alt="Bell icon"
-            width={16}
-            height={16}
-          />
-          Get notified
-        </a>
-      </footer>
     </div>
   );
 }
