@@ -6,6 +6,7 @@ import { ExchangeRates, useExchangeRates } from "@/hooks/useExchangeRates";
 import { type Transaction, useTransactions } from "@/hooks/useTransactions";
 import { useWallets, Wallet } from "@/hooks/useWalletContext";
 import { convertCurrency } from "@/lib/convertCurrency";
+import { getUmaFromUsername } from "@/lib/uma";
 import React, { useEffect } from "react";
 
 const LoadingTransactionRow = () => {
@@ -72,7 +73,8 @@ const TransactionRow = ({
   );
 
   const walletIndex = wallets.findIndex(
-    (wallet) => wallet.userId === transaction.userId,
+    (wallet) =>
+      getUmaFromUsername(wallet.uma.username) === transaction.otherUma,
   );
 
   return (

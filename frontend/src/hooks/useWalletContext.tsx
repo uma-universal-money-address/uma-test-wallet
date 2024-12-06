@@ -22,7 +22,6 @@ export type RawWalletColor =
 
 export interface Wallet {
   id: string;
-  userId: string;
   amountInLowestDenom: number;
   color: WalletColor;
   deviceToken: string;
@@ -33,7 +32,6 @@ export interface Wallet {
 
 interface RawWallet {
   id: string;
-  user_id: string;
   amount_in_lowest_denom: number;
   color: RawWalletColor;
   device_token: string;
@@ -78,7 +76,6 @@ export const WalletContextProvider = ({
           setWallets(
             response.wallets.map((rawWallet) => ({
               id: rawWallet.id,
-              userId: rawWallet.user_id,
               amountInLowestDenom: rawWallet.amount_in_lowest_denom,
               color: RAW_WALLET_COLOR_MAPPING[rawWallet.color],
               deviceToken: rawWallet.device_token,
@@ -97,7 +94,6 @@ export const WalletContextProvider = ({
           if (!currentWallet) {
             setCurrentWallet({
               id: defaultWallet.id,
-              userId: defaultWallet.user_id,
               amountInLowestDenom: defaultWallet.amount_in_lowest_denom,
               color: RAW_WALLET_COLOR_MAPPING[defaultWallet.color],
               deviceToken: defaultWallet.device_token,
