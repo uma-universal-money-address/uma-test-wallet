@@ -14,6 +14,7 @@ export const createUma = async (umaUserName: string) => {
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
     body: JSON.stringify({ uma_user_name: umaUserName }),
   });
   return response.json();

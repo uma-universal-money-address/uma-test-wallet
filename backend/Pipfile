@@ -26,6 +26,7 @@ bolt11 = "*"
 uma-sdk = "*"
 sqlalchemy = "*"
 flask-caching = "*"
+flask-login = "*"
 
 [dev-packages]
 black = "*"

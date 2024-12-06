@@ -2,6 +2,8 @@ import os
 import json
 import logging
 from datetime import datetime, timezone
+from flask_login import LoginManager
+from typing import Optional
 
 from flask import (
     Flask,
@@ -21,7 +23,8 @@ from uma import (
     is_domain_local,
 )
 
-from vasp.uma_vasp.config import Config, get_http_host
+from vasp.uma_vasp.user import User
+from vasp.uma_vasp.config import Config, get_http_host, require_env
 from vasp.uma_vasp.demo.demo_compliance_service import DemoComplianceService
 from vasp.uma_vasp.demo.demo_user_service import DemoUserService
 from vasp.uma_vasp.demo.demo_currency_service import DemoCurrencyService
@@ -56,11 +59,22 @@ def create_app() -> Flask:
 
     cache = Cache(app)
 
+    app.secret_key = require_env("FLASK_SECRET_KEY")
+    app.config["REMEMBER_COOKIE_SECURE"] = True
+
+    if app.config.get("FLASK_ENV") == "development":
+        app.config["REMEMBER_COOKIE_SAMESITE"] = "None"  # Only for local testing
+
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+
+    @login_manager.user_loader
+    def load_user(user_id: str) -> Optional[User]:
+        return User.from_id(user_id)
+
     CORS(
         app,
-        resources={
-            r"/*": {"origins": "*"},
-        },
+        origins=["https://localhost:3000"],
         allow_headers=["access-control-allow-origin", "Content-Type"],
         supports_credentials=True,
     )

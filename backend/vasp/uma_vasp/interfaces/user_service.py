@@ -12,7 +12,7 @@ class IUserService(ABC):
         pass
 
     @abstractmethod
-    def get_user_from_id(self, user_id: int) -> Optional[User]:
+    def get_user_from_id(self, user_id: str) -> Optional[User]:
         pass
 
     @abstractmethod

@@ -3,7 +3,7 @@ from typing import Any, Dict
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from vasp.db import db
-from flask import session
+from flask_login import current_user
 from vasp.uma_vasp.interfaces.ledger_service import ILedgerService
 from vasp.models.Wallet import Wallet
 from vasp.models.Transaction import Transaction
@@ -11,6 +11,11 @@ from vasp.uma_vasp.user import User
 from vasp.uma_vasp.lightspark_helpers import get_node
 from vasp.uma_vasp.config import Config, get_http_host
 from lightspark import LightsparkSyncClient as LightsparkClient
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    current_user: User
 
 log: logging.Logger = logging.getLogger(__name__)
 
@@ -28,12 +33,7 @@ class InternalLedgerService(ILedgerService):
         if amount < 0:
             raise ValueError("Amount must be positive")
 
-        user_id = session.get("user_id")
-        user = User.from_id(user_id)
-        if not user:
-            raise ValueError("User not found")
-
-        user_uma = user.get_default_uma_address()
+        user_uma = current_user.get_default_uma_address()
 
         with Session(db.engine) as db_session:
             # Update the wallet
@@ -42,7 +42,7 @@ class InternalLedgerService(ILedgerService):
 
             # Add a transaction
             transaction = Transaction(
-                user_id=user.id,
+                user_id=current_user.id,
                 amount_in_lowest_denom=amount,
                 currency_code=currency_code,
                 sender_uma=sender_uma,
@@ -59,11 +59,9 @@ class InternalLedgerService(ILedgerService):
         if amount <= 0:
             raise ValueError("Amount must be positive")
 
-        user_id = session.get("user_id")
-        user = User.from_id(user_id)
-        if not user:
+        if not current_user:
             raise ValueError("User not found")
-        user_uma = user.get_default_uma_address()
+        user_uma = current_user.get_default_uma_address()
 
         with Session(db.engine) as db_session:
             # Update the wallet
@@ -74,7 +72,7 @@ class InternalLedgerService(ILedgerService):
 
             # Add a transaction
             transaction = Transaction(
-                user_id=user.id,
+                user_id=current_user.id,
                 amount_in_lowest_denom=-amount,
                 currency_code=currency_code,
                 sender_uma=user_uma,
@@ -87,8 +85,9 @@ class InternalLedgerService(ILedgerService):
 
 
 def get_wallet(db_session: Session) -> Wallet | None:
-    user_id = session.get("user_id")
-    wallet = db_session.scalars(select(Wallet).where(Wallet.user_id == user_id)).first()
+    wallet = db_session.scalars(
+        select(Wallet).where(Wallet.user_id == current_user.id)
+    ).first()
 
     # TODO: Repulls the balance from the node. Eventually we can
     # configure webhooks to update the balance in real-time.

@@ -5,7 +5,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
 import requests
-from flask import Flask, Response, current_app, session, request as flask_request
+from flask import Flask, Response, current_app, request as flask_request
+from flask_login import current_user, login_required
 from lightspark import LightsparkSyncClient as LightsparkClient
 from vasp.utils import get_vasp_domain
 from vasp.uma_vasp.address_helpers import get_domain_from_uma_address
@@ -44,6 +45,13 @@ from uma import (
     verify_pay_request_signature,
     verify_uma_lnurlp_query_signature,
 )
+
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    current_user: User
+
 
 PAY_REQUEST_CALLBACK = "/api/uma/payreq/"
 
@@ -178,7 +186,7 @@ class ReceivingVasp:
             uma_version=None,
         )
 
-    async def handle_pay_request_callback(self, user_id: int) -> Dict[str, Any]:
+    async def handle_pay_request_callback(self, user_id: str) -> Dict[str, Any]:
         user = self.user_service.get_user_from_id(user_id)
         if not user:
             raise UmaException(
@@ -315,7 +323,7 @@ class ReceivingVasp:
             payee_data=None,
         )
 
-    async def handle_create_uma_invoice(self, user_id: int) -> str:
+    async def handle_create_uma_invoice(self, user_id: str) -> str:
         user = self.user_service.get_user_from_id(user_id)
         if not user:
             raise UmaException(
@@ -376,7 +384,7 @@ class ReceivingVasp:
         )
         return invoice.to_bech32_string()
 
-    async def create_and_send_invoice(self, user_id: int) -> Response:
+    async def create_and_send_invoice(self, user_id: str) -> Response:
         user = self.user_service.get_user_from_id(user_id)
         if not user:
             raise UmaException(
@@ -526,42 +534,23 @@ def register_routes(
 
     @app.post(PAY_REQUEST_CALLBACK + "<user_id>")
     async def handle_uma_pay_request_callback(user_id: str) -> Dict[str, Any]:
-        try:
-            user_id_int = int(user_id)
-        except ValueError:
-            raise UmaException(f"Invalid user_id {user_id}", status_code=400)
         receiving_vasp = get_receiving_vasp()
-        return await receiving_vasp.handle_pay_request_callback(user_id_int)
+        return await receiving_vasp.handle_pay_request_callback(user_id)
 
     @app.get(PAY_REQUEST_CALLBACK + "<user_id>")
+    @login_required
     async def handle_lnurl_pay_request_callback(user_id: str) -> Dict[str, Any]:
-        try:
-            user_id_int = int(user_id)
-        except ValueError:
-            raise UmaException(f"Invalid user_id {user_id}", status_code=400)
         receiving_vasp = get_receiving_vasp()
-        return await receiving_vasp.handle_pay_request_callback(user_id_int)
+        return await receiving_vasp.handle_pay_request_callback(user_id)
 
     @app.post("/api/uma/create_invoice")
+    @login_required
     async def handle_create_uma_invoice() -> str:
-        user_id = session.get("user_id")
-        user = user_service.get_user_from_id(user_id)
-        if not user:
-            raise UmaException(
-                f"Cannot find user {user_id}",
-                status_code=404,
-            )
         receiving_vasp = get_receiving_vasp()
-        return await receiving_vasp.handle_create_uma_invoice(user_id)
+        return await receiving_vasp.handle_create_uma_invoice(current_user.id)
 
     @app.post("/api/uma/create_and_send_invoice")
+    @login_required
     async def handle_create_and_send_invoice() -> Response:
-        user_id = session.get("user_id")
-        user = user_service.get_user_from_id(user_id)
-        if not user:
-            raise UmaException(
-                f"Cannot find user {user_id}",
-                status_code=404,
-            )
         receiving_vasp = get_receiving_vasp()
-        return await receiving_vasp.create_and_send_invoice(user_id)
+        return await receiving_vasp.create_and_send_invoice(current_user.id)

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 from sqlalchemy import ForeignKey, String, Boolean
 from vasp.models.Base import Base
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Any
 from vasp.utils import generate_uuid
 
 if TYPE_CHECKING:
@@ -24,6 +24,15 @@ class Uma(Base):
     wallet: Mapped["Wallet"] = relationship(
         back_populates="uma", foreign_keys=[wallet_id]
     )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "wallet_id": self.wallet_id,
+            "username": self.username,
+            "default": self.default,
+        }
 
     def __repr__(self) -> str:
         return f"Uma(id={self.id!r}, user_id={self.user_id}, wallet_id={self.wallet_id}, username={self.username!r})"

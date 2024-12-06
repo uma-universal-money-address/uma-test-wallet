@@ -5,7 +5,8 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import requests
-from flask import Flask, current_app, session, Response, request as flask_request
+from flask import Flask, current_app, Response, request as flask_request
+from flask_login import current_user, login_required
 from lightspark import CurrencyUnit
 from lightspark import LightsparkSyncClient as LightsparkClient
 from lightspark import OutgoingPayment, PaymentDirection, TransactionStatus
@@ -55,6 +56,11 @@ from uma import (
     verify_uma_lnurlp_response_signature,
 )
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    current_user: User
+
 log: logging.Logger = logging.getLogger(__name__)
 
 
@@ -84,14 +90,12 @@ class SendingVasp:
         self.uma_request_storage = uma_request_storage
 
     def handle_uma_lookup(self, receiver_uma: str) -> Dict[str, Any]:
-        user_id = session.get("user_id")
-        user = User.from_id(user_id)
-        if not user:
+        if not current_user:
             abort_with_error(403, "Unauthorized")
 
         if not self.compliance_service.should_accept_transaction_to_vasp(
             receiving_vasp_domain=get_domain_from_uma_address(receiver_uma),
-            sending_uma_address=user.get_default_uma_address(),
+            sending_uma_address=current_user.get_default_uma_address(),
             receiving_uma_address=receiver_uma,
         ):
             abort_with_error(
@@ -150,7 +154,7 @@ class SendingVasp:
         )
         sender_currencies = [
             self.currency_service.get_uma_currency(currency.code)
-            for currency in user.currencies
+            for currency in current_user.currencies
         ]
 
         return {
@@ -174,17 +178,12 @@ class SendingVasp:
     def _handle_as_non_uma_lnurl_response(
         self, lnurlp_response: LnurlpResponse, receiver_uma: str
     ) -> Dict[str, Any]:
-        user_id = session.get("user_id")
-        user = User.from_id(user_id)
-        if not user:
-            abort_with_error(403, "Unauthorized")
-
         callback_uuid = self.request_cache.save_lnurlp_response_data(
             lnurlp_response=lnurlp_response, receiver_uma=receiver_uma
         )
         sender_currencies = [
             self.currency_service.get_uma_currency(currency.code)
-            for currency in user.currencies
+            for currency in current_user.currencies
         ]
         return {
             "senderCurrencies": [currency.to_dict() for currency in sender_currencies],
@@ -201,11 +200,6 @@ class SendingVasp:
     def _retry_lnurlp_with_version_negotiation(
         self, receiver_uma: str, response: requests.Response
     ) -> requests.Response:
-        user_id = session.get("user_id")
-        user = User.from_id(user_id)
-        if not user:
-            abort_with_error(403, "Unauthorized")
-
         response_body = response.json()
         supported_major_versions = response_body["supportedMajorVersions"]
         if not supported_major_versions or len(supported_major_versions) == 0:
@@ -225,7 +219,6 @@ class SendingVasp:
         return requests.get(retry_url, timeout=20)
 
     def handle_uma_payreq_request(self, callback_uuid: str) -> Dict[str, Any]:
-        user_id = session.get("user_id")
         receiving_currency_code = flask_request.args.get("receivingCurrencyCode", "SAT")
 
         initial_request_data = self.request_cache.get_lnurlp_response_data(
@@ -246,7 +239,7 @@ class SendingVasp:
             is_amount_in_msats,
             amount,
             receiving_currency_code,
-            user_id,
+            current_user.id,
         ).to_json()
 
     async def handle_request_pay_invoice(
@@ -278,7 +271,6 @@ class SendingVasp:
 
     async def handle_pay_invoice(self) -> Dict[str, Any]:
         flask_request_data = await flask_request.json
-        user_id = session.get("user_id")
         invoice_string = flask_request_data.get("invoice")
         if not invoice_string:
             abort_with_error(400, "Invoice is required.")
@@ -316,7 +308,7 @@ class SendingVasp:
             amount=invoice.amount,
             is_amount_in_msats=receiving_currency.code == "SAT",
             receiving_currency=receiving_currency,
-            user_id=user_id,
+            user_id=current_user.id,
             uma_version=highest_version,
             invoice_uuid=invoice.invoice_uuid,
         ).to_json()
@@ -327,7 +319,7 @@ class SendingVasp:
         is_amount_in_msats: bool,
         amount: int,
         receiving_currency_code: str,
-        user_id: int,
+        user_id: str,
     ) -> SendingVaspPayReqResponse:
         initial_request_data = self.request_cache.get_lnurlp_response_data(
             callback_uuid
@@ -377,7 +369,7 @@ class SendingVasp:
         amount: int,
         is_amount_in_msats: bool,
         receiving_currency: Currency,
-        user_id: int,
+        user_id: str,
         uma_version: Optional[str] = None,
         invoice_uuid: Optional[str] = None,
     ) -> SendingVaspPayReqResponse:
@@ -551,21 +543,16 @@ class SendingVasp:
         receiving_currency_code: str,
         is_amount_in_msats: bool,
     ) -> SendingVaspPayReqResponse:
-        user_id = session.get("user_id")
-        user = User.from_id(user_id)
-        if not user:
-            abort_with_error(403, "Unauthorized")
-
         sender_currencies = [
             self.currency_service.get_uma_currency(currency.code)
-            for currency in user.currencies
+            for currency in current_user.currencies
         ]
 
         payreq = create_pay_request(
             receiving_currency_code=receiving_currency_code,
             is_amount_in_receiving_currency=not is_amount_in_msats,
             amount=amount,
-            payer_identifier=user.get_default_uma_address(),
+            payer_identifier=current_user.get_default_uma_address(),
             payer_name=None,
             payer_email=None,
             payer_compliance=None,
@@ -599,7 +586,7 @@ class SendingVasp:
             utxo_callback="",
             invoice_data=invoice_data,
             sender_currencies=sender_currencies,
-            sending_user_id=user.id,
+            sending_user_id=current_user.id,
             receiving_node_pubkey=None,
             exchange_fees_msats=0,
             receiver_uma=initial_request_data.receiver_uma,
@@ -642,7 +629,7 @@ class SendingVasp:
         payreq_data = self.request_cache.get_pay_req_data(callback_uuid)
         if not payreq_data:
             abort_with_error(404, f"Cannot find callback UUID {callback_uuid}")
-        if payreq_data.sending_user_id != session["user_id"]:
+        if payreq_data.sending_user_id != current_user.id:
             abort_with_error(403, "You are not authorized to send this payment.")
 
         uma_invoice_uuid = payreq_data.uma_invoice_uuid
@@ -763,11 +750,6 @@ class SendingVasp:
     def _send_post_tx_callback(
         self, payment: OutgoingPayment, utxo_callback: str
     ) -> None:
-        user_id = session.get("user_id")
-        user = User.from_id(user_id)
-        if not user:
-            abort_with_error(403, "Unauthorized")
-
         if not utxo_callback:
             return
 
@@ -902,26 +884,31 @@ def register_routes(
         )
 
     @app.route("/api/umalookup/<receiver_uma>")
+    @login_required
     def handle_uma_lookup(receiver_uma: str) -> Dict[str, Any]:
         sending_vasp = get_sending_vasp_internal()
         return sending_vasp.handle_uma_lookup(receiver_uma)
 
     @app.route("/api/umapayreq/<callback_uuid>")
+    @login_required
     def handle_uma_payreq(callback_uuid: str) -> Dict[str, Any]:
         sending_vasp = get_sending_vasp_internal()
         return sending_vasp.handle_uma_payreq_request(callback_uuid)
 
     @app.post("/api/sendpayment/<callback_uuid>")
+    @login_required
     def handle_send_payment(callback_uuid: str) -> Dict[str, Any]:
         sending_vasp = get_sending_vasp_internal()
         return sending_vasp.handle_send_payment(callback_uuid)
 
     @app.post("/api/uma/pay_invoice")
+    @login_required
     async def handle_pay_invoice() -> Dict[str, Any]:
         sending_vasp = get_sending_vasp_internal()
         return await sending_vasp.handle_pay_invoice()
 
     @app.post("/api/uma/request_pay_invoice")
+    @login_required
     async def handle_request_pay_invoice() -> Response:
         flask_request_data = await flask_request.json
         invoice_string = flask_request_data.get("invoice")
@@ -953,6 +940,7 @@ def register_routes(
         return await sending_vasp.handle_request_pay_invoice(user.id, invoice)
 
     @app.route("/api/uma/pending_requests/<user_id>")
+    @login_required
     def handle_get_pending_requests(user_id: int) -> Dict[str, Any]:
         sending_vasp = get_sending_vasp_internal()
         return sending_vasp.get_pending_uma_requests()
