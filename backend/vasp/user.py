@@ -21,6 +21,7 @@ from vasp.uma_vasp.interfaces.ledger_service import ILedgerService
 from vasp.uma_vasp.interfaces.currency_service import (
     ICurrencyService,
 )
+from vasp.uma_vasp.currencies import CURRENCIES
 
 from typing import TYPE_CHECKING
 
@@ -52,7 +53,17 @@ def construct_blueprint(
         if (uma is None) or (uma == ""):
             abort_with_error(400, "UMA is required to retrieve balance")
         balance, currency = ledger_service.get_wallet_balance(uma=uma)
-        return jsonify({"amount_in_lowest_denom": balance, "currency": currency})
+        return jsonify(
+            {
+                "amount_in_lowest_denom": balance,
+                "currency": {
+                    "code": currency,
+                    "name": CURRENCIES[currency].name,
+                    "symbol": CURRENCIES[currency].symbol,
+                    "decimals": CURRENCIES[currency].decimals,
+                },
+            }
+        )
 
     @bp.get("/contacts")
     @login_required

@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col h-screen">
@@ -7,10 +9,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           flex-shrink-0 flex items-center justify-between px-4 py-3"
         >
           <div className="flex items-center">
-            <img
+            <Image
               src="/uma-sandbox-icon.svg"
               alt="Logo"
-              className="h-8 w-auto"
+              height={32}
+              width={150}
             />
           </div>
           <div className="flex items-center">

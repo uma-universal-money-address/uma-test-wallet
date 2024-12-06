@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from flask_login import LoginManager
 from typing import Optional
 
@@ -110,7 +110,9 @@ def create_app() -> Flask:
     ledger_service = InternalLedgerService()
     currency_service = DemoCurrencyService()
     pubkey_cache = InMemoryPublicKeyCache()
-    nonce_cache: INonceCache = InMemoryNonceCache(datetime.now(timezone.utc))
+    nonce_cache: INonceCache = InMemoryNonceCache(
+        datetime.now(timezone.utc) - timedelta(weeks=2)
+    )
     uma_request_storage: IRequestStorage = RequestStorage()
 
     from . import auth, user, currencies, uma

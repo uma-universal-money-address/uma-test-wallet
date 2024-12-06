@@ -61,7 +61,7 @@ export default function RootLayout({
           crossOrigin="use-credentials"
         />
       </head>
-      <body className={`${inter.variable} ${roboto_mono.variable}`}>
+      <body className={`${inter.variable} ${roboto_mono.variable} h-dvh`}>
         {children}
         <Toaster />
       </body>

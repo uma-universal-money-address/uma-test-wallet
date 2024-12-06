@@ -1,16 +1,16 @@
 import { getBackendUrl } from "@/lib/backendUrl";
 import { fetchWithRedirect } from "@/lib/fetchWithRedirect";
-import { getUmaFromUsername } from "@/lib/uma";
+import { Currency } from "@/types/Currency";
 import { useEffect, useState } from "react";
 
 export interface RawBalance {
   amount_in_lowest_denom: number;
-  currency: string;
+  currency: Currency;
 }
 
 export interface Balance {
   amountInLowestDenom: number;
-  currency: string;
+  currency: Currency;
 }
 
 export const useBalance = ({ uma }: { uma: string | undefined }) => {
@@ -27,7 +27,7 @@ export const useBalance = ({ uma }: { uma: string | undefined }) => {
       setIsLoading(true);
       try {
         const response = await fetchWithRedirect(
-          `${getBackendUrl()}/user/balance?uma=${getUmaFromUsername(uma)}`,
+          `${getBackendUrl()}/user/balance?uma=${uma}`,
           {
             method: "GET",
             credentials: "include",
