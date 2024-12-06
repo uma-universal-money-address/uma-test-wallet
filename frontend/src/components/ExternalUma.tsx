@@ -15,7 +15,7 @@ export const ExternalUma = ({
       onClick={onClick}
       className="flex flex-row gap-[14px] align-start w-full"
     >
-      <SandboxAvatar externalUma={uma} size={48} />
+      <SandboxAvatar externalUma={uma} size="lg" />
       <div className="flex flex-row items-center justify-center h-full gap-[6px]">
         <span className="text-primary text-[15px] font-normal leading-[20px] tracking-[-0.187px]">
           {uma}

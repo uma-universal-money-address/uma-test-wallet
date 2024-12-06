@@ -31,7 +31,7 @@ export const Contact = (props: Props) => {
       onTouchEnd={handleUnpress}
       onMouseLeave={handleUnpress}
     >
-      <SandboxAvatar size={48} />
+      <SandboxAvatar size="lg" />
       <div className="flex flex-col gap-1 overflow-hidden">
         <span className="text-[#18181b] text-base font-semibold leading-[21px] tracking-[-0.2px]">
           {props.contactInfo.name}

@@ -9,6 +9,12 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      backgroundImage: {
+        shine: `
+          linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.04) 100%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.00) 100%)
+        `,
+      },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",

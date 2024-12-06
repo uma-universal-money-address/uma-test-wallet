@@ -1,7 +1,7 @@
 import enum
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 from sqlalchemy import ForeignKey, Integer, String, Enum
-from typing import Optional
+from typing import Optional, Dict, Any
 from vasp.models.Base import Base
 from typing import TYPE_CHECKING
 from vasp.utils import generate_uuid
@@ -43,6 +43,17 @@ class Wallet(Base):
     )
     uma: Mapped["Uma"] = relationship(back_populates="wallet")
     currency: Mapped["Currency"] = relationship(back_populates="wallet")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "amount_in_lowest_denom": self.amount_in_lowest_denom,
+            "color": self.color.value,
+            "device_token": self.device_token,
+            "uma_id": self.uma.id,
+            "currency_id": self.currency.id,
+        }
 
     def __repr__(self) -> str:
         return f"Wallet(id={self.id!r}, user_id={self.user.id}, uma_username:{self.uma.username} amount_in_lowest_denom={self.amount_in_lowest_denom!r})"

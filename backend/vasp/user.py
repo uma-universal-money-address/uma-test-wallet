@@ -216,6 +216,30 @@ def construct_blueprint(
     def umas() -> Response:
         return jsonify({"umas": [uma.to_dict() for uma in current_user.umas]})
 
+    @bp.get("/wallets")
+    @login_required
+    def wallets() -> Response:
+        with Session(db.engine) as db_session:
+            wallets = db_session.scalars(
+                select(Wallet).where(Wallet.user_id == current_user.id)
+            ).all()
+
+            return jsonify(
+                {
+                    "wallets": [
+                        {
+                            "id": wallet.id,
+                            "amount_in_lowest_denom": wallet.amount_in_lowest_denom,
+                            "color": wallet.color.value,
+                            "device_token": wallet.device_token,
+                            "uma": wallet.uma.to_dict(),
+                            "currency": wallet.currency.to_dict(),
+                        }
+                        for wallet in wallets
+                    ]
+                }
+            )
+
     @bp.get("/transactions")
     @login_required
     def transactions() -> Response:
