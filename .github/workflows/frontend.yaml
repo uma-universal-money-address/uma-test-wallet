@@ -1,0 +1,97 @@
+name: Frontend
+
+on:
+  pull_request:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend.yaml"
+  merge_group:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend.yaml"
+  push:
+    branches:
+      - main
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend.yaml"
+
+jobs:
+  update-lock-file:
+    if: github.head_ref != 'changeset-release/main'
+    name: "Update lock file for PRs before checks and build"
+    permissions:
+      contents: write
+    runs-on: "ubuntu-22.04"
+    outputs:
+      VERIFIED_LOCK_COMMIT: ${{ steps.sync-lock-file.outputs.VERIFIED_LOCK_COMMIT }}
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v3"
+        with:
+          # use branch name instead of triggering ref so we can commit to the PR branch:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 2
+      - name: "Setup Node"
+        uses: "actions/setup-node@v3"
+        env:
+          SKIP_YARN_COREPACK_CHECK: true
+        with:
+          node-version-file: "./frontend/.nvmrc"
+
+      - name: "Install dependencies with yarn cache"
+        uses: ./.github/actions/yarn-install
+        with:
+          cwd: "./frontend"
+          install-mode: "update-lock-only"
+          cache-prefix: lock-file
+
+      - name: "Commit and push changes if modified"
+        id: sync-lock-file
+        run: |
+          if [[ $(git rev-parse --abbrev-ref HEAD) == "main" ]] && ! git diff-index --quiet HEAD; then
+            echo "Lock file must not be modified by CI on main branch."
+            exit 1;
+          fi
+
+          git config --global user.name 'UMA CI'
+          git config --global user.email 'uma-ci@uma.me'
+          git add -A
+          git diff-index --quiet HEAD || git commit -nm "CI update lock file for PR"
+          git push
+          echo "$(git rev-parse HEAD)"
+          echo "VERIFIED_LOCK_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+  lint-and-format:
+    # Wait to see if the lock file should be updated before running checks:
+    needs: "update-lock-file"
+    name: "Check lint and format"
+    runs-on: "ubuntu-22.04"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v3"
+        with:
+          ref: ${{ needs.update-lock-file.outputs.VERIFIED_LOCK_COMMIT }}
+
+      - name: "Setup Node"
+        uses: "actions/setup-node@v3"
+        env:
+          SKIP_YARN_COREPACK_CHECK: true
+        with:
+          node-version-file: "./frontend/.nvmrc"
+
+      - name: "Install dependencies with yarn cache"
+        uses: ./.github/actions/yarn-install
+        with:
+          cwd: "./frontend"
+          install-mode: "install-prevent-lock-update"
+          cache-prefix: lint-and-format
+
+      - run: "yarn lint"
+        working-directory: "./frontend"
+
+      - run: "yarn format"
+        working-directory: "./frontend"
+
+      - run: "yarn build"
+        working-directory: "./frontend"

@@ -1,0 +1,54 @@
+name: Backend
+
+on:
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yaml"
+  merge_group:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yaml"
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yaml"
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: "Setup Python"
+        uses: "actions/setup-python@v4"
+        with:
+          python-version: "3.11"
+          cache: "pipenv"
+          cache-dependency-path: "backend/Pipfile.lock"
+      - name: "Install pipenv"
+        run: "pip install pipenv wheel"
+      - name: "Install dependencies"
+        working-directory: "backend"
+        run: "pipenv install --dev"
+      - name: "Run pyre"
+        working-directory: "backend"
+        run: |
+          set -o pipefail
+          pipenv run pyre | tee >(sed 's, ,:,' | awk -F: '{sub(" ", "", $5); print "::error file=" ENVIRON["PWD"] "/" $1 ",line=" $2 ",col=" $3 ",title=" $4 "::" $5}')
+      - name: "Run ruff"
+        working-directory: "backend"
+        run: "pipenv run ruff check --output-format github ."
+      - name: "Run black"
+        working-directory: "backend"
+        run: |
+          set -o pipefail
+          pipenv run black --check --diff .
+      - name: Run tests
+        working-directory: "backend"
+        run: |
+          PYTHONPATH=. pipenv run pytest
