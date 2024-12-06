@@ -43,6 +43,7 @@ interface RawWallet {
 
 export interface WalletContextData {
   wallets: Wallet[] | undefined;
+  currentWallet: Wallet | undefined;
   error?: string;
   isLoading: boolean;
 }
@@ -55,6 +56,7 @@ export const WalletContextProvider = ({
   children: React.ReactNode;
 }) => {
   const [wallets, setWallets] = useState<Wallet[]>();
+  const [currentWallet, setCurrentWallet] = useState<Wallet>();
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -89,6 +91,25 @@ export const WalletContextProvider = ({
               currency: rawWallet.currency,
             })),
           );
+          const currentWallet =
+            response.wallets.find((wallet) => wallet.uma.default) ||
+            response.wallets[0];
+          if (currentWallet) {
+            setCurrentWallet({
+              id: currentWallet.id,
+              userId: currentWallet.user_id,
+              amountInLowestDenom: currentWallet.amount_in_lowest_denom,
+              color: RAW_WALLET_COLOR_MAPPING[currentWallet.color],
+              deviceToken: currentWallet.device_token,
+              name: currentWallet.name,
+              uma: {
+                userId: currentWallet.uma.user_id,
+                username: currentWallet.uma.username,
+                default: currentWallet.uma.default,
+              },
+              currency: currentWallet.currency,
+            });
+          }
           setIsLoading(false);
         }
       } catch (e: unknown) {
@@ -106,7 +127,7 @@ export const WalletContextProvider = ({
   }, []);
 
   return (
-    <Context.Provider value={{ wallets, error, isLoading }}>
+    <Context.Provider value={{ wallets, currentWallet, error, isLoading }}>
       {children}
     </Context.Provider>
   );

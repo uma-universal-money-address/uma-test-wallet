@@ -2,6 +2,7 @@
 import { useToast } from "@/hooks/use-toast";
 import { useBalance } from "@/hooks/useBalance";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
+import { type Wallet as WalletType } from "@/hooks/useWalletContext";
 import { convertCurrency } from "@/lib/convertCurrency";
 import { convertToNormalDenomination } from "@/lib/convertToNormalDenomination";
 import Image from "next/image";
@@ -11,10 +12,11 @@ import { Skeleton } from "./ui/skeleton";
 
 interface Props {
   uma: string | undefined;
+  wallet: WalletType | undefined;
   isLoading: boolean;
 }
 
-export const Wallet = ({ uma, isLoading }: Props) => {
+export const Wallet = ({ uma, wallet, isLoading }: Props) => {
   const router = useRouter();
   const { toast } = useToast();
   const {
@@ -67,7 +69,13 @@ export const Wallet = ({ uma, isLoading }: Props) => {
   }
 
   return (
-    <div className="flex flex-col text-gray-50 bg-primary gap-6 rounded-3xl shadow-[0px_0px_0px_1px_rgba(0, 0, 0, 0.06), 0px_1px_1px_-0.5px_rgba(0, 0, 0, 0.06), 0px_3px_3px_-1.5px_rgba(0, 0, 0, 0.06), 0px_6px_6px_-3px_rgba(0, 0, 0, 0.06), 0px_12px_12px_-6px_rgba(0, 0, 0, 0.06), 0px_24px_24px_-12px_rgba(0, 0, 0, 0.06);]">
+    <div
+      style={{
+        backgroundColor: wallet ? wallet.color : "rgba(0, 0, 0, 0.3)",
+        transition: "background-color 0.3s",
+      }}
+      className="flex flex-col text-gray-50 gap-6 rounded-3xl shadow-[0px_0px_0px_1px_rgba(0, 0, 0, 0.06), 0px_1px_1px_-0.5px_rgba(0, 0, 0, 0.06), 0px_3px_3px_-1.5px_rgba(0, 0, 0, 0.06), 0px_6px_6px_-3px_rgba(0, 0, 0, 0.06), 0px_12px_12px_-6px_rgba(0, 0, 0, 0.06), 0px_24px_24px_-12px_rgba(0, 0, 0, 0.06);]"
+    >
       <div className="flex flex-row items-center text-white opacity-50 justify-between pl-8 pr-[22px] pt-[17px]">
         <span className="text-white">Balance</span>
         <Button variant="ghost">
