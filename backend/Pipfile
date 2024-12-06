@@ -10,9 +10,8 @@ python_version = "3.11"
 aiohttp = "*"
 alembic = "*"
 botocore = "*"
-click = "*"
-quart = "*"
-quart-cors = "*"
+flask = {extras = ["async"], version = "*"}
+flask-cors = "*"
 gunicorn = "*"
 lightspark = "*"
 psycopg = {extras = ["binary"], version = "*"}
@@ -25,10 +24,8 @@ alembic-postgresql-enum = "*"
 uma-auth-api = "*"
 bolt11 = "*"
 uma-sdk = "*"
-cffi = "*"
-typing-extensions = "*"
 sqlalchemy = "*"
-aiocache = "*"
+flask-caching = "*"
 
 [dev-packages]
 black = "*"

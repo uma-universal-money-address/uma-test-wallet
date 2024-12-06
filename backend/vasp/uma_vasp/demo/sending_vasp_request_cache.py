@@ -1,6 +1,6 @@
 from typing import List, Optional
 from uuid import uuid4
-from aiocache.base import BaseCache
+from flask_caching import Cache
 
 from lightspark import InvoiceData
 from uma import Currency, LnurlpResponse
@@ -13,7 +13,7 @@ from vasp.uma_vasp.interfaces.sending_vasp_request_cache import (
 
 
 class SendingVaspRequestCache(ISendingVaspRequestCache):
-    def __init__(self, cache: BaseCache) -> None:
+    def __init__(self, cache: Cache) -> None:
         self.cache = cache
 
     def get_lnurlp_response_data(

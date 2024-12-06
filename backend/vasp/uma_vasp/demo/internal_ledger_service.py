@@ -3,7 +3,7 @@ from typing import Any, Dict
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from vasp.db import db
-from quart import session, current_app
+from flask import session
 from vasp.uma_vasp.interfaces.ledger_service import ILedgerService
 from vasp.models.Wallet import Wallet
 from vasp.models.Transaction import Transaction
@@ -92,7 +92,7 @@ def get_wallet(db_session: Session) -> Wallet | None:
 
     # TODO: Repulls the balance from the node. Eventually we can
     # configure webhooks to update the balance in real-time.
-    config = Config.get(current_app.config)
+    config = Config.get()
     host = get_http_host()
     lightspark_client = LightsparkClient(
         api_token_client_id=config.api_token_client_id,

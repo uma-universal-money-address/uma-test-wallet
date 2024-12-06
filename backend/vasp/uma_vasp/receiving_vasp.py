@@ -5,9 +5,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
 import requests
-from quart import Quart, Response, current_app
-from quart import request as quart_request
-from quart import session
+from flask import Flask, Response, current_app, session, request as flask_request
 from lightspark import LightsparkSyncClient as LightsparkClient
 from vasp.utils import get_vasp_domain
 from vasp.uma_vasp.address_helpers import get_domain_from_uma_address
@@ -75,7 +73,7 @@ class ReceivingVasp:
         print(f"Handling LNURLP query for user {username}")
         lnurlp_request: LnurlpRequest
         try:
-            lnurlp_request = parse_lnurlp_request(quart_request.url)
+            lnurlp_request = parse_lnurlp_request(flask_request.url)
         except UnsupportedVersionException as e:
             raise e
         except Exception as e:
@@ -191,9 +189,9 @@ class ReceivingVasp:
         request: PayRequest
         try:
             request_data = (
-                await quart_request.get_data(as_text=True)
-                if quart_request.method == "POST"
-                else json.dumps(quart_request.args)
+                flask_request.get_data(as_text=True)
+                if flask_request.method == "POST"
+                else json.dumps(flask_request.args)
             )
             request = parse_pay_request(request_data)
         except Exception as e:
@@ -325,10 +323,10 @@ class ReceivingVasp:
                 status_code=404,
             )
 
-        quart_request_data = await quart_request.json
-        amount = quart_request_data.get("amount")
+        flask_request_data = await flask_request.json
+        amount = flask_request_data.get("amount")
 
-        currency_code = quart_request_data.get("currency_code")
+        currency_code = flask_request_data.get("currency_code")
         if not currency_code:
             currency_code = "SAT"
         receiver_currencies = [
@@ -386,10 +384,10 @@ class ReceivingVasp:
                 status_code=404,
             )
 
-        quart_request_data = await quart_request.json
-        amount = await quart_request_data.get("amount")
+        flask_request_data = await flask_request.json
+        amount = await flask_request_data.get("amount")
 
-        currency_code = quart_request_data.get("currency_code")
+        currency_code = flask_request_data.get("currency_code")
         if not currency_code:
             currency_code = "SAT"
         receiver_currencies = [
@@ -426,7 +424,7 @@ class ReceivingVasp:
             }
         )
 
-        sender_uma = quart_request_data.get("sender_uma")
+        sender_uma = flask_request_data.get("sender_uma")
         if not sender_uma:
             raise UmaException(
                 "Cannot find sender_uma",
@@ -496,7 +494,7 @@ class LightsparkInvoiceCreator(IUmaInvoiceCreator):
 
 
 def register_routes(
-    app: Quart,
+    app: Flask,
     config: Config,
     lightspark_client: LightsparkClient,
     user_service: IUserService,
@@ -526,7 +524,7 @@ def register_routes(
         receiving_vasp = get_receiving_vasp(user.id)
         return receiving_vasp.handle_lnurlp_request(username)
 
-    @app.route(PAY_REQUEST_CALLBACK + "<user_id>", methods=["POST"])
+    @app.post(PAY_REQUEST_CALLBACK + "<user_id>")
     async def handle_uma_pay_request_callback(user_id: str) -> Dict[str, Any]:
         try:
             user_id_int = int(user_id)
@@ -535,7 +533,7 @@ def register_routes(
         receiving_vasp = get_receiving_vasp(user_id_int)
         return await receiving_vasp.handle_pay_request_callback(user_id_int)
 
-    @app.route(PAY_REQUEST_CALLBACK + "<user_id>", methods=["GET"])
+    @app.get(PAY_REQUEST_CALLBACK + "<user_id>")
     async def handle_lnurl_pay_request_callback(user_id: str) -> Dict[str, Any]:
         try:
             user_id_int = int(user_id)
@@ -544,7 +542,7 @@ def register_routes(
         receiving_vasp = get_receiving_vasp(user_id_int)
         return await receiving_vasp.handle_pay_request_callback(user_id_int)
 
-    @app.route("/api/uma/create_invoice", methods=["POST"])
+    @app.post("/api/uma/create_invoice")
     async def handle_create_uma_invoice() -> str:
         user_id = session.get("user_id")
         user = user_service.get_user_from_id(user_id)
@@ -556,7 +554,7 @@ def register_routes(
         receiving_vasp = get_receiving_vasp(user_id)
         return await receiving_vasp.handle_create_uma_invoice(user_id)
 
-    @app.route("/api/uma/create_and_send_invoice", methods=["POST"])
+    @app.post("/api/uma/create_and_send_invoice")
     async def handle_create_and_send_invoice() -> Response:
         user_id = session.get("user_id")
         user = user_service.get_user_from_id(user_id)

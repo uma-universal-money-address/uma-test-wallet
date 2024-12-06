@@ -1,5 +1,5 @@
 from logging.config import fileConfig
-from quart import Quart, current_app
+from flask import Flask, current_app
 from vasp import create_app
 from vasp.db import db
 import alembic_postgresql_enum  # noqa: F401
@@ -32,7 +32,7 @@ target_metadata: MetaData = Base.metadata
 # ... etc.
 
 
-def get_app() -> Quart:
+def get_app() -> Flask:
     try:
         return current_app._get_current_object()  # noqa: SLF001 # pyre-ignore [16]
     except RuntimeError:

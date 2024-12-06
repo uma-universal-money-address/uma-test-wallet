@@ -3,7 +3,7 @@ from typing import Any, Tuple
 
 import jwt
 from bolt11 import decode as bolt11_decode
-from quart import Blueprint, Response, current_app, jsonify, request, session
+from flask import Blueprint, Response, current_app, jsonify, request, session
 from vasp.uma_vasp.currencies import CURRENCIES
 from lightspark import LightsparkSyncClient
 from lightspark.objects.CurrencyUnit import CurrencyUnit
@@ -271,8 +271,8 @@ class UmaNwcBridge:
 
         return GetInfoResponse(
             alias="UMA Sandbox",
-            pubkey=current_app.config.get("LIGHTSPARK_SIGNING_PUBKEY"),
-            network=current_app.config.get("BITCOIN_NETWORK"),
+            pubkey=self.config.signing_pubkey_hex,
+            network=self.config.bitcoin_network,
             methods=[
                 "pay_invoice",
                 "make_invoice",
@@ -596,7 +596,7 @@ def construct_blueprint(
             print("Invalid token error", e)
             abort_with_error(401, "Unauthorized")
 
-    @bp.route("/balance", methods=["GET"])
+    @bp.get("/balance")
     def balance() -> dict[str, Any]:
         return GetBalanceResponse(
             balance=ledger_service.get_user_balance(),
@@ -608,15 +608,15 @@ def construct_blueprint(
             ),
         ).to_dict()
 
-    @bp.route("/payments", methods=["GET"])
+    @bp.get("/payments")
     def transactions() -> Response:
         return get_nwc_bridge(session["user_id"]).transactions()
 
-    @bp.route("/payments/bolt11", methods=["POST"])
+    @bp.post("/payments/bolt11")
     async def handle_pay_invoice() -> dict[str, Any]:
         return await get_nwc_bridge(session["user_id"]).handle_pay_invoice()
 
-    @bp.route("/invoice", methods=["POST"])
+    @bp.post("/invoice")
     async def handle_create_invoice() -> dict[str, Any]:
         return await get_nwc_bridge(session["user_id"]).handle_create_invoice()
 
@@ -634,15 +634,15 @@ def construct_blueprint(
     def handle_get_quote() -> dict[str, Any]:
         return get_nwc_bridge(session["user_id"]).handle_get_quote()
 
-    @bp.route("/quote/<payment_hash>", methods=["POST"])
+    @bp.post("/quote/<payment_hash>")
     def handle_execute_quote(payment_hash: str) -> dict[str, Any]:
         return get_nwc_bridge(session["user_id"]).handle_execute_quote(payment_hash)
 
-    @bp.route("/payments/lud16", methods=["POST"])
+    @bp.post("/payments/lud16")
     async def handle_pay_address() -> dict[str, Any]:
         return await get_nwc_bridge(session["user_id"]).handle_pay_to_address()
 
-    @bp.route("/payments/keysend", methods=["POST"])
+    @bp.post("/payments/keysend")
     def handle_pay_keysend() -> Tuple[Response, int]:
         # TODO: Implement keysend payments.
         return jsonify({"error": "Keysend Not implemented."}), 501
@@ -651,7 +651,7 @@ def construct_blueprint(
     def handle_info() -> dict[str, Any]:
         return get_nwc_bridge(session["user_id"]).handle_get_info()
 
-    @bp.route("/token", methods=["POST"])
+    @bp.post("/token")
     async def handle_token_exchange() -> Response:
         user_id = session.get("user_id")
         user = User.from_id(user_id)

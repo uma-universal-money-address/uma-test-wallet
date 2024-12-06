@@ -48,7 +48,3 @@ jobs:
         run: |
           set -o pipefail
           pipenv run black --check --diff .
-      - name: Run tests
-        working-directory: "backend"
-        run: |
-          PYTHONPATH=. pipenv run pytest

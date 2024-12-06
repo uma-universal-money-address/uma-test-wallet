@@ -5,10 +5,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import requests
-from quart import Quart, current_app
-from quart import request as quart_request
-from quart import session
-from quart import Response
+from flask import Flask, current_app, session, Response, request as flask_request
 from lightspark import CurrencyUnit
 from lightspark import LightsparkSyncClient as LightsparkClient
 from lightspark import OutgoingPayment, PaymentDirection, TransactionStatus
@@ -108,7 +105,7 @@ class SendingVasp:
             is_subject_to_travel_rule=True,
         )
 
-        if os.environ.get("QUART_ENV") == "development":
+        if os.environ.get("FLASK_ENV") == "development":
             url = url.replace("https://", "http://")
 
         response = requests.get(url, timeout=20)
@@ -229,7 +226,7 @@ class SendingVasp:
 
     def handle_uma_payreq_request(self, callback_uuid: str) -> Dict[str, Any]:
         user_id = session.get("user_id")
-        receiving_currency_code = quart_request.args.get("receivingCurrencyCode", "SAT")
+        receiving_currency_code = flask_request.args.get("receivingCurrencyCode", "SAT")
 
         initial_request_data = self.request_cache.get_lnurlp_response_data(
             callback_uuid
@@ -237,10 +234,10 @@ class SendingVasp:
         if initial_request_data is None:
             abort_with_error(404, f"Cannot find callback UUID {callback_uuid}")
         is_amount_in_msats = (
-            quart_request.args.get("isAmountInMsats", "").lower() == "true"
+            flask_request.args.get("isAmountInMsats", "").lower() == "true"
         )
         amount = self._parse_and_validate_amount(
-            quart_request.args.get("amount", ""),
+            flask_request.args.get("amount", ""),
             "SAT" if is_amount_in_msats else receiving_currency_code,
             initial_request_data.lnurlp_response,
         )
@@ -255,7 +252,7 @@ class SendingVasp:
     async def handle_request_pay_invoice(
         self, user_id: int, invoice: Invoice
     ) -> Response:
-        quart_request_data = await quart_request.json
+        flask_request_data = await flask_request.json
         receiver_uma = invoice.receiver_uma
         receiving_domain = get_domain_from_uma_address(receiver_uma)
         receiver_vasp_pubkey = fetch_public_key_for_vasp(
@@ -271,7 +268,7 @@ class SendingVasp:
             "amount": invoice.amount,
             "receiving_currency_code": invoice.receving_currency.code,
             "receiver_uma": receiver_uma,
-            "invoice_string": quart_request_data.get("invoice"),
+            "invoice_string": flask_request_data.get("invoice"),
         }
         self.uma_request_storage.save_request(invoice.invoice_uuid, info)
 
@@ -280,9 +277,9 @@ class SendingVasp:
         return Response(status=200)
 
     async def handle_pay_invoice(self) -> Dict[str, Any]:
-        quart_request_data = await quart_request.json
+        flask_request_data = await flask_request.json
         user_id = session.get("user_id")
-        invoice_string = quart_request_data.get("invoice")
+        invoice_string = flask_request_data.get("invoice")
         if not invoice_string:
             abort_with_error(400, "Invoice is required.")
 
@@ -879,7 +876,7 @@ def get_sending_vasp(
 
 
 def register_routes(
-    app: Quart,
+    app: Flask,
     config: Config,
     lightspark_client: LightsparkClient,
     user_service: IUserService,
@@ -918,22 +915,22 @@ def register_routes(
         sending_vasp = get_sending_vasp_for_user(user_id)
         return sending_vasp.handle_uma_payreq_request(callback_uuid)
 
-    @app.route("/api/sendpayment/<callback_uuid>", methods=["POST"])
+    @app.post("/api/sendpayment/<callback_uuid>")
     def handle_send_payment(callback_uuid: str) -> Dict[str, Any]:
         user_id = session.get("user_id")
         sending_vasp = get_sending_vasp_for_user(user_id)
         return sending_vasp.handle_send_payment(callback_uuid)
 
-    @app.route("/api/uma/pay_invoice", methods=["POST"])
+    @app.post("/api/uma/pay_invoice")
     async def handle_pay_invoice() -> Dict[str, Any]:
         user_id = session.get("user_id")
         sending_vasp = get_sending_vasp_for_user(user_id)
         return await sending_vasp.handle_pay_invoice()
 
-    @app.route("/api/uma/request_pay_invoice", methods=["POST"])
+    @app.post("/api/uma/request_pay_invoice")
     async def handle_request_pay_invoice() -> Response:
-        quart_request_data = await quart_request.json
-        invoice_string = quart_request_data.get("invoice")
+        flask_request_data = await flask_request.json
+        invoice_string = flask_request_data.get("invoice")
         if not invoice_string:
             abort_with_error(401, "Invoice is required.")
 
@@ -944,7 +941,7 @@ def register_routes(
         sender_uma = (
             invoice.sender_uma
             if invoice.sender_uma is not None
-            else quart_request_data.get("sender")
+            else flask_request_data.get("sender")
         )
 
         if not sender_uma:

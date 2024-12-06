@@ -2,15 +2,22 @@
 
 A VASP implementation for simulating UMA transactions.
 
-## Run the quart server locally
+## Run the flask server locally
 
-Create a `.quartenv` file:
+Create a `.env` file with the following Lightspark environment variables:
 
 ```bash
-QUART_APP=sandbox_vasp
-QUART_DEBUG=True
-QUART_RUN_PORT=8080
-QUART_ENV=development
+LIGHTSPARK_API_TOKEN_CLIENT_ID=
+LIGHTSPARK_API_TOKEN_CLIENT_SECRET=
+BITCOIN_NETWORK="REGTEST"
+LIGHTSPARK_NODE_ID=
+LIGHTSPARK_OSK_NODE_SIGNING_KEY_PASSWORD="1234!@#$"
+LIGHTSPARK_UMA_ENCRYPTION_PUBKEY=
+LIGHTSPARK_UMA_ENCRYPTION_PRIVKEY=
+LIGHTSPARK_UMA_SIGNING_PUBKEY=
+LIGHTSPARK_UMA_SIGNING_PRIVKEY=
+LIGHTSPARK_UMA_ENCRYPTION_CERT_CHAIN=
+LIGHTSPARK_UMA_SIGNING_CERT_CHAIN=
 ```
 
 Install dependencies:
@@ -29,7 +36,7 @@ touch instance/vasp.sqlite
 Run migrations on the db:
 
 ```bash
-QUART_CONFIG="local-dev.py" pipenv run alembic upgrade head
+FLASK_CONFIG="local-dev.py" pipenv run alembic upgrade head
 ```
 
 > The schema is defined with SQLAlchemy ORMs in `vasp/models`
@@ -37,7 +44,7 @@ QUART_CONFIG="local-dev.py" pipenv run alembic upgrade head
 Run the backend:
 
 ```bash
-QUART_CONFIG="local-dev.py" pipenv run quart run
+sh run_backend.sh
 ```
 
 Alternatively you could just run the `run_backend.sh` script which sets all the needed env variables for you

@@ -1,7 +1,7 @@
 import os
-from quart import redirect
+from flask import redirect
 
-is_dev: bool = os.environ.get("QUART_ENV") == "development"
+is_dev: bool = os.environ.get("FLASK_ENV") == "development"
 
 
 def redirect_frontend(path: str) -> None:

@@ -1,5 +1,5 @@
 from typing import Optional
-from quart import session
+from flask import session
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
