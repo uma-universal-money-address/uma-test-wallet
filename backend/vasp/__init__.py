@@ -96,9 +96,10 @@ def create_app() -> Flask:
     nonce_cache: INonceCache = InMemoryNonceCache(datetime.now(timezone.utc))
     uma_request_storage: IRequestStorage = RequestStorage()
 
-    from . import auth, user, currencies
+    from . import auth, user, currencies, uma
 
     app.register_blueprint(auth.bp)
+    app.register_blueprint(uma.bp)
 
     from vasp.uma_vasp import well_known, utxo_callback
 

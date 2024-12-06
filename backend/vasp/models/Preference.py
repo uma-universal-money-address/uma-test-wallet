@@ -3,6 +3,7 @@ from sqlalchemy.orm import Mapped, relationship, mapped_column
 from sqlalchemy import String, ForeignKey, Enum
 from vasp.models.Base import Base
 from typing import TYPE_CHECKING
+from vasp.utils import generate_uuid
 
 if TYPE_CHECKING:
     from vasp.models.User import User
@@ -20,7 +21,7 @@ class PreferenceType(enum.Enum):
 class Preference(Base):
     __tablename__ = "user_preferences"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[str] = mapped_column(primary_key=True, default=generate_uuid)
 
     # User who this preference belongs to.
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))

@@ -2,6 +2,7 @@ from sqlalchemy.orm import Mapped, relationship, mapped_column
 from sqlalchemy import String, ForeignKey
 from vasp.models.Base import Base
 from typing import TYPE_CHECKING
+from vasp.utils import generate_uuid
 
 if TYPE_CHECKING:
     from vasp.models.User import User
@@ -13,7 +14,7 @@ class Currency(Base):
 
     __tablename__ = "currency"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[str] = mapped_column(primary_key=True, default=generate_uuid)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     code: Mapped[str] = mapped_column(String)
 

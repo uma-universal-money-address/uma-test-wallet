@@ -250,7 +250,7 @@ class SendingVasp:
         ).to_json()
 
     async def handle_request_pay_invoice(
-        self, user_id: int, invoice: Invoice
+        self, user_id: str, invoice: Invoice
     ) -> Response:
         flask_request_data = await flask_request.json
         receiver_uma = invoice.receiver_uma
@@ -849,7 +849,6 @@ class SendingVasp:
 
 
 def get_sending_vasp(
-    user_id: int,
     config: Config,
     lightspark_client: LightsparkClient,
     user_service: IUserService,
@@ -888,9 +887,8 @@ def register_routes(
     nonce_cache: INonceCache,
     uma_request_storage: IRequestStorage,
 ) -> None:
-    def get_sending_vasp_for_user(user_id: int) -> SendingVasp:
+    def get_sending_vasp_internal() -> SendingVasp:
         return get_sending_vasp(
-            user_id,
             config=config,
             lightspark_client=lightspark_client,
             user_service=user_service,
@@ -905,26 +903,22 @@ def register_routes(
 
     @app.route("/api/umalookup/<receiver_uma>")
     def handle_uma_lookup(receiver_uma: str) -> Dict[str, Any]:
-        user_id = session.get("user_id")
-        sending_vasp = get_sending_vasp_for_user(user_id)
+        sending_vasp = get_sending_vasp_internal()
         return sending_vasp.handle_uma_lookup(receiver_uma)
 
     @app.route("/api/umapayreq/<callback_uuid>")
     def handle_uma_payreq(callback_uuid: str) -> Dict[str, Any]:
-        user_id = session.get("user_id")
-        sending_vasp = get_sending_vasp_for_user(user_id)
+        sending_vasp = get_sending_vasp_internal()
         return sending_vasp.handle_uma_payreq_request(callback_uuid)
 
     @app.post("/api/sendpayment/<callback_uuid>")
     def handle_send_payment(callback_uuid: str) -> Dict[str, Any]:
-        user_id = session.get("user_id")
-        sending_vasp = get_sending_vasp_for_user(user_id)
+        sending_vasp = get_sending_vasp_internal()
         return sending_vasp.handle_send_payment(callback_uuid)
 
     @app.post("/api/uma/pay_invoice")
     async def handle_pay_invoice() -> Dict[str, Any]:
-        user_id = session.get("user_id")
-        sending_vasp = get_sending_vasp_for_user(user_id)
+        sending_vasp = get_sending_vasp_internal()
         return await sending_vasp.handle_pay_invoice()
 
     @app.post("/api/uma/request_pay_invoice")
@@ -955,10 +949,10 @@ def register_routes(
         if not user:
             abort_with_error(401, "Unauthorized")
 
-        sending_vasp = get_sending_vasp_for_user(user.id)
+        sending_vasp = get_sending_vasp_internal()
         return await sending_vasp.handle_request_pay_invoice(user.id, invoice)
 
     @app.route("/api/uma/pending_requests/<user_id>")
     def handle_get_pending_requests(user_id: int) -> Dict[str, Any]:
-        sending_vasp = get_sending_vasp_for_user(user_id)
+        sending_vasp = get_sending_vasp_internal()
         return sending_vasp.get_pending_uma_requests()

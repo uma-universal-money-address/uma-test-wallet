@@ -23,7 +23,7 @@ class SendingVaspPayReqData:
     utxo_callback: str
     invoice_data: InvoiceData
     sender_currencies: List[Currency]
-    sending_user_id: int
+    sending_user_id: str
     receiving_node_pubkey: Optional[str]
     receiver_uma: str
     uma_invoice_uuid: Optional[str] = None
@@ -61,7 +61,7 @@ class ISendingVaspRequestCache(ABC):
         utxo_callback: str,
         invoice_data: InvoiceData,
         sender_currencies: List[Currency],
-        sending_user_id: int,
+        sending_user_id: str,
         receiving_node_pubkey: Optional[str],
         receiver_uma: str,
     ) -> str:

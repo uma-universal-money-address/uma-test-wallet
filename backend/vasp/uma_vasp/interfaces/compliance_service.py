@@ -46,7 +46,7 @@ class IComplianceService(ABC):
     @abstractmethod
     def get_travel_rule_info_for_transaction(
         self,
-        sending_user_id: int,
+        sending_user_id: str,
         sending_uma_address: str,
         receiving_uma_address: str,
         amount_msats: int,

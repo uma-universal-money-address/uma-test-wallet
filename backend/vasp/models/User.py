@@ -9,12 +9,13 @@ from vasp.models.Wallet import Wallet
 from vasp.models.Preference import Preference
 from typing import List
 from uma import KycStatus
+from vasp.utils import generate_uuid
 
 
 class User(Base):
     __tablename__ = "user"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[str] = mapped_column(primary_key=True, default=generate_uuid)
     google_id: Mapped[Optional[str]] = mapped_column(String)
     phone_number: Mapped[Optional[str]] = mapped_column(String)
     webauthn_id: Mapped[Optional[str]] = mapped_column(String)
