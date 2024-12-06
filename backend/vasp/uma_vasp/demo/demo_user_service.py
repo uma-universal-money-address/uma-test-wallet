@@ -7,6 +7,7 @@ from vasp.db import db
 from vasp.uma_vasp.user import User
 from vasp.uma_vasp.interfaces.user_service import IUserService
 from vasp.models.Currency import Currency
+from vasp.models.Wallet import Wallet
 
 from typing import TYPE_CHECKING
 
@@ -27,5 +28,5 @@ class DemoUserService(IUserService):
     def get_currency_preferences_for_user(self) -> list[Currency]:
         with Session(db.engine) as db_session:
             return db_session.scalars(
-                select(Currency).where(Currency.user_id == current_user.id)
+                select(Currency).join(Wallet).where(Wallet.user_id == current_user.id)
             ).all()

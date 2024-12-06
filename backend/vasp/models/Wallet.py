@@ -9,6 +9,7 @@ from vasp.utils import generate_uuid
 if TYPE_CHECKING:
     from vasp.models.User import User
     from vasp.models.Uma import Uma
+    from vasp.models.Currency import Currency
 
 """Stores user wallet information."""
 
@@ -37,8 +38,11 @@ class Wallet(Base):
 
     device_token: Mapped[Optional[str]] = mapped_column(String)
 
-    user: Mapped["User"] = relationship(back_populates="wallet", foreign_keys=[user_id])
+    user: Mapped["User"] = relationship(
+        back_populates="wallets", foreign_keys=[user_id]
+    )
     uma: Mapped["Uma"] = relationship(back_populates="wallet")
+    currency: Mapped["Currency"] = relationship(back_populates="wallet")
 
     def __repr__(self) -> str:
         return f"Wallet(id={self.id!r}, user_id={self.user.id}, uma_username:{self.uma.username} amount_in_lowest_denom={self.amount_in_lowest_denom!r})"

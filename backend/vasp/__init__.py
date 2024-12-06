@@ -63,10 +63,13 @@ def create_app() -> Flask:
     app.config["REMEMBER_COOKIE_SECURE"] = True
 
     if app.config.get("FLASK_ENV") == "development":
-        app.config["REMEMBER_COOKIE_SAMESITE"] = "None"  # Only for local testing
+        app.config["REMEMBER_COOKIE_SAMESITE"] = (
+            "None; Secure"  # Only for local testing
+        )
 
     login_manager = LoginManager()
     login_manager.init_app(app)
+    login_manager.login_view = "auth.login_redirect"
 
     @login_manager.user_loader
     def load_user(user_id: str) -> Optional[User]:
@@ -74,7 +77,7 @@ def create_app() -> Flask:
 
     CORS(
         app,
-        origins=["https://localhost:3000"],
+        origins=["http://localhost:3000"],
         allow_headers=["access-control-allow-origin", "Content-Type"],
         supports_credentials=True,
     )

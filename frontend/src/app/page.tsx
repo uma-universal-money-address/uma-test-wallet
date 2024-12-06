@@ -1,6 +1,5 @@
 "use client";
 import { UmaInput } from "@/components/UmaInput";
-import { useUma } from "@/hooks/useUma";
 import { checkUmaAvailability, createUma } from "@/lib/uma";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -12,7 +11,6 @@ export default function Home() {
   const [uma, setUma] = useState("");
   const [umaError, setUmaError] = useState<string | undefined>();
   const [umaInputMessage, setUmaInputMessage] = useState<string | undefined>();
-  const { umas: userUmas } = useUma();
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
@@ -44,6 +42,8 @@ export default function Home() {
       if (!succeeded) {
         setUmaError("Failed to create UMA username.");
       }
+
+      router.push(`/wallet`);
     } catch (error) {
       console.error(error);
       setUmaError("Failed to create UMA username.");
@@ -55,12 +55,6 @@ export default function Home() {
       inputRef.current?.focus();
     }, 0);
   });
-
-  useEffect(() => {
-    if (userUmas) {
-      router.push(`/wallet`);
-    }
-  }, [userUmas, router]);
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-inter)]">

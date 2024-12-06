@@ -153,8 +153,8 @@ class SendingVasp:
             lnurlp_response=lnurlp_response, receiver_uma=receiver_uma
         )
         sender_currencies = [
-            self.currency_service.get_uma_currency(currency.code)
-            for currency in current_user.currencies
+            self.currency_service.get_uma_currency(wallet.currency.code)
+            for wallet in current_user.wallets
         ]
 
         return {
@@ -182,8 +182,8 @@ class SendingVasp:
             lnurlp_response=lnurlp_response, receiver_uma=receiver_uma
         )
         sender_currencies = [
-            self.currency_service.get_uma_currency(currency.code)
-            for currency in current_user.currencies
+            self.currency_service.get_uma_currency(wallet.currency.code)
+            for wallet in current_user.wallets
         ]
         return {
             "senderCurrencies": [currency.to_dict() for currency in sender_currencies],
@@ -497,8 +497,8 @@ class SendingVasp:
             abort_with_error(403, "Transaction is not allowed.")
 
         sender_currencies = [
-            self.currency_service.get_uma_currency(currency.code)
-            for currency in user.currencies
+            self.currency_service.get_uma_currency(wallet.currency.code)
+            for wallet in user.wallets
         ]
 
         invoice_data = self.lightspark_client.get_decoded_payment_request(
@@ -544,8 +544,8 @@ class SendingVasp:
         is_amount_in_msats: bool,
     ) -> SendingVaspPayReqResponse:
         sender_currencies = [
-            self.currency_service.get_uma_currency(currency.code)
-            for currency in current_user.currencies
+            self.currency_service.get_uma_currency(wallet.currency.code)
+            for wallet in current_user.wallets
         ]
 
         payreq = create_pay_request(
@@ -664,7 +664,13 @@ class SendingVasp:
         )
         sending_max_fee = round(amount_as_msats * 0.0017)
 
-        if self.ledger_service.get_user_balance() - sending_currency_amount < 0:
+        if (
+            self.ledger_service.get_wallet_balance(
+                current_user.get_default_uma_address()
+            )[0]
+            - sending_currency_amount
+            < 0
+        ):
             abort_with_error(400, "Insufficient balance.")
 
         self._load_signing_key()
@@ -693,9 +699,10 @@ class SendingVasp:
         if payreq_data.utxo_callback:
             self._send_post_tx_callback(payment, payreq_data.utxo_callback)
 
-        self.ledger_service.subtract_user_balance(
+        self.ledger_service.subtract_wallet_balance(
             amount=sending_currency_amount,
             currency_code=sending_currency_code,
+            sender_uma=current_user.get_default_uma_address(),
             receiver_uma=payreq_data.receiver_uma,
         )
 

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 import logging
 
 from typing import Optional
-from flask import Blueprint, current_app, request, redirect
+from flask import Blueprint, current_app, request, redirect, jsonify
 from flask_login import login_user, login_required, logout_user, current_user
 from vasp.redirect import redirect_frontend
 
@@ -16,6 +16,7 @@ from vasp.db import db
 from vasp.models.User import User as UserModel
 from vasp.uma_vasp.uma_exception import abort_with_error
 from vasp.uma_vasp.user import User
+from vasp.models.Wallet import Wallet
 from vasp.models.Currency import Currency
 from vasp.uma_vasp.currencies import CURRENCIES
 import json
@@ -54,7 +55,7 @@ def nwc_login() -> WerkzeugResponse:
 
     with Session(db.engine) as db_session:
         currency = db_session.scalars(
-            select(Currency).where(Currency.user_id == current_user.id)
+            select(Currency).join(Wallet).where(Wallet.user_id == current_user.id)
         ).first()
 
     jwt_private_key = current_app.config.get("NWC_JWT_PRIVKEY")
@@ -108,6 +109,16 @@ def login() -> None:
     redirect_frontend("/")
 
 
+@bp.route("/login/redirect", methods=["GET"])
+async def login_redirect() -> WerkzeugResponse:
+    user = await get_user_for_login()
+    if user:
+        login_user(user)
+        return jsonify({"logged_in": True})
+    else:
+        return jsonify({"logged_in": False})
+
+
 @bp.route("/logout")
 @login_required
 def logout() -> None:
@@ -137,4 +148,4 @@ async def get_user_for_login() -> Optional[User]:
 async def gen_resolve_id() -> tuple[str, AuthMethod]:
     # TODO: determine the id and auth method from the request
     logging.debug("TODO: determine the id and auth method from the request")
-    return ("1", AuthMethod.Webauthn)
+    return ("1", AuthMethod.Google)

@@ -3,6 +3,7 @@ from typing import Any, Tuple
 
 import jwt
 from bolt11 import decode as bolt11_decode
+from flask_login import current_user
 from flask import Blueprint, Response, current_app, jsonify, request, session
 from vasp.uma_vasp.currencies import CURRENCIES
 from lightspark import LightsparkSyncClient
@@ -46,6 +47,11 @@ from uma_auth.models.pay_to_address_response import PayToAddressResponse
 from uma_auth.models.get_info_response import GetInfoResponse
 from uma_auth.models.quote import Quote as UmaQuote
 from uma_auth.models.transaction_type import TransactionType
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    current_user: User
 
 
 class UmaNwcBridge:
@@ -132,6 +138,10 @@ class UmaNwcBridge:
         user_id = session.get("user_id")
         if not user_id:
             abort_with_error(401, "Unauthorized")
+        user = User.from_id(user_id)
+        if user is None:
+            abort_with_error(404, f"User {user_id} not found.")
+
         request_json = await request.get_json()
         if not request_json:
             abort_with_error(400, "Request must be JSON")
@@ -173,7 +183,10 @@ class UmaNwcBridge:
         amount_sats = payment.amount.convert_to(
             CurrencyUnit.SATOSHI
         ).preferred_currency_value_rounded
-        self.ledger_service.subtract_user_balance(amount_sats, "SAT", "NWC")
+        default_uma = user.get_default_uma_address()
+        self.ledger_service.subtract_wallet_balance(
+            amount_sats, "SAT", default_uma, "NWC"
+        )
         preimage = payment_result.payment_preimage
         if not preimage:
             abort_with_error(500, "Payment preimage not found.")
@@ -261,11 +274,11 @@ class UmaNwcBridge:
         currencies = (
             [
                 user_currency_to_uma_auth_currency(
-                    self.currency_service.get_uma_currency(currency.code)
+                    self.currency_service.get_uma_currency(wallet.currency.code)
                 )
-                for currency in user.currencies
+                for wallet in user.wallets
             ]
-            if user.currencies
+            if user.wallets
             else []
         )
 
@@ -597,8 +610,9 @@ def construct_blueprint(
 
     @bp.get("/balance")
     def balance() -> dict[str, Any]:
+        default_uma = current_user.get_default_uma_address()
         return GetBalanceResponse(
-            balance=ledger_service.get_user_balance(),
+            balance=ledger_service.get_wallet_balance(uma=default_uma)[0],
             currency=UmaCurrency(
                 code="SAT",
                 symbol=CURRENCIES["SAT"].symbol,

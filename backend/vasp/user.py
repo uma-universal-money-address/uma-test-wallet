@@ -48,8 +48,11 @@ def construct_blueprint(
     @bp.get("/balance")
     @login_required
     def balance() -> Response:
-        balance = ledger_service.get_user_balance()
-        return jsonify(balance)
+        uma = request.args.get("uma")
+        if (uma is None) or (uma == ""):
+            abort_with_error(400, "UMA is required to retrieve balance")
+        balance, currency = ledger_service.get_wallet_balance(uma=uma)
+        return jsonify({"amount_in_lowest_denom": balance, "currency": currency})
 
     @bp.get("/contacts")
     @login_required
@@ -290,54 +293,19 @@ def construct_blueprint(
             response.status_code = 201
             return response
 
-    @bp.route("/currencies", methods=["POST", "GET"])
+    @bp.get("/currencies")
     @login_required
     async def currencies() -> Response:
         user_id = current_user.id
 
         with Session(db.engine) as db_session:
-            if request.method == "GET":
-                currencies = db_session.scalars(
-                    select(Currency).where(Currency.user_id == user_id)
-                ).all()
-                response = [
-                    currency_service.get_uma_currency(currency.code)
-                    for currency in currencies
-                ]
-                return jsonify(response)
-
-            # For POST requests:
-            if not request.is_json:
-                abort_with_error(400, "Request is not in JSON format.")
-
-            request_json = await request.json
-            for currency_code in request_json:
-                currency = db_session.scalars(
-                    select(Currency).where(
-                        Currency.user_id == user_id,
-                        Currency.code == currency_code,
-                    )
-                ).first()
-
-                if not currency:
-                    currency = Currency(
-                        user_id=user_id,
-                        code=currency_code,
-                    )
-                    db_session.add(currency)
-
-            # remove any currencies not in the request
             currencies = db_session.scalars(
-                select(Currency).where(Currency.user_id == user_id)
+                select(Currency).join(Wallet).where(Wallet.user_id == user_id)
             ).all()
-            for currency in currencies:
-                if currency.code not in request_json:
-                    db_session.delete(currency)
-
-            db_session.commit()
-
-            response = jsonify(request_json)
-            response.status_code = 201
-            return response
+            response = [
+                currency_service.get_uma_currency(currency.code)
+                for currency in currencies
+            ]
+            return jsonify(response)
 
     return bp
