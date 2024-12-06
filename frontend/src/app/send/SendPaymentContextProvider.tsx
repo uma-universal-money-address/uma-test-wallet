@@ -11,6 +11,7 @@ export enum SendPaymentStep {
 
 export interface SendPaymentContextData {
   step: SendPaymentStep;
+  senderUma: string;
   receiverUma: string;
   umaLookupResponse?: UmaLookupResponse;
   umaPayreqResponse?: UmaPayreqResponse;
@@ -39,13 +40,16 @@ const STEP_MAPPING: Record<SendPaymentStep, SendPaymentStep | undefined> = {
 const FIRST_STEP = SendPaymentStep.SelectRecipient;
 
 function SendPaymentContextProvider({
+  senderUma,
   children,
 }: {
+  senderUma: string;
   children: React.ReactNode;
 }) {
   const { toast } = useToast();
   const [data, setData] = useState<SendPaymentContextData>({
     step: FIRST_STEP,
+    senderUma,
     receiverUma: "",
     amount: 0,
     history: [],

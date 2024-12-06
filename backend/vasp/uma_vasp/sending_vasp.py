@@ -11,7 +11,7 @@ from lightspark import CurrencyUnit
 from lightspark import LightsparkSyncClient as LightsparkClient
 from lightspark import OutgoingPayment, PaymentDirection, TransactionStatus
 from lightspark.utils.currency_amount import amount_as_msats
-from vasp.utils import get_vasp_domain
+from vasp.utils import get_vasp_domain, is_valid_uma
 from vasp.uma_vasp.address_helpers import get_domain_from_uma_address
 from vasp.uma_vasp.config import Config
 from vasp.uma_vasp.interfaces.compliance_service import IComplianceService
@@ -90,12 +90,15 @@ class SendingVasp:
         self.uma_request_storage = uma_request_storage
 
     def handle_uma_lookup(self, receiver_uma: str) -> Dict[str, Any]:
-        if not current_user:
-            abort_with_error(403, "Unauthorized")
+        sender_uma = flask_request.args.get("senderUma")
+        if sender_uma and not is_valid_uma(sender_uma):
+            abort_with_error(400, "Invalid sender UMA address.")
+        elif not sender_uma:
+            sender_uma = current_user.get_default_uma_address()
 
         if not self.compliance_service.should_accept_transaction_to_vasp(
             receiving_vasp_domain=get_domain_from_uma_address(receiver_uma),
-            sending_uma_address=current_user.get_default_uma_address(),
+            sending_uma_address=sender_uma,
             receiving_uma_address=receiver_uma,
         ):
             abort_with_error(
@@ -132,7 +135,9 @@ class SendingVasp:
 
         if not lnurlp_response.is_uma_response():
             print("Handling as regular LNURLP response.")
-            return self._handle_as_non_uma_lnurl_response(lnurlp_response, receiver_uma)
+            return self._handle_as_non_uma_lnurl_response(
+                lnurlp_response, sender_uma, receiver_uma
+            )
 
         receiver_vasp_pubkey = fetch_public_key_for_vasp(
             vasp_domain=get_domain_from_uma_address(receiver_uma),
@@ -150,7 +155,9 @@ class SendingVasp:
                 abort_with_error(424, f"Error verifying LNURLP response signature: {e}")
 
         callback_uuid = self.request_cache.save_lnurlp_response_data(
-            lnurlp_response=lnurlp_response, receiver_uma=receiver_uma
+            lnurlp_response=lnurlp_response,
+            sender_uma=sender_uma,
+            receiver_uma=receiver_uma,
         )
         sender_currencies = self.currency_service.get_uma_currencies_for_user(
             current_user.get_id()
@@ -175,10 +182,12 @@ class SendingVasp:
         }
 
     def _handle_as_non_uma_lnurl_response(
-        self, lnurlp_response: LnurlpResponse, receiver_uma: str
+        self, lnurlp_response: LnurlpResponse, sender_uma: str, receiver_uma: str
     ) -> Dict[str, Any]:
         callback_uuid = self.request_cache.save_lnurlp_response_data(
-            lnurlp_response=lnurlp_response, receiver_uma=receiver_uma
+            lnurlp_response=lnurlp_response,
+            sender_uma=sender_uma,
+            receiver_uma=receiver_uma,
         )
         sender_currencies = self.currency_service.get_uma_currencies_for_user(
             current_user.get_id()
@@ -268,7 +277,7 @@ class SendingVasp:
         return Response(status=200)
 
     async def handle_pay_invoice(self) -> Dict[str, Any]:
-        flask_request_data = await flask_request.json
+        flask_request_data = flask_request.json
         invoice_string = flask_request_data.get("invoice")
         if not invoice_string:
             abort_with_error(400, "Invoice is required.")
@@ -301,6 +310,7 @@ class SendingVasp:
         highest_version = select_highest_supported_version(major_versions)
 
         return self._handle_internal_uma_payreq(
+            sender_uma=flask_request_data.get("senderUma"),
             receiver_uma=receiver_uma,
             callback=invoice.callback,
             amount=invoice.amount,
@@ -347,10 +357,12 @@ class SendingVasp:
                 is_amount_in_msats,
             )
 
+        sender_uma = initial_request_data.sender_uma
         receiver_uma = initial_request_data.receiver_uma
         callback = initial_request_data.lnurlp_response.callback
         uma_version = initial_request_data.lnurlp_response.uma_version
         return self._handle_internal_uma_payreq(
+            sender_uma,
             receiver_uma,
             callback,
             amount,
@@ -362,6 +374,7 @@ class SendingVasp:
 
     def _handle_internal_uma_payreq(
         self,
+        sender_uma: str,
         receiver_uma: str,
         callback: str,
         amount: int,
@@ -386,11 +399,11 @@ class SendingVasp:
         payer_compliance = create_compliance_payer_data(
             receiver_encryption_pubkey=receiver_vasp_pubkey.get_encryption_pubkey(),
             signing_private_key=self.config.get_signing_privkey(),
-            payer_identifier=user.get_default_uma_address(),
+            payer_identifier=sender_uma,
             payer_kyc_status=user.kyc_status,
             travel_rule_info=self.compliance_service.get_travel_rule_info_for_transaction(
                 sending_user_id=user.id,
-                sending_uma_address=user.get_default_uma_address(),
+                sending_uma_address=sender_uma,
                 receiving_uma_address=receiver_uma,
                 amount_msats=round(amount * receiving_currency.millisatoshi_per_unit),
             ),
@@ -417,7 +430,7 @@ class SendingVasp:
             receiving_currency_code=receiving_currency.code,
             is_amount_in_receiving_currency=not is_amount_in_msats,
             amount=amount,
-            payer_identifier=user.get_default_uma_address(),
+            payer_identifier=sender_uma,
             payer_name=user.full_name,
             payer_email=user.email_address,
             payer_compliance=payer_compliance,
@@ -466,7 +479,7 @@ class SendingVasp:
                             f"Payreq response payee data identifier does not match expected receiver UMA: {payee_data_identifier} != {receiver_uma}",
                         )
                     verify_pay_req_response_signature(
-                        user.get_default_uma_address(),
+                        sender_uma,
                         payee_data_identifier,
                         payreq_response,
                         receiver_vasp_pubkey,
@@ -474,7 +487,7 @@ class SendingVasp:
                     )
                 else:
                     verify_pay_req_response_signature(
-                        user.get_default_uma_address(),
+                        sender_uma,
                         receiver_uma,
                         payreq_response,
                         receiver_vasp_pubkey,
@@ -485,7 +498,7 @@ class SendingVasp:
 
         payment_info = none_throws(payreq_response.payment_info)
         if not self.compliance_service.pre_screen_transaction(
-            sending_uma_address=user.get_default_uma_address(),
+            sending_uma_address=sender_uma,
             receiving_uma_address=receiver_uma,
             amount_msats=round(amount * payment_info.multiplier)
             + payment_info.exchange_fees_msats,
@@ -508,6 +521,7 @@ class SendingVasp:
             sender_currencies=sender_currencies,
             sending_user_id=user.id,
             receiving_node_pubkey=compliance.node_pubkey,
+            sender_uma=sender_uma,
             receiver_uma=receiver_uma,
         )
 
@@ -546,7 +560,7 @@ class SendingVasp:
             receiving_currency_code=receiving_currency_code,
             is_amount_in_receiving_currency=not is_amount_in_msats,
             amount=amount,
-            payer_identifier=current_user.get_default_uma_address(),
+            payer_identifier=initial_request_data.sender_uma,
             payer_name=None,
             payer_email=None,
             payer_compliance=None,
@@ -583,6 +597,7 @@ class SendingVasp:
             sending_user_id=current_user.id,
             receiving_node_pubkey=None,
             exchange_fees_msats=0,
+            sender_uma=initial_request_data.sender_uma,
             receiver_uma=initial_request_data.receiver_uma,
         )
 
@@ -626,6 +641,8 @@ class SendingVasp:
         if payreq_data.sending_user_id != current_user.id:
             abort_with_error(403, "You are not authorized to send this payment.")
 
+        sender_uma = payreq_data.sender_uma
+
         uma_invoice_uuid = payreq_data.uma_invoice_uuid
         if uma_invoice_uuid:
             self.uma_request_storage.delete_request(uma_invoice_uuid)
@@ -641,7 +658,7 @@ class SendingVasp:
         ).preferred_currency_value_rounded
 
         wallet_balance, wallet_currency_code = self.ledger_service.get_wallet_balance(
-            current_user.get_default_uma_address()
+            sender_uma
         )
         sending_currency_code = payreq_data.sender_currencies[0].code
         if sending_currency_code != wallet_currency_code:
@@ -687,7 +704,7 @@ class SendingVasp:
         self.ledger_service.subtract_wallet_balance(
             amount=sending_currency_amount,
             currency_code=sending_currency_code,
-            sender_uma=current_user.get_default_uma_address(),
+            sender_uma=sender_uma,
             receiver_uma=payreq_data.receiver_uma,
         )
 
@@ -902,7 +919,7 @@ def register_routes(
     @app.post("/api/uma/request_pay_invoice")
     @login_required
     async def handle_request_pay_invoice() -> Response:
-        flask_request_data = await flask_request.json
+        flask_request_data = flask_request.json
         invoice_string = flask_request_data.get("invoice")
         if not invoice_string:
             abort_with_error(401, "Invoice is required.")

@@ -33,9 +33,6 @@ export const Contact = (props: Props) => {
     >
       <SandboxAvatar size="lg" />
       <div className="flex flex-col gap-1 overflow-hidden">
-        <span className="text-[#18181b] text-base font-semibold leading-[21px] tracking-[-0.2px]">
-          {props.contactInfo.name}
-        </span>
         <span className="text-secondary text-[15px] font-normal leading-[20px] tracking-[-0.187px] truncate">
           {props.contactInfo.uma}
         </span>

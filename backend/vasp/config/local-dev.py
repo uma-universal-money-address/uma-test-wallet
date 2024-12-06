@@ -4,7 +4,7 @@ DATABASE_URI: str = "sqlite+pysqlite:///" + os.path.join(
     os.getcwd(), "instance", "vasp.sqlite"
 )
 
-VASP_DOMAIN: str = "local:5000"
+VASP_DOMAIN: str = "localhost:5000"
 
 NWC_SERVER_DOMAIN: str = "localhost:8080"
 NWC_JWT_PUBKEY = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEEVs/o5+uQbTjL3chynL4wXgUg2R9\nq9UU8I5mEovUf86QZ7kOBIjJwqnzD1omageEHWwHdBO6B+dFabmdT9POxg==\n-----END PUBLIC KEY-----"

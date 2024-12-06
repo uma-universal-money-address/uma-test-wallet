@@ -1,9 +1,7 @@
 "use client";
 import { useToast } from "@/hooks/use-toast";
-import { useUma } from "@/hooks/useUmaContext";
-import { getUmaFromUsername } from "@/lib/uma";
 import { type UmaLookupResponse } from "@/types/UmaLookupResponse";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
 import { Confirm } from "./Confirm";
 import { EnterAmount } from "./EnterAmount";
@@ -25,18 +23,16 @@ export default function Page() {
 
 function PageContent() {
   const { toast } = useToast();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const {
     step,
+    senderUma,
     isLoading,
     setStep,
     setIsLoading,
     setUmaLookupResponse,
     setUmaPayreqResponse,
   } = useSendPaymentContext();
-  const { umas, isLoading: isLoadingUmas, error: umasError } = useUma();
-  const defaultUma = umas.find((uma) => uma.default);
 
   useEffect(() => {
     const uma = searchParams.get("uma");
@@ -48,7 +44,7 @@ function PageContent() {
 
         let umaLookupResponse: UmaLookupResponse;
         try {
-          umaLookupResponse = await lnurlpLookup(uma);
+          umaLookupResponse = await lnurlpLookup(senderUma, uma);
           setUmaLookupResponse(umaLookupResponse);
         } catch (e: unknown) {
           const error = e as Error;
@@ -78,6 +74,7 @@ function PageContent() {
     })();
   }, [
     searchParams,
+    senderUma,
     setStep,
     setIsLoading,
     setUmaLookupResponse,
@@ -94,15 +91,7 @@ function PageContent() {
       content = <EnterAmount />;
       break;
     case SendPaymentStep.Confirm:
-      if (defaultUma) {
-        content = <Confirm uma={getUmaFromUsername(defaultUma.username)} />;
-      } else if (umasError) {
-        toast({
-          title: `Failed to fetch user uma: ${umasError}`,
-          variant: "error",
-        });
-        router.push("/wallet");
-      }
+      content = <Confirm />;
       break;
     default:
       throw new Error(`Unknown step`);
@@ -110,7 +99,7 @@ function PageContent() {
 
   return (
     <>
-      {(isLoading || isLoadingUmas) && <LoadingOverlay />}
+      {isLoading && <LoadingOverlay />}
       <div className="flex flex-col h-full w-full overflow-y-scroll">
         {content}
       </div>

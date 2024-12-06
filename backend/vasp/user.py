@@ -1,7 +1,6 @@
 from typing import Dict
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from sqlalchemy.sql import or_
 import base64
 
 
@@ -9,10 +8,11 @@ from flask import Blueprint, Response, request, jsonify
 from flask_login import current_user, login_required
 
 from vasp.db import db
+from vasp.utils import get_uma_from_username
 from vasp.models.User import User as UserModel
 from vasp.models.Wallet import Wallet
-from vasp.models.Uma import Uma
 from vasp.models.Currency import Currency
+from vasp.models.Uma import Uma
 from vasp.uma_vasp.uma_exception import abort_with_error
 from vasp.uma_vasp.user import User
 from vasp.models.Preference import Preference, PreferenceType
@@ -40,6 +40,21 @@ def construct_blueprint(
     currency_service: ICurrencyService,
 ) -> Blueprint:
     bp = Blueprint("user", __name__, url_prefix="/user")
+
+    @bp.get("/")
+    @login_required
+    def get_user() -> Response:
+        return jsonify(
+            {
+                "id": current_user.id,
+                "google_id": current_user.google_id,
+                "phone_number": current_user.phone_number,
+                "webauthn_id": current_user.webauthn_id,
+                "kyc_status": current_user.kyc_status.value,
+                "email_address": current_user.email_address,
+                "full_name": current_user.full_name,
+            }
+        )
 
     @bp.get("/id")
     @login_required
@@ -70,17 +85,13 @@ def construct_blueprint(
     def contacts() -> Response:
         # TODO: get contacts from past transactions
         with Session(db.engine) as db_session:
-            user_models = db_session.scalars(
-                select(UserModel).where(UserModel.id != current_user.id)
-            ).all()
-            users = [User.from_model(user_model) for user_model in user_models]
+            uma_models = db_session.scalars(select(Uma)).all()
             response = [
                 {
-                    "id": str(user.id),
-                    "name": user.full_name,
-                    "uma": user.get_default_uma_address(),
+                    "id": uma_model.id,
+                    "uma": get_uma_from_username(uma_model.username),
                 }
-                for user in users
+                for uma_model in uma_models
             ]
             return jsonify(response)
 
@@ -148,7 +159,7 @@ def construct_blueprint(
             if request.method == "GET":
                 return jsonify({"full_name": user_model.full_name})
             else:
-                request_json = await request.json
+                request_json = request.json
                 user_model.full_name = request_json.get("full_name")
                 db_session.commit()
                 response = jsonify({"full_name": user_model.full_name})
@@ -165,51 +176,22 @@ def construct_blueprint(
             if wallet is None:
                 abort_with_error(404, f"Wallet for {current_user.id} not found.")
 
-            request_json = await request.json
+            request_json = request.json
             wallet.device_token = request_json.get("device_token")
             db_session.commit()
             response = jsonify({"device_token": wallet.device_token})
             response.status_code = 201
             return response
 
-    @bp.route("/uma", methods=["GET", "POST"])
+    @bp.get("/uma")
     @login_required
     async def uma() -> Response:
         user_id = current_user.id
 
-        if request.method == "GET":
-            user = User.from_id(user_id)
-            if user is None:
-                abort_with_error(404, f"User {user_id} not found.")
-            return jsonify({"uma": user.get_default_uma_address()})
-        else:
-            with Session(db.engine) as db_session:
-                user_model = db_session.scalars(
-                    select(UserModel).where(UserModel.id == user_id)
-                ).first()
-                if user_model is None:
-                    abort_with_error(404, f"User {user_id} not found.")
-
-                request_json = await request.json
-                # Set the default UMA to False for all UMAs if the new UMA is default
-                if request_json.get("default"):
-                    uma_models = db_session.scalars(
-                        select(Uma).where(Uma.user_id == user_id, Uma.default)
-                    ).all()
-
-                    for uma_model in uma_models:
-                        uma_model.default = False
-
-                # Create a new UMA for the user
-                uma = Uma(
-                    user_id=user_id,
-                    username=request_json.get("uma_user_name"),
-                    default=request_json.get("default") or False,
-                )
-
-                db_session.commit()
-
-                return jsonify({"uma": uma})
+        user = User.from_id(user_id)
+        if user is None:
+            abort_with_error(404, f"User {user_id} not found.")
+        return jsonify({"uma": user.get_default_uma_address()})
 
     @bp.get("/umas")
     @login_required
@@ -243,26 +225,26 @@ def construct_blueprint(
     @bp.get("/transactions")
     @login_required
     def transactions() -> Response:
+        uma = request.args.get("uma")
+        if uma is None:
+            abort_with_error(400, "UMA is required to retrieve transactions.")
+
         with Session(db.engine) as db_session:
             # TODO: Add pagination
+            # Only returns transactions sent by current user and for the provided uma
             transactions = db_session.scalars(
-                select(Transaction)
-                .where(
-                    or_(
-                        Transaction.sender_uma
-                        == current_user.get_default_uma_address(),
-                        Transaction.receiver_uma
-                        == current_user.get_default_uma_address(),
-                    )
+                select(Transaction).where(
+                    Transaction.user_id == current_user.id,
+                    Transaction.sender_uma == uma,
                 )
-                .order_by(Transaction.created_at.desc())
-                .limit(20)
-            ).all()
+            )
+
             if not transactions:
                 return jsonify([])
 
             response = [
                 {
+                    "id": transaction.id,
                     "amountInLowestDenom": (
                         transaction.amount_in_lowest_denom
                         if transaction.user_id == current_user.id
@@ -295,7 +277,7 @@ def construct_blueprint(
             if not request.is_json:
                 abort_with_error(400, "Request is not in JSON format.")
 
-            request_json = await request.json
+            request_json = request.json
             # Check if valid PreferenceType
             for preference_type in request_json.keys():
                 if preference_type.upper() not in [e.value for e in PreferenceType]:

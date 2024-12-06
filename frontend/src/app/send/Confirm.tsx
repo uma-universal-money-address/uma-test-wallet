@@ -10,18 +10,21 @@ import { Footer } from "./Footer";
 import { useSendPaymentContext } from "./SendPaymentContextProvider";
 import { sendPayment } from "./umaRequests";
 
-export const Confirm = ({ uma }: { uma: string }) => {
+export const Confirm = () => {
   const { toast } = useToast();
   const router = useRouter();
   const {
     umaLookupResponse,
     umaPayreqResponse,
+    senderUma,
     receiverUma,
     isLoading,
     setError,
     setIsLoading,
   } = useSendPaymentContext();
-  const { balance, isLoading: isLoadingBalance } = useBalance({ uma });
+  const { balance, isLoading: isLoadingBalance } = useBalance({
+    uma: senderUma,
+  });
 
   assert(umaLookupResponse);
   assert(umaPayreqResponse);
@@ -45,7 +48,7 @@ export const Confirm = ({ uma }: { uma: string }) => {
     }
 
     toast({
-      title: `You paid ${uma}`,
+      title: `You paid ${receiverUma}`,
     });
 
     // Navigate back to the wallet page

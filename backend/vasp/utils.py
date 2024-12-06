@@ -37,3 +37,14 @@ def cert_gen(
 
 def generate_uuid() -> str:
     return str(uuid4())
+
+
+def is_valid_uma(uma: str) -> bool:
+    # Check if UMA starts with $, has characters between $ and @, and has domain
+    return bool(
+        uma.startswith("$") and uma[1 : uma.index("@")] and uma[uma.index("@") + 1 :]
+    )
+
+
+def get_uma_from_username(username: str) -> str:
+    return f"${username}@{get_vasp_domain()}"

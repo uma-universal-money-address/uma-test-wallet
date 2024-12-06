@@ -11,6 +11,7 @@ class SendingVaspInitialRequestData:
     """This is the data that we cache for the initial Lnurlp request."""
 
     lnurlp_response: LnurlpResponse
+    sender_uma: str
     receiver_uma: str
 
 
@@ -25,6 +26,7 @@ class SendingVaspPayReqData:
     sender_currencies: List[Currency]
     sending_user_id: str
     receiving_node_pubkey: Optional[str]
+    sender_uma: str
     receiver_uma: str
     uma_invoice_uuid: Optional[str] = None
 
@@ -49,6 +51,7 @@ class ISendingVaspRequestCache(ABC):
     def save_lnurlp_response_data(
         self,
         lnurlp_response: LnurlpResponse,
+        sender_uma: str,
         receiver_uma: str,
     ) -> str:
         pass
@@ -63,6 +66,7 @@ class ISendingVaspRequestCache(ABC):
         sender_currencies: List[Currency],
         sending_user_id: str,
         receiving_node_pubkey: Optional[str],
+        sender_uma: str,
         receiver_uma: str,
     ) -> str:
         pass

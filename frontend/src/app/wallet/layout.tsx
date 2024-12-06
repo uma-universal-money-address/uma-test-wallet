@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UmaSwitcherFooter } from "@/components/UmaSwitcherFooter";
 import { useToast } from "@/hooks/use-toast";
+import { useAppState } from "@/hooks/useAppState";
 import UmaContextProvider, { useUma } from "@/hooks/useUmaContext";
 import WalletContextProvider, { useWallets } from "@/hooks/useWalletContext";
 import { getUmaFromUsername } from "@/lib/uma";
@@ -22,20 +23,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
 const LayoutContent = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
-  const { umas, isLoading: isLoadingUmas, error: umasError } = useUma();
-  const defaultUma = umas.find((uma) => uma.default);
+  const { isLoading: isLoadingUmas, error: umasError } = useUma();
   const {
     wallets,
     isLoading: isLoadingWallets,
     error: walletsError,
   } = useWallets();
+  const { currentWallet } = useAppState();
 
   const handleCopy = () => {
     if (isLoadingUmas || isLoadingWallets) {
       return;
     }
 
-    navigator.clipboard.writeText(getUmaFromUsername(defaultUma!.username));
+    navigator.clipboard.writeText(
+      getUmaFromUsername(currentWallet!.uma.username),
+    );
     toast({
       title: "Copied to clipboard",
     });
@@ -56,10 +59,10 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
       <div className="flex items-center justify-between px-4 py-[3px]">
         <div className="flex items-center">
           <span className="text-primary text-[15px] font-semibold leading-5 tracking-[-0.187px]">
-            {isLoadingUmas || isLoadingWallets || !defaultUma ? (
+            {isLoadingUmas || isLoadingWallets || !currentWallet ? (
               <Skeleton className="w-[200px] h-[15px] rounded-full" />
             ) : (
-              getUmaFromUsername(defaultUma.username)
+              getUmaFromUsername(currentWallet.uma.username)
             )}
           </span>
         </div>
@@ -85,7 +88,10 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
       <main className="flex-1 overflow-y-auto">{children}</main>
       {wallets && wallets.length > 0 && (
         <div className="pt-2 px-4 pb-3 border-[#EBEEF2] border">
-          <UmaSwitcherFooter wallets={wallets} />
+          <UmaSwitcherFooter
+            wallets={wallets || []}
+            isLoading={isLoadingWallets || !currentWallet}
+          />
         </div>
       )}
     </div>

@@ -17,6 +17,7 @@ const isUmaFormat = (uma: string) => {
 
 export const SelectRecipient = () => {
   const {
+    senderUma,
     onNext,
     setReceiverUma,
     setUmaLookupResponse,
@@ -48,6 +49,7 @@ export const SelectRecipient = () => {
     ) {
       setIsLoadingSearchResults(true);
       lnurlpLookup(
+        senderUma,
         `${customReceiverUma.startsWith("$") ? "" : "$"}${customReceiverUma}`,
       )
         .then((response) => {
@@ -62,7 +64,7 @@ export const SelectRecipient = () => {
           setIsLoadingSearchResults(false);
         });
     }
-  }, [customReceiverUma, contacts]);
+  }, [customReceiverUma, contacts, senderUma]);
 
   useDebounce(searchUma, [customReceiverUma], 1000);
 
@@ -97,7 +99,7 @@ export const SelectRecipient = () => {
     setError(null);
     setIsLoading(true);
     try {
-      const umaLookupResponse = await lnurlpLookup(uma);
+      const umaLookupResponse = await lnurlpLookup(senderUma, uma);
       setUmaLookupResponse(umaLookupResponse);
       setIsLoading(false);
     } catch (e: unknown) {
@@ -180,15 +182,17 @@ export const SelectRecipient = () => {
       </>
     );
   } else {
-    restOfContacts = contacts?.map((contact) => {
-      return (
-        <Contact
-          key={contact.uma}
-          contactInfo={contact}
-          onClick={() => handleChooseUma(contact.uma)}
-        />
-      );
-    });
+    restOfContacts = contacts
+      ?.filter((contact) => contact.uma !== senderUma)
+      .map((contact) => {
+        return (
+          <Contact
+            key={contact.uma}
+            contactInfo={contact}
+            onClick={() => handleChooseUma(contact.uma)}
+          />
+        );
+      });
   }
 
   return (

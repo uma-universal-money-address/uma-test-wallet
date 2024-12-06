@@ -94,7 +94,7 @@ const TransactionRow = ({
       <div className="flex flex-col gap-[2px] justify-center grow">
         <div className="flex flex-row justify-between gap-2">
           <span className="text-primary text-[15px] font-medium leading-[20px] tracking-[-0.187px]">
-            {transaction.name}
+            {transaction.otherUma}
           </span>
           {amount}
         </div>
@@ -151,7 +151,7 @@ export const TransactionTable = () => {
   } else {
     transactionRows = transactions?.map((transaction) => (
       <TransactionRow
-        key={transaction.createdAt}
+        key={transaction.id}
         transaction={transaction}
         exchangeRates={exchangeRates!}
         wallets={wallets || []}

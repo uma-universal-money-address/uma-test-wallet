@@ -6,12 +6,18 @@ import {
   type UmaPayreqResponse,
 } from "@/types/UmaPayreqResponse";
 
-export const lnurlpLookup = async (uma: string): Promise<UmaLookupResponse> => {
-  const lookupRes = await fetch(`${getBackendUrl()}/api/umalookup/${uma}`, {
-    method: "GET",
-    cache: "no-store",
-    credentials: "include",
-  }).then((res) => res.json() as Promise<UmaLookupResponse>);
+export const lnurlpLookup = async (
+  senderUma: string,
+  receiverUma: string,
+): Promise<UmaLookupResponse> => {
+  const lookupRes = await fetch(
+    `${getBackendUrl()}/api/umalookup/${receiverUma}?senderUma=${senderUma}`,
+    {
+      method: "GET",
+      cache: "no-store",
+      credentials: "include",
+    },
+  ).then((res) => res.json() as Promise<UmaLookupResponse>);
   console.log("lookupRes", lookupRes);
 
   if (!lookupRes.callbackUuid) {
