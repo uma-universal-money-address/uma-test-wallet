@@ -1,6 +1,9 @@
 "use client";
+import { SandboxButton } from "@/components/SandboxButton";
 import { UmaInput } from "@/components/UmaInput";
+import { getBackendUrl } from "@/lib/backendUrl";
 import { checkUmaAvailability, createUma } from "@/lib/uma";
+import { startRegistration } from "@simplewebauthn/browser";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -11,6 +14,7 @@ export default function Home() {
   const [uma, setUma] = useState("");
   const [umaError, setUmaError] = useState<string | undefined>();
   const [umaInputMessage, setUmaInputMessage] = useState<string | undefined>();
+  const [isLoadingRegister, setIsLoadingRegister] = useState(false);
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
@@ -47,6 +51,45 @@ export default function Home() {
     } catch (error) {
       console.error(error);
       setUmaError("Failed to create UMA username.");
+    }
+  };
+
+  const handleRegister = async () => {
+    setIsLoadingRegister(true);
+    try {
+      const optionsRes = await fetch(
+        `${getBackendUrl()}/auth/webauthn_options`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+      const options = await optionsRes.json();
+      const attResp = await startRegistration({ optionsJSON: options });
+      const verificationRes = await fetch(
+        `${getBackendUrl()}/auth/webauthn_register`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(attResp),
+        },
+      );
+      const verification = await verificationRes.json();
+      if (verification.success) {
+        router.push(`/wallet`);
+      } else {
+        console.error("Failed to register with WebAuthn.");
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoadingRegister(false);
     }
   };
 
@@ -91,6 +134,16 @@ export default function Home() {
           before="$"
           after="@test.uma.me"
         />
+
+        <SandboxButton
+          loading={isLoadingRegister}
+          buttonProps={{
+            className: "w-full",
+            onClick: handleRegister,
+          }}
+        >
+          <span>Register</span>
+        </SandboxButton>
 
         <div className="flex gap-4 items-center flex-col sm:flex-row">
           <a

@@ -12,7 +12,6 @@ export default function Page() {
   const { toast } = useToast();
   const { isLoading: isLoadingWallets, error } = useWallets();
   const currentWallet = useAppState((state) => state.currentWallet);
-  console.log("currentWallet wallet", currentWallet);
 
   useEffect(() => {
     if (error) {

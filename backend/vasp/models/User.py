@@ -6,6 +6,7 @@ from vasp.models.Transaction import Transaction
 from vasp.models.Uma import Uma
 from vasp.models.Wallet import Wallet
 from vasp.models.Preference import Preference
+from vasp.models.WebAuthnCredential import WebAuthnCredential
 from typing import List
 from uma import KycStatus
 from vasp.utils import generate_uuid
@@ -17,7 +18,9 @@ class User(Base):
     id: Mapped[str] = mapped_column(primary_key=True, default=generate_uuid)
     google_id: Mapped[Optional[str]] = mapped_column(String)
     phone_number: Mapped[Optional[str]] = mapped_column(String)
-    webauthn_id: Mapped[Optional[str]] = mapped_column(String)
+    webauthn_credentials: Mapped[List["WebAuthnCredential"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan", lazy=True
+    )
     kyc_status: Mapped[KycStatus] = mapped_column(Enum(KycStatus))
     email_address: Mapped[Optional[str]] = mapped_column(String)
     full_name: Mapped[Optional[str]] = mapped_column(String)

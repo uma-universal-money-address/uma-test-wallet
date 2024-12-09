@@ -11,6 +11,7 @@ from vasp.db import db
 from vasp.models.Uma import Uma as UmaModel
 from vasp.models.User import User as UserModel
 from vasp.models.Wallet import Wallet
+from vasp.models.WebAuthnCredential import WebAuthnCredential
 from vasp.uma_vasp.uma_exception import UmaException
 
 
@@ -26,7 +27,7 @@ class User(UserMixin):
     id: str
     google_id: Optional[str]
     phone_number: Optional[str]
-    webauthn_id: Optional[str]
+    webauthn_credentials: Optional[List["WebAuthnCredential"]]
     umas: List["UmaModel"]
     kyc_status: KycStatus
     email_address: Optional[str]
@@ -58,7 +59,7 @@ class User(UserMixin):
             id=user_model.id,
             google_id=user_model.google_id,
             phone_number=user_model.phone_number,
-            webauthn_id=user_model.webauthn_id,
+            webauthn_credentials=user_model.webauthn_credentials,
             umas=user_model.umas,
             kyc_status=KycStatus(user_model.kyc_status),
             email_address=user_model.email_address,
@@ -76,7 +77,7 @@ class User(UserMixin):
                     id=user_model.id,
                     google_id=user_model.google_id,
                     phone_number=user_model.phone_number,
-                    webauthn_id=user_model.webauthn_id,
+                    webauthn_credentials=user_model.webauthn_credentials,
                     umas=user_model.umas,
                     kyc_status=user_model.kyc_status,
                     email_address=user_model.email_address,
