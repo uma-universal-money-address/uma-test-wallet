@@ -3,12 +3,22 @@
 import json
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
+import logging
 import requests
 from flask import Flask, Response, current_app, request as flask_request
 from flask_login import current_user, login_required
-from lightspark import LightsparkSyncClient as LightsparkClient
-from vasp.utils import get_vasp_domain
+from lightspark import (
+    LightsparkSyncClient as LightsparkClient,
+    webhooks,
+    LightningTransaction,
+    TransactionStatus,
+    IncomingPayment,
+)
+from vasp.db import db
+from vasp.utils import get_vasp_domain, get_username_from_uma
 from vasp.uma_vasp.address_helpers import get_domain_from_uma_address
 from vasp.uma_vasp.config import Config
 from vasp.uma_vasp.interfaces.compliance_service import IComplianceService
@@ -21,6 +31,8 @@ from vasp.uma_vasp.currencies import CURRENCIES
 from vasp.uma_vasp.lightspark_helpers import get_node
 from vasp.uma_vasp.uma_exception import UmaException, abort_with_error
 from vasp.uma_vasp.user import User
+from vasp.models.Transaction import Transaction
+from vasp.models.Uma import Uma
 from uma import (
     INonceCache,
     InvoiceCurrency,
@@ -52,6 +64,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     current_user: User
 
+log: logging.Logger = logging.getLogger(__name__)
 
 PAY_REQUEST_CALLBACK = "/api/uma/payreq/"
 
@@ -556,3 +569,86 @@ def register_routes(
     async def handle_create_and_send_invoice() -> Response:
         receiving_vasp = get_receiving_vasp()
         return await receiving_vasp.create_and_send_invoice(current_user.id)
+
+    @app.post("/webhooks/transaction")
+    async def handle_post_transaction() -> Response:
+        signature_header = flask_request.headers.get(webhooks.SIGNATURE_HEADER)
+        if not signature_header:
+            abort_with_error(400, "Missing signature header")
+
+        event = webhooks.WebhookEvent.verify_and_parse(
+            flask_request.data,
+            signature_header,
+            config.webhook_signing_key,
+        )
+        if event.event_type == webhooks.WebhookEventType.PAYMENT_FINISHED:
+            payment = lightspark_client.get_entity(
+                event.entity_id, LightningTransaction
+            )
+            if not payment:
+                abort_with_error(500, f"Cannot find payment {event.entity_id}")
+
+            if payment.status == TransactionStatus.SUCCESS and isinstance(
+                payment, IncomingPayment
+            ):
+                transaction_hash = payment.transaction_hash
+
+                if not payment.is_uma:
+                    logging.info(
+                        f"Received non-UMA payment, transaction_hash: {transaction_hash}"
+                    )
+                    return Response(status=200)
+                if not transaction_hash:
+                    abort_with_error(
+                        500,
+                        f"Cannot find transaction_hash for payment {payment.id}",
+                    )
+
+                with Session(db.engine) as db_session:
+                    # TODO: Should cache transaction and uma data in receiving_vasp and retrieve here instead of looking for sender transaction. Otherwise, we don't necessarily know the umas if the payment was sent from an external uma.
+                    transaction = db_session.scalars(
+                        select(Transaction).where(
+                            Transaction.transaction_hash == transaction_hash
+                        )
+                    ).first()
+                    if not transaction:
+                        abort_with_error(
+                            500,
+                            f"Cannot find transaction for transaction_hash: {transaction_hash}",
+                        )
+
+                    user = user_service.get_user_from_uma(transaction.receiver_uma)
+                    if not user:
+                        abort_with_error(
+                            500,
+                            f"Cannot find user for receiver_uma: {transaction.receiver_uma}",
+                        )
+
+                    receiving_transaction = db_session.scalars(
+                        select(Transaction)
+                        .join(Uma)
+                        .where(
+                            Uma.username
+                            == get_username_from_uma(transaction.receiver_uma)
+                        )
+                        .where(Transaction.transaction_hash == transaction_hash)
+                    ).first()
+                    if receiving_transaction:
+                        logging.info(
+                            f"Already received payment for user {user.id}, transaction_hash: {transaction_hash}"
+                        )
+                        return Response(status=200)
+
+                    ledger_service.add_wallet_balance(
+                        transaction_hash=transaction_hash,
+                        amount=-transaction.amount_in_lowest_denom,
+                        currency_code=transaction.currency_code,
+                        sender_uma=transaction.sender_uma,
+                        receiver_uma=transaction.receiver_uma,
+                    )
+
+                    logging.info(
+                        f"Received payment for user {user.id}, transaction_hash: {transaction_hash}"
+                    )
+
+        return Response(status=200)

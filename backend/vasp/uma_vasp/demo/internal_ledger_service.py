@@ -3,7 +3,6 @@ from typing import Any, Dict
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from vasp.db import db
-from flask_login import current_user
 from vasp.uma_vasp.interfaces.ledger_service import ILedgerService
 from vasp.models.Wallet import Wallet
 from vasp.models.Uma import Uma
@@ -26,7 +25,12 @@ class InternalLedgerService(ILedgerService):
 
     # This method is used to add balance to the wallet of the receiver_uma
     def add_wallet_balance(
-        self, amount: int, currency_code: str, sender_uma: str, receiver_uma: str
+        self,
+        transaction_hash: str,
+        amount: int,
+        currency_code: str,
+        sender_uma: str,
+        receiver_uma: str,
     ) -> int:
         if amount < 0:
             raise ValueError("Amount must be positive")
@@ -38,7 +42,9 @@ class InternalLedgerService(ILedgerService):
 
             # Add a transaction
             transaction = Transaction(
-                user_id=current_user.id,
+                user_id=wallet.user_id,
+                uma_id=wallet.uma.id,
+                transaction_hash=transaction_hash,
                 amount_in_lowest_denom=amount,
                 currency_code=currency_code,
                 sender_uma=sender_uma,
@@ -51,7 +57,12 @@ class InternalLedgerService(ILedgerService):
 
     # This method is used to subtract balance from the wallet of the sender_uma
     def subtract_wallet_balance(
-        self, amount: int, currency_code: str, sender_uma: str, receiver_uma: str
+        self,
+        transaction_hash: str,
+        amount: int,
+        currency_code: str,
+        sender_uma: str,
+        receiver_uma: str,
     ) -> int:
         if amount <= 0:
             raise ValueError("Amount must be positive")
@@ -65,7 +76,9 @@ class InternalLedgerService(ILedgerService):
 
             # Add a transaction
             transaction = Transaction(
-                user_id=current_user.id,
+                user_id=wallet.user_id,
+                uma_id=wallet.uma.id,
+                transaction_hash=transaction_hash,
                 amount_in_lowest_denom=-amount,
                 currency_code=currency_code,
                 sender_uma=sender_uma,

@@ -48,3 +48,14 @@ def is_valid_uma(uma: str) -> bool:
 
 def get_uma_from_username(username: str) -> str:
     return f"${username}@{get_vasp_domain()}"
+
+
+def get_username_from_uma(uma: str) -> str:
+    # Remove $ from uma if it exists
+    if uma.startswith("$"):
+        uma = uma[1:]
+    # Remove anything after @ from uma
+    if "@" in uma:
+        uma = uma.split("@")[0]
+
+    return uma

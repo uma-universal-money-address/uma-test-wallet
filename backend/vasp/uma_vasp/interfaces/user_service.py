@@ -7,7 +7,7 @@ from vasp.uma_vasp.user import User
 
 class IUserService(ABC):
     @abstractmethod
-    def get_user_from_uma(self, uma_user_name: str) -> Optional[User]:
+    def get_user_from_uma(self, uma: str) -> Optional[User]:
         pass
 
     @abstractmethod
