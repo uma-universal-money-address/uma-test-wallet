@@ -2,6 +2,7 @@ from typing import Optional
 
 from vasp.uma_vasp.user import User
 from vasp.uma_vasp.interfaces.user_service import IUserService
+from vasp.utils import get_username_from_uma
 
 from typing import TYPE_CHECKING
 
@@ -10,10 +11,9 @@ if TYPE_CHECKING:
 
 
 class DemoUserService(IUserService):
-    def get_user_from_uma(self, uma_user_name: str) -> Optional[User]:
-        # Remove $ from uma_user_name
-        if uma_user_name.startswith("$"):
-            uma_user_name = uma_user_name[1:]
+    def get_user_from_uma(self, uma: str) -> Optional[User]:
+        uma_user_name = get_username_from_uma(uma)
+
         return User.from_model_uma(uma_user_name)
 
     def get_user_from_id(self, user_id: str) -> Optional[User]:

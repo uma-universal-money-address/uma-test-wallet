@@ -8,6 +8,7 @@ from vasp.utils import generate_uuid
 
 if TYPE_CHECKING:
     from vasp.models.User import User
+    from vasp.models.Uma import Uma
 
 """Stores transaction information."""
 
@@ -20,6 +21,12 @@ class Transaction(Base):
     # User who either sent or received the transaction.
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
 
+    # UMA who either sent or received the transaction.
+    uma_id: Mapped[int] = mapped_column(ForeignKey("uma.id"))
+
+    # Transaction hash used to identify received payments
+    transaction_hash: Mapped[str] = mapped_column(String)
+
     # Amount in the lowest denomination of the currency, e.g. 1234 for $12.34
     amount_in_lowest_denom: Mapped[int] = mapped_column(Integer)
     currency_code: Mapped[str] = mapped_column(String)
@@ -30,6 +37,7 @@ class Transaction(Base):
     receiver_uma: Mapped[str] = mapped_column(String)
 
     user: Mapped["User"] = relationship(back_populates="transactions")
+    uma: Mapped["Uma"] = relationship(back_populates="transactions")
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

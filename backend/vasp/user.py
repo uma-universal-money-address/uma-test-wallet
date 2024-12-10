@@ -8,7 +8,7 @@ from flask import Blueprint, Response, request, jsonify
 from flask_login import current_user, login_required
 
 from vasp.db import db
-from vasp.utils import get_uma_from_username
+from vasp.utils import get_uma_from_username, get_username_from_uma
 from vasp.models.User import User as UserModel
 from vasp.models.Wallet import Wallet
 from vasp.models.Currency import Currency
@@ -233,11 +233,11 @@ def construct_blueprint(
             # TODO: Add pagination
             # Only returns transactions sent by current user and for the provided uma
             transactions = db_session.scalars(
-                select(Transaction).where(
-                    Transaction.user_id == current_user.id,
-                    Transaction.sender_uma == uma,
-                )
-            )
+                select(Transaction)
+                .join(Uma)
+                .where(Transaction.user_id == current_user.id)
+                .where(Uma.username == get_username_from_uma(uma))
+            ).all()
 
             if not transactions:
                 return jsonify([])

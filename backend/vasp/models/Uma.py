@@ -1,12 +1,13 @@
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 from sqlalchemy import ForeignKey, String, Boolean
 from vasp.models.Base import Base
-from typing import TYPE_CHECKING, Dict, Any
+from typing import TYPE_CHECKING, Dict, Any, List
 from vasp.utils import generate_uuid
 
 if TYPE_CHECKING:
     from vasp.models.User import User
     from vasp.models.Wallet import Wallet
+    from vasp.models.Transaction import Transaction
 
 """Stores uma information users."""
 
@@ -23,6 +24,10 @@ class Uma(Base):
     user: Mapped["User"] = relationship(back_populates="umas", foreign_keys=[user_id])
     wallet: Mapped["Wallet"] = relationship(
         back_populates="uma", foreign_keys=[wallet_id]
+    )
+
+    transactions: Mapped[List["Transaction"]] = relationship(
+        back_populates="uma", cascade="all, delete-orphan"
     )
 
     def to_dict(self) -> Dict[str, Any]:

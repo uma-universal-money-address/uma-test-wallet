@@ -15,6 +15,7 @@ class Config:
         return Config(
             api_token_client_id=require_env("LIGHTSPARK_API_TOKEN_CLIENT_ID"),
             api_token_client_secret=require_env("LIGHTSPARK_API_TOKEN_CLIENT_SECRET"),
+            webhook_signing_key=require_env("LIGHTSPARK_WEBHOOK_SIGNING_KEY"),
             node_id=require_env("LIGHTSPARK_NODE_ID"),
             encryption_cert_chain=require_env("LIGHTSPARK_UMA_ENCRYPTION_CERT_CHAIN"),
             encryption_pubkey_hex=require_env("LIGHTSPARK_UMA_ENCRYPTION_PUBKEY"),
@@ -33,6 +34,7 @@ class Config:
         self,
         api_token_client_id: str,
         api_token_client_secret: str,
+        webhook_signing_key: str,
         node_id: str,
         encryption_cert_chain: str,
         encryption_pubkey_hex: str,
@@ -48,6 +50,7 @@ class Config:
     ) -> None:
         self.api_token_client_id = api_token_client_id
         self.api_token_client_secret = api_token_client_secret
+        self.webhook_signing_key = webhook_signing_key
         self.node_id = node_id
         self.encryption_cert_chain = encryption_cert_chain
         self.encryption_pubkey_hex = encryption_pubkey_hex

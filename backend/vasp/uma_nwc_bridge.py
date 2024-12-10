@@ -174,7 +174,8 @@ class UmaNwcBridge:
         if not payment_result:
             abort_with_error(500, "Payment failed.")
         payment = self.sending_vasp.wait_for_payment_completion(payment_result)
-        if payment.status != TransactionStatus.SUCCESS:
+        transaction_hash = payment.transaction_hash
+        if payment.status != TransactionStatus.SUCCESS or not transaction_hash:
             abort_with_error(
                 500,
                 f"Payment failed. {payment.failure_message}",
@@ -185,7 +186,7 @@ class UmaNwcBridge:
         ).preferred_currency_value_rounded
         default_uma = user.get_default_uma_address()
         self.ledger_service.subtract_wallet_balance(
-            amount_sats, "SAT", default_uma, "NWC"
+            transaction_hash, amount_sats, "SAT", default_uma, "NWC"
         )
         preimage = payment_result.payment_preimage
         if not preimage:

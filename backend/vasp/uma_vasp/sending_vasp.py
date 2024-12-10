@@ -685,7 +685,8 @@ class SendingVasp:
         if not payment_result:
             abort_with_error(500, "Payment failed.")
         payment = self.wait_for_payment_completion(payment_result)
-        if payment.status != TransactionStatus.SUCCESS:
+        transaction_hash = payment.transaction_hash
+        if payment.status != TransactionStatus.SUCCESS or not transaction_hash:
             abort_with_error(
                 500,
                 f"Payment failed. Payment ID: {payment.id} {payment.status}",
@@ -702,6 +703,7 @@ class SendingVasp:
             self._send_post_tx_callback(payment, payreq_data.utxo_callback)
 
         self.ledger_service.subtract_wallet_balance(
+            transaction_hash=transaction_hash,
             amount=sending_currency_amount,
             currency_code=sending_currency_code,
             sender_uma=sender_uma,

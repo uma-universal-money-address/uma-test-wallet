@@ -49,10 +49,13 @@ class WebauthnLoginData(TypedDict):
 
 is_dev: bool = os.environ.get("FLASK_ENV") == "development"
 
-WEBAUTHN_EXPECTED_RP_ID: str = "localhost" if is_dev else get_vasp_domain()
-WEBAUTHN_EXPECTED_ORIGIN: str = (
-    "http://localhost:3000" if is_dev else f"https://{get_vasp_domain()}"
-)
+
+def get_webauthn_expected_rp_id() -> str:
+    return "localhost" if is_dev else get_vasp_domain()
+
+
+def get_webauthn_expected_origin() -> str:
+    return "http://localhost:3000" if is_dev else f"https://{get_vasp_domain()}"
 
 
 def construct_blueprint(
@@ -180,7 +183,7 @@ def construct_blueprint(
     @login_required
     def webauthn_options() -> str:
         public_credential_creation_options = webauthn.generate_registration_options(
-            rp_id=WEBAUTHN_EXPECTED_RP_ID,
+            rp_id=get_webauthn_expected_rp_id(),
             rp_name="UMA Sandbox",
             user_id="UMA Sandbox".encode(
                 "utf-8"
@@ -208,8 +211,8 @@ def construct_blueprint(
         auth_verification = webauthn.verify_registration_response(
             credential=request.get_json(),
             expected_challenge=webauthn.base64url_to_bytes(challenge_data.data),
-            expected_origin=WEBAUTHN_EXPECTED_ORIGIN,
-            expected_rp_id=WEBAUTHN_EXPECTED_RP_ID,
+            expected_origin=get_webauthn_expected_origin(),
+            expected_rp_id=get_webauthn_expected_rp_id(),
         )
 
         # Python implementation of base64 encoding will have slightly different symbols, make it a urlsafe base64 encoding
@@ -231,7 +234,7 @@ def construct_blueprint(
     @bp.post("/webauthn_prepare_login")
     def webauthn_prepare_login() -> WerkzeugResponse:
         authentication_options = webauthn.generate_authentication_options(
-            rp_id=WEBAUTHN_EXPECTED_RP_ID,
+            rp_id=get_webauthn_expected_rp_id(),
             allow_credentials=[],  # Allow any credential
             timeout=60000,
         )
@@ -287,8 +290,8 @@ def construct_blueprint(
                 webauthn.verify_authentication_response(
                     credential=credential,
                     expected_challenge=challenge_data.data.encode(),
-                    expected_origin=WEBAUTHN_EXPECTED_ORIGIN,
-                    expected_rp_id=WEBAUTHN_EXPECTED_RP_ID,
+                    expected_origin=get_webauthn_expected_origin(),
+                    expected_rp_id=get_webauthn_expected_rp_id(),
                     credential_public_key=credential_model.credential_public_key,
                     credential_current_sign_count=0,  # Not used
                 )

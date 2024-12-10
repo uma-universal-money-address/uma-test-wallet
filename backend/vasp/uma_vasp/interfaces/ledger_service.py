@@ -8,12 +8,22 @@ class ILedgerService(ABC):
 
     @abstractmethod
     def add_wallet_balance(
-        self, amount: int, currency_code: str, sender_uma: str, receiver_uma: str
+        self,
+        transaction_hash: str,
+        amount: int,
+        currency_code: str,
+        sender_uma: str,
+        receiver_uma: str,
     ) -> int:
         pass
 
     @abstractmethod
     def subtract_wallet_balance(
-        self, amount: int, currency_code: str, sender_uma: str, receiver_uma: str
+        self,
+        transaction_hash: str,
+        amount: int,
+        currency_code: str,
+        sender_uma: str,
+        receiver_uma: str,
     ) -> int:
         pass
