@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from typing import List
 from flask import Blueprint, request, Response, jsonify
-from flask_login import login_user
+from flask_login import login_user, current_user
 
 from vasp.db import db
 from vasp.models.Uma import Uma as UmaModel
@@ -17,6 +17,11 @@ from vasp.user import DEFAULT_PREFERENCES
 from vasp.uma_vasp.user import User
 from vasp.models.Currency import Currency
 from uma import KycStatus
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    current_user: User
 
 log: logging.Logger = logging.getLogger(__name__)
 
@@ -36,23 +41,43 @@ def register_uma(
                 error = f"UMA {uma_user_name} is already registered."
                 abort_with_error(400, error)
             else:
-                new_user = UserModel(
-                    id=str(uuid4()),
-                    kyc_status=kyc_status.value,
-                )
+
+                if current_user.is_authenticated:
+                    existing_user = db_session.scalars(
+                        select(UserModel).where(UserModel.id == current_user.id)
+                    ).first()
+
+                    # Set the default UMA to False for all UMAs if the new UMA is default
+                    uma_models = db_session.scalars(
+                        select(UmaModel).where(
+                            UmaModel.user_id == current_user.id, UmaModel.default
+                        )
+                    ).all()
+
+                    for uma_model in uma_models:
+                        uma_model.default = False
+
+                    user = existing_user
+                else:
+                    user = UserModel(
+                        id=str(uuid4()),
+                        kyc_status=kyc_status.value,
+                    )
+                    db_session.add(user)
+
                 new_wallet = WalletModel(
                     id=str(uuid4()),
-                    user_id=new_user.id,
+                    user_id=user.id,
                     amount_in_lowest_denom=8000,
                     color=Color.ONE,
                 )
                 new_uma = UmaModel(
-                    user_id=new_user.id,
+                    user_id=user.id,
                     wallet_id=new_wallet.id,
                     username=uma_user_name,
                     default=True,
                 )
-                db_session.add_all([new_uma, new_wallet, new_user])
+                db_session.add_all([new_uma, new_wallet])
                 db_session.commit()
 
                 for currency in currencies:
@@ -62,14 +87,14 @@ def register_uma(
 
                 for preference_type, value in DEFAULT_PREFERENCES.items():
                     preference = Preference(
-                        user_id=new_user.id,
+                        user_id=user.id,
                         preference_type=preference_type,
                         value=value,
                     )
                     db_session.add(preference)
                 db_session.commit()
 
-                return User.from_model(new_user)
+                return User.from_model(user)
         except exc.SQLAlchemyError as err:
             error = f"Error registering user {uma_user_name}: {err}"
             abort_with_error(500, error)
@@ -86,10 +111,14 @@ def create_uma() -> Response:
     # Default to verified for the purpose of this demo app
     kyc_status = KycStatus.VERIFIED
 
-    user = register_uma(uma_user_name, currencies, kyc_status)
+    user = register_uma(
+        uma_user_name=uma_user_name,
+        currencies=currencies,
+        kyc_status=kyc_status,
+    )
     login_user(user, remember=True)
 
-    return jsonify({"user_id": user.id})
+    return jsonify({"success": True})
 
 
 @bp.get("/<uma_user_name>")

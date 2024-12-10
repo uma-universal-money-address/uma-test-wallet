@@ -1,42 +1,35 @@
 import { getBackendUrl } from "@/lib/backendUrl";
 import { useEffect, useState } from "react";
 
-export interface ContactInfo {
-  userId: string;
-  uma: string;
+export interface RawLoggedIn {
+  logged_in: boolean;
 }
 
-interface RawContactInfo {
-  id: string;
-  uma: string;
+export interface LoggedIn {
+  loggedIn: boolean;
 }
 
-export const useContacts = () => {
-  const [contacts, setContacts] = useState<ContactInfo[]>();
+export const useLoggedIn = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>();
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    async function fetchContacts() {
+    async function fetchLoggedIn() {
       setIsLoading(true);
       try {
-        const response = await fetch(`${getBackendUrl()}/user/contacts`, {
+        const response = await fetch(`${getBackendUrl()}/auth/logged_in`, {
           method: "GET",
           credentials: "include",
         }).then((res) => {
           if (res.ok) {
-            return res.json() as Promise<RawContactInfo[]>;
+            return res.json() as Promise<RawLoggedIn>;
           } else {
-            throw new Error("Failed to fetch contacts.");
+            throw new Error("Failed to fetch user logged in status.");
           }
         });
         if (!ignore) {
-          setContacts(
-            response.map(({ uma, id }) => ({
-              userId: id,
-              uma,
-            })),
-          );
+          setIsLoggedIn(response.logged_in);
           setIsLoading(false);
         }
       } catch (e: unknown) {
@@ -47,14 +40,14 @@ export const useContacts = () => {
     }
 
     let ignore = false;
-    fetchContacts();
+    fetchLoggedIn();
     return () => {
       ignore = true;
     };
   }, []);
 
   return {
-    contacts,
+    isLoggedIn,
     error,
     isLoading,
   };

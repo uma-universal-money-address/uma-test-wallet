@@ -1,10 +1,12 @@
 import { getBackendUrl } from "@/lib/backendUrl";
 import { getUmaFromUsername } from "@/lib/uma";
 import { useEffect, useState } from "react";
+import { useAppState } from "./useAppState";
 import { useContacts, type ContactInfo } from "./useContacts";
-import { useUma } from "./useUmaContext";
+import { useWallets } from "./useWalletContext";
 
 export interface Transaction {
+  id: string;
   amountInLowestDenom: number;
   currencyCode: string;
   name: string;
@@ -14,6 +16,7 @@ export interface Transaction {
 }
 
 interface RawTransaction {
+  id: string;
   amountInLowestDenom: number;
   currencyCode: string;
   senderUma: string;
@@ -32,9 +35,10 @@ const hydrateTransactions = (
       ? rawTransaction.receiverUma
       : rawTransaction.senderUma;
     const contact = contacts.find((contact) => contact.uma === otherUma);
-    const name = contact ? contact.name : otherUma;
+    const name = otherUma;
     const userId = contact?.userId;
     return {
+      id: rawTransaction.id,
       amountInLowestDenom: rawTransaction.amountInLowestDenom,
       currencyCode: rawTransaction.currencyCode,
       name,
@@ -49,22 +53,24 @@ const hydrateTransactions = (
 
 export function useTransactions() {
   const { contacts, isLoading: isLoadingContacts } = useContacts();
-  const { umas, isLoading: isLoadingUmas } = useUma();
+  const { isLoading: isLoadingWallets } = useWallets();
+  const { currentWallet } = useAppState();
 
   const [transactions, setTransactions] = useState<Transaction[]>();
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const defaultUma = umas.find((uma) => uma.default);
-
   useEffect(() => {
     async function fetchTransactions(contacts: ContactInfo[], uma: string) {
       setIsLoading(true);
       try {
-        const response = await fetch(`${getBackendUrl()}/user/transactions`, {
-          method: "GET",
-          credentials: "include",
-        }).then((res) => {
+        const response = await fetch(
+          `${getBackendUrl()}/user/transactions?uma=${uma}`,
+          {
+            method: "GET",
+            credentials: "include",
+          },
+        ).then((res) => {
           if (res.ok) {
             return res.json() as Promise<RawTransaction[]>;
           } else {
@@ -83,13 +89,16 @@ export function useTransactions() {
     }
 
     let ignore = false;
-    if (contacts && !isLoadingContacts && defaultUma && !isLoadingUmas) {
-      fetchTransactions(contacts, getUmaFromUsername(defaultUma.username));
+    if (contacts && !isLoadingContacts && currentWallet && !isLoadingWallets) {
+      fetchTransactions(
+        contacts,
+        getUmaFromUsername(currentWallet.uma.username),
+      );
     }
     return () => {
       ignore = true;
     };
-  }, [contacts, defaultUma, isLoadingContacts, isLoadingUmas]);
+  }, [contacts, currentWallet, isLoadingContacts, isLoadingWallets]);
 
   return {
     transactions,

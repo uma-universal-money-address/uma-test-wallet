@@ -5,6 +5,7 @@ import {
 } from "@/lib/walletColorMapping";
 import { Currency } from "@/types/Currency";
 import React, { useEffect, useState } from "react";
+import { useAppState } from "./useAppState";
 import { RawUma, Uma } from "./useUmaContext";
 
 export type RawWalletColor =
@@ -21,7 +22,6 @@ export type RawWalletColor =
 
 export interface Wallet {
   id: string;
-  userId: string;
   amountInLowestDenom: number;
   color: WalletColor;
   deviceToken: string;
@@ -32,7 +32,6 @@ export interface Wallet {
 
 interface RawWallet {
   id: string;
-  user_id: string;
   amount_in_lowest_denom: number;
   color: RawWalletColor;
   device_token: string;
@@ -43,7 +42,6 @@ interface RawWallet {
 
 export interface WalletContextData {
   wallets: Wallet[] | undefined;
-  currentWallet: Wallet | undefined;
   error?: string;
   isLoading: boolean;
 }
@@ -56,9 +54,9 @@ export const WalletContextProvider = ({
   children: React.ReactNode;
 }) => {
   const [wallets, setWallets] = useState<Wallet[]>();
-  const [currentWallet, setCurrentWallet] = useState<Wallet>();
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { currentWallet, setCurrentWallet } = useAppState();
 
   useEffect(() => {
     async function fetchWallets() {
@@ -78,7 +76,6 @@ export const WalletContextProvider = ({
           setWallets(
             response.wallets.map((rawWallet) => ({
               id: rawWallet.id,
-              userId: rawWallet.user_id,
               amountInLowestDenom: rawWallet.amount_in_lowest_denom,
               color: RAW_WALLET_COLOR_MAPPING[rawWallet.color],
               deviceToken: rawWallet.device_token,
@@ -91,23 +88,22 @@ export const WalletContextProvider = ({
               currency: rawWallet.currency,
             })),
           );
-          const currentWallet =
+          const defaultWallet =
             response.wallets.find((wallet) => wallet.uma.default) ||
             response.wallets[0];
-          if (currentWallet) {
+          if (!currentWallet) {
             setCurrentWallet({
-              id: currentWallet.id,
-              userId: currentWallet.user_id,
-              amountInLowestDenom: currentWallet.amount_in_lowest_denom,
-              color: RAW_WALLET_COLOR_MAPPING[currentWallet.color],
-              deviceToken: currentWallet.device_token,
-              name: currentWallet.name,
+              id: defaultWallet.id,
+              amountInLowestDenom: defaultWallet.amount_in_lowest_denom,
+              color: RAW_WALLET_COLOR_MAPPING[defaultWallet.color],
+              deviceToken: defaultWallet.device_token,
+              name: defaultWallet.name,
               uma: {
-                userId: currentWallet.uma.user_id,
-                username: currentWallet.uma.username,
-                default: currentWallet.uma.default,
+                userId: defaultWallet.uma.user_id,
+                username: defaultWallet.uma.username,
+                default: defaultWallet.uma.default,
               },
-              currency: currentWallet.currency,
+              currency: defaultWallet.currency,
             });
           }
           setIsLoading(false);
@@ -124,10 +120,16 @@ export const WalletContextProvider = ({
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [currentWallet, setCurrentWallet]);
 
   return (
-    <Context.Provider value={{ wallets, currentWallet, error, isLoading }}>
+    <Context.Provider
+      value={{
+        wallets,
+        error,
+        isLoading,
+      }}
+    >
       {children}
     </Context.Provider>
   );

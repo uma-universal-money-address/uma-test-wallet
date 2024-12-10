@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 import logging
 from flask_login import UserMixin
 
-from vasp.utils import get_vasp_domain
+from vasp.utils import get_uma_from_username
 from vasp.db import db
 from vasp.models.Uma import Uma as UmaModel
 from vasp.models.User import User as UserModel
@@ -49,7 +49,7 @@ class User(UserMixin):
 
     def get_default_uma_address(self) -> str:
         default_uma = self.get_default_uma()
-        return f"${default_uma.username}@{get_vasp_domain()}"
+        return get_uma_from_username(default_uma.username)
 
     @classmethod
     def from_model(cls, user_model: UserModel) -> "User":

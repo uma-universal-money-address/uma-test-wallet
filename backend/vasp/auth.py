@@ -126,6 +126,14 @@ def logout() -> None:
     redirect_frontend("/login")
 
 
+@bp.route("/logged_in", methods=["GET"])
+def logged_in() -> WerkzeugResponse:
+    if current_user.is_authenticated:
+        return jsonify({"logged_in": True})
+    else:
+        return jsonify({"logged_in": False})
+
+
 async def get_user_for_login() -> Optional[User]:
     [id, auth_method] = await gen_resolve_id()
 

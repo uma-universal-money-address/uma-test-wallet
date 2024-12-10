@@ -2,6 +2,7 @@
 
 import { Wallet } from "@/components/Wallet";
 import { useToast } from "@/hooks/use-toast";
+import { useAppState } from "@/hooks/useAppState";
 import { useWallets } from "@/hooks/useWalletContext";
 import { getUmaFromUsername } from "@/lib/uma";
 import { useEffect } from "react";
@@ -9,7 +10,9 @@ import { TransactionTable } from "./TransactionTable";
 
 export default function Page() {
   const { toast } = useToast();
-  const { currentWallet, isLoading: isLoadingWallets, error } = useWallets();
+  const { isLoading: isLoadingWallets, error } = useWallets();
+  const currentWallet = useAppState((state) => state.currentWallet);
+  console.log("currentWallet wallet", currentWallet);
 
   useEffect(() => {
     if (error) {
