@@ -30,6 +30,7 @@ from vasp.uma_vasp.demo.demo_user_service import DemoUserService
 from vasp.uma_vasp.demo.demo_currency_service import DemoCurrencyService
 from vasp.uma_vasp.demo.internal_ledger_service import InternalLedgerService
 from vasp.uma_vasp.demo.sending_vasp_request_cache import SendingVaspRequestCache
+from vasp.uma_vasp.demo.webauthn_challenge_cache import WebauthnChallengeCache
 from vasp.uma_vasp.demo.demo_request_storage import RequestStorage
 from vasp.uma_vasp.receiving_vasp import (
     register_routes as register_receiving_vasp_routes,
@@ -117,7 +118,9 @@ def create_app() -> Flask:
 
     from . import auth, user, currencies, uma
 
-    app.register_blueprint(auth.bp)
+    app.register_blueprint(
+        auth.construct_blueprint(challenge_cache=WebauthnChallengeCache(cache=cache))
+    )
     app.register_blueprint(uma.bp)
 
     from vasp.uma_vasp import well_known, utxo_callback
