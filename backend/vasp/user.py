@@ -7,6 +7,7 @@ import base64
 from flask import Blueprint, Response, request, jsonify
 from flask_login import current_user, login_required
 
+from . import notifications
 from vasp.db import db
 from vasp.utils import get_uma_from_username, get_username_from_uma
 from vasp.models.User import User as UserModel
@@ -22,6 +23,7 @@ from vasp.uma_vasp.interfaces.currency_service import (
     ICurrencyService,
 )
 from vasp.uma_vasp.currencies import CURRENCIES
+from vasp.uma_vasp.config import Config
 
 from typing import TYPE_CHECKING
 
@@ -36,6 +38,7 @@ DEFAULT_PREFERENCES: Dict[PreferenceType, str] = {
 
 
 def construct_blueprint(
+    config: Config,
     ledger_service: ILedgerService,
     currency_service: ICurrencyService,
 ) -> Blueprint:
@@ -324,5 +327,7 @@ def construct_blueprint(
                 for currency in currencies
             ]
             return jsonify(response)
+
+    bp.register_blueprint(notifications.construct_blueprint(config=config))
 
     return bp

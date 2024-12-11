@@ -5,14 +5,18 @@ from uma import KycStatus
 from sqlalchemy.orm import Session
 import logging
 from flask_login import UserMixin
+import json
+from pywebpush import webpush, WebPushException
 
 from vasp.utils import get_uma_from_username
 from vasp.db import db
 from vasp.models.Uma import Uma as UmaModel
 from vasp.models.User import User as UserModel
+from vasp.models.PushSubscription import PushSubscription
 from vasp.models.Wallet import Wallet
 from vasp.models.WebAuthnCredential import WebAuthnCredential
 from vasp.uma_vasp.uma_exception import UmaException
+from vasp.uma_vasp.config import Config
 
 
 log: logging.Logger = logging.getLogger(__name__)
@@ -51,6 +55,31 @@ class User(UserMixin):
     def get_default_uma_address(self) -> str:
         default_uma = self.get_default_uma()
         return get_uma_from_username(default_uma.username)
+
+    def send_push_notification(self, config: Config, title: str, body: str) -> None:
+        with Session(db.engine) as db_session:
+            push_subscriptions = (
+                db_session.query(PushSubscription)
+                .filter(PushSubscription.user_id == self.id)
+                .all()
+            )
+
+            for push_subscription in push_subscriptions:
+                try:
+                    subscription_info = json.loads(push_subscription.subscription_json)
+                    webpush(
+                        subscription_info=subscription_info,
+                        data=json.dumps({"title": title, "body": body}),
+                        vapid_private_key=config.vapid_private_key,
+                        vapid_claims={
+                            "sub": "mailto:{}".format(config.vapid_claim_email)
+                        },
+                    )
+                except WebPushException as error:
+                    if error.response:
+                        logging.error(f"WebPushException response: {error.response}")
+                    else:
+                        logging.error("WebPushException error", error)
 
     @classmethod
     def from_model(cls, user_model: UserModel) -> "User":

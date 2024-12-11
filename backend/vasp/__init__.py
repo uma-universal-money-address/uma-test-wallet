@@ -133,7 +133,9 @@ def create_app() -> Flask:
     )
     app.register_blueprint(
         user.construct_blueprint(
-            ledger_service=ledger_service, currency_service=currency_service
+            config=config,
+            ledger_service=ledger_service,
+            currency_service=currency_service,
         )
     )
     app.register_blueprint(
