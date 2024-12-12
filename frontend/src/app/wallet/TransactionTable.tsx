@@ -84,7 +84,7 @@ const TransactionRow = ({
     >
       <SandboxAvatar
         size="lg"
-        sandboxWallet={
+        ownContact={
           walletIndex >= 0
             ? {
                 wallet: wallets[walletIndex],

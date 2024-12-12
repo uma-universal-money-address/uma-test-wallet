@@ -1,11 +1,18 @@
 "use client";
+import { ExampleUma } from "@/components/ExampleUma";
 import { ExternalUma } from "@/components/ExternalUma";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UmaInput } from "@/components/UmaInput";
-import { useContacts, type ContactInfo } from "@/hooks/useContacts";
+import {
+  EXAMPLE_UMA_CONTACTS,
+  useContacts,
+  type ContactInfo,
+} from "@/hooks/useContacts";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useWallets } from "@/hooks/useWalletContext";
+import { getUmaFromUsername } from "@/lib/uma";
 import { type UmaLookupResponse } from "@/types/UmaLookupResponse";
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { Contact } from "./Contact";
 import { useSendPaymentContext } from "./SendPaymentContextProvider";
 import { lnurlpLookup } from "./umaRequests";
@@ -25,10 +32,16 @@ export const SelectRecipient = () => {
     setIsLoading,
   } = useSendPaymentContext();
   const {
-    contacts,
+    recentContacts,
+    ownUmaContacts,
     error: errorLoadingContacts,
     isLoading: isLoadingContacts,
   } = useContacts();
+  const {
+    wallets,
+    isLoading: isLoadingWallets,
+    error: walletsError,
+  } = useWallets();
   const [customReceiverUma, setCustomReceiverUma] = React.useState("");
   const [customReceiverUmaError, setCustomReceiverUmaError] = React.useState<
     string | null
@@ -42,10 +55,32 @@ export const SelectRecipient = () => {
     UmaLookupResponse | null | undefined
   >();
 
+  const allContacts = useMemo(() => {
+    return recentContacts && ownUmaContacts
+      ? [...recentContacts, ...ownUmaContacts].filter(
+          (contact) => contact.uma !== senderUma,
+        )
+      : [];
+  }, [recentContacts, ownUmaContacts, senderUma]);
+
+  const recentContactsFiltered = recentContacts?.filter(
+    (contact) => contact.uma !== senderUma,
+  );
+  const ownUmaContactsFiltered = ownUmaContacts?.filter(
+    (contact) => contact.uma !== senderUma,
+  );
+
+  useEffect(() => {
+    const error = errorLoadingContacts || walletsError;
+    if (error) {
+      setError(new Error(error));
+    }
+  }, [errorLoadingContacts, walletsError, setError]);
+
   const searchUma = useCallback(() => {
     if (
       isUmaFormat(customReceiverUma) &&
-      !contacts?.find((contact) => contact.uma === customReceiverUma)
+      !allContacts?.find((contact) => contact.uma === customReceiverUma)
     ) {
       setIsLoadingSearchResults(true);
       lnurlpLookup(
@@ -64,7 +99,7 @@ export const SelectRecipient = () => {
           setIsLoadingSearchResults(false);
         });
     }
-  }, [customReceiverUma, contacts, senderUma]);
+  }, [customReceiverUma, allContacts, senderUma]);
 
   useDebounce(searchUma, [customReceiverUma], 1000);
 
@@ -75,12 +110,12 @@ export const SelectRecipient = () => {
     let matchingContacts: ContactInfo[] = [];
     if (uma.startsWith("$")) {
       matchingContacts =
-        contacts?.filter((contact) =>
+        allContacts?.filter((contact) =>
           contact.uma.startsWith(uma.toLowerCase()),
         ) || [];
     } else {
       matchingContacts =
-        contacts?.filter((contact) =>
+        allContacts?.filter((contact) =>
           contact.uma.startsWith(`$${uma.toLowerCase()}`),
         ) || [];
     }
@@ -132,14 +167,10 @@ export const SelectRecipient = () => {
     handleSearchUma(newValue);
   };
 
-  let restOfContacts: React.ReactNode;
-  if (errorLoadingContacts) {
-    restOfContacts = (
-      <span className="text-error">{`Error loading contacts: ${errorLoadingContacts}`}</span>
-    );
-  } else if (isLoadingContacts) {
-    restOfContacts = <Skeleton className="w-10" />;
-  } else if (customReceiverUma) {
+  let searchedContactsSection: React.ReactNode;
+  let recentContactsSection: React.ReactNode;
+  let ownUmaContactsSection: React.ReactNode;
+  if (customReceiverUma) {
     let searchResultComponent: React.ReactNode;
     if (isLoadingSearchResults) {
       searchResultComponent = <Skeleton className="w-10" />;
@@ -169,31 +200,99 @@ export const SelectRecipient = () => {
         </span>
       );
     }
-    restOfContacts = (
+
+    if (wallets) {
+      searchedContactsSection = (
+        <>
+          {contactSearchResults.map((result) => {
+            const walletIndex = wallets.findIndex(
+              (wallet) =>
+                getUmaFromUsername(wallet.uma.username) === result.uma,
+            );
+            return (
+              <Contact
+                key={result.uma}
+                contactInfo={result}
+                ownContact={
+                  walletIndex >= 0
+                    ? {
+                        wallet: wallets[walletIndex],
+                        number: walletIndex + 1,
+                      }
+                    : undefined
+                }
+                onClick={() => handleChooseUma(result.uma)}
+              />
+            );
+          })}
+          {searchResultComponent}
+        </>
+      );
+    }
+  } else if (wallets) {
+    recentContactsSection = (
       <>
-        {contactSearchResults.map((result) => (
-          <Contact
-            key={result.uma}
-            contactInfo={result}
-            onClick={() => handleChooseUma(result.uma)}
-          />
-        ))}
-        {searchResultComponent}
+        <div className="flex flex-col text-secondary text-[13px] font-semibold leading-[18px] tracking-[-0.162px] space-y-6">
+          Recent contacts
+        </div>
+        {recentContactsFiltered?.map((contact) => {
+          return (
+            <Contact
+              key={contact.uma}
+              contactInfo={contact}
+              onClick={() => handleChooseUma(contact.uma)}
+            />
+          );
+        })}
       </>
     );
-  } else {
-    restOfContacts = contacts
-      ?.filter((contact) => contact.uma !== senderUma)
-      .map((contact) => {
+    ownUmaContactsSection = (
+      <>
+        <div className="flex flex-col text-secondary text-[13px] font-semibold leading-[18px] tracking-[-0.162px] space-y-6">
+          Your test UMAs
+        </div>
+        {ownUmaContactsFiltered?.map((contact) => {
+          const walletIndex = wallets.findIndex(
+            (wallet) => getUmaFromUsername(wallet.uma.username) === contact.uma,
+          );
+          return (
+            <Contact
+              key={contact.uma}
+              contactInfo={contact}
+              ownContact={
+                walletIndex >= 0
+                  ? {
+                      wallet: wallets[walletIndex],
+                      number: walletIndex + 1,
+                    }
+                  : undefined
+              }
+              onClick={() => handleChooseUma(contact.uma)}
+            />
+          );
+        })}
+      </>
+    );
+  }
+
+  const exampleUmaContactsSection = (
+    <>
+      <div className="flex flex-col text-secondary text-[13px] font-semibold leading-[18px] tracking-[-0.162px] space-y-6">
+        Example UMAs
+      </div>
+      {EXAMPLE_UMA_CONTACTS.map((exampleContact) => {
+        const uma = getUmaFromUsername(exampleContact.umaUserName);
         return (
-          <Contact
-            key={contact.uma}
-            contactInfo={contact}
-            onClick={() => handleChooseUma(contact.uma)}
+          <ExampleUma
+            key={exampleContact.umaUserName}
+            uma={uma}
+            exampleContact={exampleContact}
+            onClick={() => handleChooseUma(uma)}
           />
         );
-      });
-  }
+      })}
+    </>
+  );
 
   return (
     <div className="flex flex-col align-start py-4 px-8 h-full">
@@ -212,14 +311,24 @@ export const SelectRecipient = () => {
             error={customReceiverUmaError}
           />
         </div>
-        <div className="flex flex-col gap-6">
-          {!customReceiverUma && (
-            <div className="flex flex-col text-secondary text-[13px] font-semibold leading-[18px] tracking-[-0.162px] space-y-6">
-              Example recipients
-            </div>
-          )}
-          <div className="flex flex-col gap-6 pb-6">{restOfContacts}</div>
-        </div>
+        {/* Face section in while sliding down upon loading */}
+        {!isLoadingContacts && !isLoadingWallets && (
+          <div className="flex flex-col gap-6 pb-6 animate-[fadeInAndSlideDown_0.5s_ease-in-out_forwards]">
+            {searchedContactsSection}
+
+            {!customReceiverUma && (
+              <>
+                {recentContactsFiltered &&
+                  recentContactsFiltered.length > 0 &&
+                  recentContactsSection}
+                {ownUmaContactsFiltered &&
+                  ownUmaContactsFiltered.length > 0 &&
+                  ownUmaContactsSection}
+                {exampleUmaContactsSection}
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -88,15 +88,46 @@ def construct_blueprint(
     def contacts() -> Response:
         # TODO: get contacts from past transactions
         with Session(db.engine) as db_session:
-            uma_models = db_session.scalars(select(Uma)).all()
-            response = [
+            own_umas = db_session.scalars(
+                select(Uma).where(Uma.user_id == current_user.id)
+            ).all()
+            recent_contacts = db_session.scalars(
+                select(Uma)
+                .join(Transaction)
+                # .where(Uma.user_id == current_user.id)
+                # .where(Transaction.user_id == current_user.id)
+                .where(
+                    Transaction.sender_uma.in_(
+                        get_uma_from_username(uma.username) for uma in own_umas
+                    )
+                )
+                .where(
+                    Transaction.receiver_uma.notin_(
+                        [get_uma_from_username(uma.username) for uma in own_umas]
+                    )
+                )
+                .distinct(Uma.id)
+                .order_by(Transaction.created_at.desc())
+                .limit(5)
+            ).all()
+            return jsonify(
                 {
-                    "id": uma_model.id,
-                    "uma": get_uma_from_username(uma_model.username),
+                    "recent_contacts": [
+                        {
+                            "id": uma_model.id,
+                            "uma": get_uma_from_username(uma_model.username),
+                        }
+                        for uma_model in recent_contacts
+                    ],
+                    "own_umas": [
+                        {
+                            "id": uma_model.id,
+                            "uma": get_uma_from_username(uma_model.username),
+                        }
+                        for uma_model in own_umas
+                    ],
                 }
-                for uma_model in uma_models
-            ]
-            return jsonify(response)
+            )
 
     @bp.get("/username")
     @login_required

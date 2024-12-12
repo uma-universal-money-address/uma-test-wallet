@@ -37,7 +37,7 @@ export const UmaSwitcherFooter = ({ wallets, isLoading }: Props) => {
           }}
         >
           <SandboxAvatar
-            sandboxWallet={{
+            ownContact={{
               wallet,
               number: index + 1,
             }}

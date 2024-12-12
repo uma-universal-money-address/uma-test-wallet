@@ -1,9 +1,11 @@
 "use client";
+import { ExampleContact } from "@/hooks/useContacts";
 import { Wallet } from "@/hooks/useWalletContext";
+import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Skeleton } from "./ui/skeleton";
 
-interface SandboxWallet {
+export interface OwnContact {
   wallet: Wallet;
   number: number;
 }
@@ -11,13 +13,14 @@ interface SandboxWallet {
 interface Props {
   size?: "xs" | "sm" | "md" | "lg" | undefined;
   src?: string | undefined;
-  externalUma?: string;
+  uma?: string | undefined;
   isLoading?: boolean;
   shadow?: boolean;
   /**
    * If this is set, the avatar will show the wallet number and color of the wallet instead of the avatar image.
    */
-  sandboxWallet?: SandboxWallet | undefined;
+  ownContact?: OwnContact | undefined;
+  country?: ExampleContact | undefined;
 }
 
 const EMPTY_AVATAR = "/empty-avatar.svg";
@@ -71,11 +74,11 @@ export const SandboxAvatar = (props: Props) => {
   const avatarSrc = props.src || EMPTY_AVATAR;
   const size = props.size || "lg";
 
-  if (props.sandboxWallet) {
+  if (props.ownContact) {
     return (
       <div
         style={{
-          backgroundColor: props.sandboxWallet.wallet.color,
+          backgroundColor: props.ownContact.wallet.color,
           boxShadow: props.shadow ? "0px 1px 1px rgba(0, 0, 0, 0.25)" : "",
           width: `${getWidthHeight(size)}px`,
           height: `${getWidthHeight(size)}px`,
@@ -85,13 +88,13 @@ export const SandboxAvatar = (props: Props) => {
         className="border rounded-xl flex items-center justify-center bg-shine"
       >
         <span className="text-white items-center flex justify-center font-semibold tracking-[-0.2px]">
-          {props.sandboxWallet.number}
+          {props.ownContact.number}
         </span>
       </div>
     );
   }
 
-  if (props.externalUma && props.externalUma.length > 1) {
+  if (props.uma && props.uma.length > 1) {
     return (
       <div
         style={{
@@ -101,9 +104,35 @@ export const SandboxAvatar = (props: Props) => {
           fontSize: `${getFontSize(size)}px`,
           lineHeight: `${getLineHeight(size)}px`,
         }}
-        className="items-center justify-center flex rounded-xl bg-primary"
+        className="items-center justify-center flex rounded-full bg-primary text-white"
       >
-        {props.externalUma[1].toUpperCase()}
+        {props.uma[1].toUpperCase()}
+      </div>
+    );
+  }
+
+  if (props.country) {
+    return (
+      <div
+        style={{
+          boxShadow: props.shadow ? "0px 1px 1px rgba(0, 0, 0, 0.25)" : "",
+          width: `${getWidthHeight(size)}px`,
+          height: `${getWidthHeight(size)}px`,
+          fontSize: `${getFontSize(size)}px`,
+          lineHeight: `${getLineHeight(size)}px`,
+        }}
+        className="items-center justify-center flex rounded-full bg-[#EBEEF2] text-primary relative"
+      >
+        {props.country.currency.code.slice(0, 2).toUpperCase()}
+        <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center absolute bottom-[-2px] right-[-2px]">
+          <Image
+            className="rounded-full"
+            src={props.country.image}
+            alt={props.country.currency.code}
+            width={16}
+            height={16}
+          />
+        </div>
       </div>
     );
   }
@@ -112,13 +141,11 @@ export const SandboxAvatar = (props: Props) => {
     <Avatar
       style={{
         boxShadow: props.shadow ? "0px 1px 1px rgba(0, 0, 0, 0.25)" : "",
+        width: `${getWidthHeight(size)}px`,
+        height: `${getWidthHeight(size)}px`,
       }}
     >
-      <AvatarImage
-        src={avatarSrc}
-        width={getWidthHeight(size)}
-        height={getWidthHeight(size)}
-      />
+      <AvatarImage src={avatarSrc} />
       <AvatarFallback>
         <Skeleton className="w-full h-full rounded-full" />
       </AvatarFallback>
