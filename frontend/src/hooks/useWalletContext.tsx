@@ -57,6 +57,7 @@ export const WalletContextProvider = ({
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { currentWallet, setCurrentWallet } = useAppState();
+  const hasCurrentWallet = !!currentWallet;
 
   useEffect(() => {
     async function fetchWallets() {
@@ -91,7 +92,7 @@ export const WalletContextProvider = ({
           const defaultWallet =
             response.wallets.find((wallet) => wallet.uma.default) ||
             response.wallets[0];
-          if (!currentWallet) {
+          if (!hasCurrentWallet) {
             setCurrentWallet({
               id: defaultWallet.id,
               amountInLowestDenom: defaultWallet.amount_in_lowest_denom,
@@ -120,7 +121,7 @@ export const WalletContextProvider = ({
     return () => {
       ignore = true;
     };
-  }, [currentWallet, setCurrentWallet]);
+  }, [hasCurrentWallet, setCurrentWallet]);
 
   return (
     <Context.Provider
