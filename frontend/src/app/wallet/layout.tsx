@@ -101,7 +101,9 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
           </Button>
         </div>
       </div>
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="flex-1 overflow-y-auto overflow-x-hidden">
+        {children}
+      </main>
       {wallets && wallets.length > 0 && (
         <div className="pt-2 px-4 pb-3 border-[#EBEEF2] border">
           <UmaSwitcherFooter

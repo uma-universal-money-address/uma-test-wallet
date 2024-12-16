@@ -1,22 +1,22 @@
 "use client";
 import { useToast } from "@/hooks/use-toast";
 import { useBalance } from "@/hooks/useBalance";
-import { useExchangeRates } from "@/hooks/useExchangeRates";
+import { ExchangeRates } from "@/hooks/useExchangeRates";
 import { type Wallet as WalletType } from "@/hooks/useWalletContext";
 import { convertCurrency } from "@/lib/convertCurrency";
 import { convertToNormalDenomination } from "@/lib/convertToNormalDenomination";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
-import { Skeleton } from "./ui/skeleton";
 
 interface Props {
   uma: string | undefined;
   wallet: WalletType | undefined;
+  exchangeRates: ExchangeRates | undefined;
   isLoading: boolean;
 }
 
-export const Wallet = ({ uma, wallet, isLoading }: Props) => {
+export const Wallet = ({ uma, wallet, exchangeRates, isLoading }: Props) => {
   const router = useRouter();
   const { toast } = useToast();
   const {
@@ -26,11 +26,6 @@ export const Wallet = ({ uma, wallet, isLoading }: Props) => {
   } = useBalance({
     uma,
   });
-  const {
-    exchangeRates,
-    error: exchangeRatesError,
-    isLoading: isLoadingExchangeRates,
-  } = useExchangeRates();
 
   if (error) {
     toast({
@@ -43,15 +38,8 @@ export const Wallet = ({ uma, wallet, isLoading }: Props) => {
     router.push("/send");
   };
 
-  let estimate: React.ReactNode = (
-    <Skeleton className="w-[30px] h-[24px] rounded-full" />
-  );
-  if (
-    !isLoadingBalance &&
-    !isLoadingExchangeRates &&
-    balance &&
-    exchangeRates
-  ) {
+  let estimate: React.ReactNode | null = null;
+  if (!isLoadingBalance && balance && exchangeRates) {
     const currencyToEstimate = balance.currency.code === "USD" ? "SAT" : "USD";
     estimate = convertCurrency(
       exchangeRates,
@@ -64,8 +52,6 @@ export const Wallet = ({ uma, wallet, isLoading }: Props) => {
       style: "currency",
       currency: currencyToEstimate,
     });
-  } else if (exchangeRatesError) {
-    estimate = `Failed to fetch exchange rates: ${exchangeRatesError}`;
   }
 
   return (
@@ -74,9 +60,9 @@ export const Wallet = ({ uma, wallet, isLoading }: Props) => {
         backgroundColor: wallet ? wallet.color : "rgba(0, 0, 0, 0.3)",
         transition: "background-color 0.3s",
       }}
-      className="flex flex-col text-gray-50 gap-6 rounded-3xl shadow-[0px_0px_0px_1px_rgba(0, 0, 0, 0.06), 0px_1px_1px_-0.5px_rgba(0, 0, 0, 0.06), 0px_3px_3px_-1.5px_rgba(0, 0, 0, 0.06), 0px_6px_6px_-3px_rgba(0, 0, 0, 0.06), 0px_12px_12px_-6px_rgba(0, 0, 0, 0.06), 0px_24px_24px_-12px_rgba(0, 0, 0, 0.06);]"
+      className="flex flex-col text-gray-50 py-6 gap-6 rounded-3xl shadow-[0px_0px_0px_1px_rgba(0, 0, 0, 0.06), 0px_1px_1px_-0.5px_rgba(0, 0, 0, 0.06), 0px_3px_3px_-1.5px_rgba(0, 0, 0, 0.06), 0px_6px_6px_-3px_rgba(0, 0, 0, 0.06), 0px_12px_12px_-6px_rgba(0, 0, 0, 0.06), 0px_24px_24px_-12px_rgba(0, 0, 0, 0.06);]"
     >
-      <div className="flex flex-row items-center text-white opacity-50 justify-between pl-8 pr-[22px] pt-[17px]">
+      <div className="flex flex-row items-center text-white opacity-50 justify-between pl-8 h-[26px] pr-[22px]">
         <span className="text-white">Balance</span>
         <Button variant="ghost">
           <Image
@@ -91,34 +77,39 @@ export const Wallet = ({ uma, wallet, isLoading }: Props) => {
       </div>
       <div className="flex flex-col gap-2.5 px-8">
         <div className="flex flex-row items-end gap-1">
-          <div className="text-5xl font-light leading-[48px] tracking-[-1.92px]">
-            {isLoading || isLoadingBalance || !balance ? (
-              <Skeleton className="w-[120px] h-[48px] rounded-full" />
-            ) : (
-              Number(
+          {!isLoading && !isLoadingBalance && balance ? (
+            <div className="text-5xl font-light leading-[48px] tracking-[-1.92px] animate-[slideUpSmall_0.4s_ease-in-out_forwards]">
+              {Number(
                 convertToNormalDenomination(
                   balance.amountInLowestDenom,
                   balance.currency,
                 ),
               ).toLocaleString("en", {
                 currency: balance.currency.code,
-              })
-            )}
-          </div>
-          <div className="text-[15px] font-semibold leading-[20px] tracking-[-0.187px]">
-            {isLoading || isLoadingBalance || !balance ? (
-              <Skeleton className="w-[28px] h-[20px] rounded-full" />
-            ) : (
-              balance.currency.code
-            )}
-          </div>
+              })}
+            </div>
+          ) : (
+            <div className="w-[128px] h-[48px]" />
+          )}
+          {!isLoading && !isLoadingBalance && balance ? (
+            <div className="text-[15px] font-semibold leading-[20px] tracking-[-0.187px] animate-[slideUpSmall_0.4s_ease-in-out_forwards]">
+              {balance.currency.code}
+            </div>
+          ) : (
+            <div className="w-[28px] h-[20px]" />
+          )}
         </div>
-        <div className="flex flex-row opacity-50 gap-2">About {estimate}</div>
+        {estimate !== null && (
+          <div className="flex flex-row opacity-50 text-[13px] leading-[18px] tracking-[-0.162px] gap-2 animate-[slideLeftSmall_0.4s_ease-in-out_forwards]">
+            About {estimate}
+          </div>
+        )}
       </div>
-      <div className="flex flex-row items-center justify-between px-6 pb-6">
+      <div className="flex flex-row items-center justify-between px-6">
         <Button
           className="w-full text-white bg-white/[0.12] hover:bg-white/[0.2]"
           onClick={handleSend}
+          size="sm"
         >
           Send
         </Button>

@@ -1,31 +1,12 @@
 "use client";
 import { SandboxAvatar } from "@/components/SandboxAvatar";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { ExchangeRates, useExchangeRates } from "@/hooks/useExchangeRates";
 import { type Transaction, useTransactions } from "@/hooks/useTransactions";
 import { useWallets, Wallet } from "@/hooks/useWalletContext";
 import { convertCurrency } from "@/lib/convertCurrency";
 import { getUmaFromUsername } from "@/lib/uma";
-import React, { useEffect } from "react";
-
-const LoadingTransactionRow = () => {
-  return (
-    <div className="flex flex-row gap-2 cursor-pointer select-none transition-transform active:scale-95 duration-100">
-      <SandboxAvatar size="lg" />
-      <div className="flex flex-col gap-[2px] justify-center grow">
-        <div className="flex flex-row justify-between gap-2">
-          <Skeleton className="h-5 w-32" />
-          <Skeleton className="h-5 w-12" />
-        </div>
-        <div className="flex flex-row justify-between gap-2">
-          <Skeleton className="h-[13px] w-10" />
-          <Skeleton className="h-[13px] w-8" />
-        </div>
-      </div>
-    </div>
-  );
-};
+import { useEffect } from "react";
 
 const TransactionRow = ({
   transaction,
@@ -133,40 +114,30 @@ export const TransactionTable = () => {
     }
   }, [error, exchangeRatesError, walletsError, toast]);
 
-  let transactionRows: React.ReactNode;
-  if (isLoading || isLoadingExchangeRates || isLoadingWallets) {
-    transactionRows = [
-      <LoadingTransactionRow key="loader-1" />,
-      <LoadingTransactionRow key="loader-2" />,
-      <LoadingTransactionRow key="loader-3" />,
-      <LoadingTransactionRow key="loader-4" />,
-      <LoadingTransactionRow key="loader-5" />,
-    ];
-  } else if (!transactions) {
-    return (
-      <div className="flex flex-col gap-6 pt-2 pb-4">
-        <span className="text-secondary text-[13px] font-normal leading-[18px] tracking-[-0.162px]">
-          No transactions
-        </span>
-      </div>
-    );
-  } else {
-    transactionRows = transactions?.map((transaction) => (
-      <TransactionRow
-        key={transaction.id}
-        transaction={transaction}
-        exchangeRates={exchangeRates!}
-        wallets={wallets || []}
-      />
-    ));
-  }
+  const transactionRows = transactions?.map((transaction) => (
+    <TransactionRow
+      key={transaction.id}
+      transaction={transaction}
+      exchangeRates={exchangeRates!}
+      wallets={wallets || []}
+    />
+  ));
 
   return (
-    <div className="flex flex-col grow gap-6 pt-2 pb-4">
-      <span className="text-secondary text-[13px] font-semibold leading-[18px] tracking-[-0.162px]">
-        Completed
-      </span>
-      {transactionRows}
-    </div>
+    <>
+      {!isLoading &&
+        !isLoadingWallets &&
+        !isLoadingExchangeRates &&
+        transactions &&
+        exchangeRates &&
+        wallets && (
+          <div className="flex flex-col grow gap-6 pt-2 animate-[fadeInAndSlideDown_0.5s_ease-in-out_forwards]">
+            <span className="text-secondary text-[13px] font-semibold leading-[18px] tracking-[-0.162px]">
+              Completed
+            </span>
+            {transactionRows}
+          </div>
+        )}
+    </>
   );
 };
