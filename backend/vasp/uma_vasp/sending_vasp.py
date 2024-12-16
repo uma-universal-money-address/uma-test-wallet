@@ -11,7 +11,7 @@ from lightspark import CurrencyUnit
 from lightspark import LightsparkSyncClient as LightsparkClient
 from lightspark import OutgoingPayment, PaymentDirection, TransactionStatus
 from lightspark.utils.currency_amount import amount_as_msats
-from vasp.utils import get_vasp_domain, is_valid_uma
+from vasp.utils import get_vasp_domain, is_valid_uma, get_username_from_uma
 from vasp.uma_vasp.address_helpers import get_domain_from_uma_address
 from vasp.uma_vasp.config import Config
 from vasp.uma_vasp.interfaces.compliance_service import IComplianceService
@@ -29,7 +29,6 @@ from vasp.uma_vasp.lightspark_helpers import get_node
 from vasp.uma_vasp.sending_vasp_payreq_response import SendingVaspPayReqResponse
 from vasp.uma_vasp.uma_exception import abort_with_error
 from vasp.uma_vasp.user import User
-from vasp.notification import send_push_notification
 from vasp.uma_vasp.interfaces.request_storage import IRequestStorage
 from uma import (
     Currency,
@@ -272,7 +271,14 @@ class SendingVasp:
         }
         self.uma_request_storage.save_request(invoice.invoice_uuid, info)
 
-        send_push_notification(user_id=user_id, payload=info)
+        # If the receiver is an internal user, send a push notification.
+        receiver_user = User.from_model_uma(get_username_from_uma(invoice.receiver_uma))
+        if receiver_user:
+            receiver_user.send_push_notification(
+                config=self.config,
+                title=f"{invoice.sender_uma} requested a payment",
+                body="You have a new UMA request.",
+            )
 
         return Response(status=200)
 
@@ -948,7 +954,9 @@ def register_routes(
             abort_with_error(401, "Unauthorized")
 
         sending_vasp = get_sending_vasp_internal()
-        return await sending_vasp.handle_request_pay_invoice(user.id, invoice)
+        return await sending_vasp.handle_request_pay_invoice(
+            user_id=user.id, invoice=invoice
+        )
 
     @app.route("/api/uma/pending_requests/<user_id>")
     @login_required

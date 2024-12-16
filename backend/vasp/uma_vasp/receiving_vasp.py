@@ -647,6 +647,12 @@ def register_routes(
                         receiver_uma=transaction.receiver_uma,
                     )
 
+                    user.send_push_notification(
+                        config=config,
+                        title="Payment received",
+                        body=f"Received payment of {-transaction.amount_in_lowest_denom} {transaction.currency_code}",
+                    )
+
                     logging.info(
                         f"Received payment for user {user.id}, transaction_hash: {transaction_hash}"
                     )

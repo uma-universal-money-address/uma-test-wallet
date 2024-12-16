@@ -7,6 +7,7 @@ import { startRegistration } from "@simplewebauthn/browser";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { PushNotificationManager } from "./PushNotificationManager";
 
 export default function Home() {
   const router = useRouter();
@@ -15,6 +16,21 @@ export default function Home() {
   const [umaError, setUmaError] = useState<string | undefined>();
   const [umaInputMessage, setUmaInputMessage] = useState<string | undefined>();
   const [isLoadingRegister, setIsLoadingRegister] = useState(false);
+
+  useEffect(() => {
+    async function paymentNotification() {
+      await Notification.requestPermission();
+      const notifBody = `You received a payment`;
+      const notifImg = `/icons/playground.svg`;
+      const options = {
+        body: notifBody,
+        icon: notifImg,
+      };
+      new Notification("Payment received", options);
+      console.log("Payment notification sent");
+    }
+    paymentNotification();
+  }, []);
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
@@ -144,6 +160,8 @@ export default function Home() {
         >
           <span>Register</span>
         </SandboxButton>
+
+        <PushNotificationManager />
 
         <div className="flex gap-4 items-center flex-col sm:flex-row">
           <a

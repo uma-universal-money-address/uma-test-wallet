@@ -28,6 +28,7 @@ sqlalchemy = "*"
 flask-caching = "*"
 flask-login = "*"
 webauthn = "*"
+pywebpush = "*"
 
 [dev-packages]
 black = "*"

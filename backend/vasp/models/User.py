@@ -6,6 +6,7 @@ from vasp.models.Transaction import Transaction
 from vasp.models.Uma import Uma
 from vasp.models.Wallet import Wallet
 from vasp.models.Preference import Preference
+from vasp.models.PushSubscription import PushSubscription
 from vasp.models.WebAuthnCredential import WebAuthnCredential
 from typing import List
 from uma import KycStatus
@@ -33,6 +34,10 @@ class User(Base):
     )
 
     preferences: Mapped[List["Preference"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+
+    push_subscriptions: Mapped[List["PushSubscription"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
 
