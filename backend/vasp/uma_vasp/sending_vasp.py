@@ -687,6 +687,8 @@ class SendingVasp:
             encoded_invoice=payreq_data.encoded_invoice,
             timeout_secs=30,
             maximum_fees_msats=max(5000, sending_max_fee),
+            sender_identifier=sender_uma,
+            signing_private_key=self.config.get_signing_privkey(),
         )
         if not payment_result:
             abort_with_error(500, "Payment failed.")

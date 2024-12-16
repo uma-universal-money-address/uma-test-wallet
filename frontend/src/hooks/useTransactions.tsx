@@ -52,7 +52,11 @@ const hydrateTransactions = (
 };
 
 export function useTransactions() {
-  const { contacts, isLoading: isLoadingContacts } = useContacts();
+  const {
+    recentContacts,
+    ownUmaContacts,
+    isLoading: isLoadingContacts,
+  } = useContacts();
   const { isLoading: isLoadingWallets } = useWallets();
   const { currentWallet } = useAppState();
 
@@ -89,16 +93,28 @@ export function useTransactions() {
     }
 
     let ignore = false;
-    if (contacts && !isLoadingContacts && currentWallet && !isLoadingWallets) {
+    if (
+      recentContacts &&
+      ownUmaContacts &&
+      !isLoadingContacts &&
+      currentWallet &&
+      !isLoadingWallets
+    ) {
       fetchTransactions(
-        contacts,
+        [...recentContacts, ...ownUmaContacts],
         getUmaFromUsername(currentWallet.uma.username),
       );
     }
     return () => {
       ignore = true;
     };
-  }, [contacts, currentWallet, isLoadingContacts, isLoadingWallets]);
+  }, [
+    recentContacts,
+    ownUmaContacts,
+    currentWallet,
+    isLoadingContacts,
+    isLoadingWallets,
+  ]);
 
   return {
     transactions,

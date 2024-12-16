@@ -1,10 +1,11 @@
 "use client";
-import { SandboxAvatar } from "@/components/SandboxAvatar";
+import { OwnContact, SandboxAvatar } from "@/components/SandboxAvatar";
 import { type ContactInfo } from "@/hooks/useContacts";
 import { useState } from "react";
 
 interface Props {
   contactInfo: ContactInfo;
+  ownContact?: OwnContact | undefined;
   onClick?: () => void;
 }
 
@@ -31,9 +32,13 @@ export const Contact = (props: Props) => {
       onTouchEnd={handleUnpress}
       onMouseLeave={handleUnpress}
     >
-      <SandboxAvatar size="lg" />
-      <div className="flex flex-col gap-1 overflow-hidden">
-        <span className="text-secondary text-[15px] font-normal leading-[20px] tracking-[-0.187px] truncate">
+      <SandboxAvatar
+        size="lg"
+        ownContact={props.ownContact}
+        uma={props.contactInfo.uma}
+      />
+      <div className="flex flex-col gap-1 overflow-hidden self-center">
+        <span className="text-primary text-[15px] font-normal leading-[20px] tracking-[-0.187px] truncate">
           {props.contactInfo.uma}
         </span>
       </div>
