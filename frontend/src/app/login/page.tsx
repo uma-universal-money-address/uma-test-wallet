@@ -3,6 +3,7 @@
 import { SandboxButton } from "@/components/SandboxButton";
 import { useToast } from "@/hooks/use-toast";
 import { getBackendUrl } from "@/lib/backendUrl";
+import { convertArrayBuffersToBase64 } from "@/lib/convertArrayBuffersToBase64";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -57,7 +58,9 @@ export default function Page() {
         body: JSON.stringify({
           webauthn: {
             challenge_id: prepData.challenge_id,
-            credential,
+            credential: convertArrayBuffersToBase64(
+              credential as unknown as Record<string, string | ArrayBuffer>,
+            ),
           },
         }),
       });

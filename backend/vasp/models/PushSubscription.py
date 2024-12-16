@@ -1,5 +1,6 @@
+from datetime import datetime
 from sqlalchemy.orm import Mapped, relationship, mapped_column
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import DateTime, ForeignKey, String, func
 from vasp.models.Base import Base
 from typing import TYPE_CHECKING
 from vasp.utils import generate_uuid
@@ -19,6 +20,12 @@ class PushSubscription(Base):
 
     user: Mapped["User"] = relationship(
         back_populates="push_subscriptions", foreign_keys=[user_id]
+    )
+
+    last_used: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.current_timestamp(),
     )
 
     def __repr__(self) -> str:

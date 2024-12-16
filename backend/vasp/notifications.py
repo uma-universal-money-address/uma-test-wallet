@@ -38,10 +38,21 @@ def construct_blueprint(config: Config) -> Blueprint:
 
         subscription_json = data["subscription_json"]
         with Session(db.engine) as db_session:
+            existing_subscriptions = db_session.scalars(
+                select(PushSubscription)
+                .where(PushSubscription.user_id == current_user.id)
+                .order_by(PushSubscription.last_used.desc())
+            ).all()
+
+            # Limit the number of subscriptions to last 10 used
+            if len(existing_subscriptions) >= 10:
+                db_session.delete(existing_subscriptions[-1])
+
             subscription = PushSubscription(
                 user_id=current_user.id,
                 subscription_json=subscription_json,
             )
+
             db_session.add(subscription)
             db_session.commit()
         return jsonify({"success": True})

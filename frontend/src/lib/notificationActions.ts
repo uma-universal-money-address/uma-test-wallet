@@ -78,3 +78,41 @@ export async function sendNotification(message: string) {
     return { success: false, error: "Failed to send notification" };
   }
 }
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, "+")
+    .replace(/_/g, "/");
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+export async function subscribeToPush() {
+  const registration = await navigator.serviceWorker.register("/sw.js", {
+    scope: "/",
+    updateViaCache: "none",
+  });
+  await registration.pushManager.getSubscription();
+
+  const keyResponse = await getVapidPublicKey();
+  if (!keyResponse) {
+    throw new Error("Failed to fetch VASP public key");
+  }
+
+  const readyRegistration = await navigator.serviceWorker.ready;
+  const sub = await readyRegistration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(keyResponse.public_key),
+  });
+  const subscribeRes = await subscribeUser(sub);
+  if (!subscribeRes.success) {
+    throw new Error(subscribeRes.error);
+  }
+}
