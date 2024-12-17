@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 from sqlalchemy import ForeignKey, String, LargeBinary
 from vasp.models.Base import Base
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Any
 from vasp.utils import generate_uuid
 
 if TYPE_CHECKING:
@@ -21,6 +21,12 @@ class WebAuthnCredential(Base):
     user: Mapped["User"] = relationship(
         back_populates="webauthn_credentials", foreign_keys=[user_id]
     )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "credential_id": self.credential_id,
+        }
 
     def __repr__(self) -> str:
         return f"Credential(user_id={self.user_id}, credential_id={self.credential_id})"

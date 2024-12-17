@@ -18,6 +18,7 @@ from vasp.uma_vasp.uma_exception import abort_with_error
 from vasp.uma_vasp.user import User
 from vasp.models.Preference import Preference, PreferenceType
 from vasp.models.Transaction import Transaction
+from vasp.models.WebAuthnCredential import WebAuthnCredential
 from vasp.uma_vasp.interfaces.ledger_service import ILedgerService
 from vasp.uma_vasp.interfaces.currency_service import (
     ICurrencyService,
@@ -384,6 +385,24 @@ def construct_blueprint(
                 for currency in currencies
             ]
             return jsonify(response)
+
+    @bp.get("/login_methods")
+    @login_required
+    async def login_methods() -> Response:
+        with Session(db.engine) as db_session:
+            webauthn_credentials = db_session.scalars(
+                select(WebAuthnCredential).where(
+                    WebAuthnCredential.user_id == current_user.id
+                )
+            ).all()
+
+            return jsonify(
+                {
+                    "webauthn_credentials": [
+                        credential.to_dict() for credential in webauthn_credentials
+                    ],
+                }
+            )
 
     bp.register_blueprint(notifications.construct_blueprint(config=config))
 
