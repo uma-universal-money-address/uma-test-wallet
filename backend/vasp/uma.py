@@ -32,7 +32,7 @@ def register_uma(
     uma_user_name: str,
     currencies: List[str],
     kyc_status: KycStatus,
-) -> User:
+) -> tuple[User, WalletModel]:
     with Session(db.engine) as db_session:
         try:
             if db_session.scalars(
@@ -92,9 +92,11 @@ def register_uma(
                         value=value,
                     )
                     db_session.add(preference)
+
                 db_session.commit()
 
-                return User.from_model(user)
+                return User.from_model(user), new_wallet
+
         except exc.SQLAlchemyError as err:
             error = f"Error registering user {uma_user_name}: {err}"
             abort_with_error(500, error)
@@ -111,14 +113,28 @@ def create_uma() -> Response:
     # Default to verified for the purpose of this demo app
     kyc_status = KycStatus.VERIFIED
 
-    user = register_uma(
+    user, wallet = register_uma(
         uma_user_name=uma_user_name,
         currencies=currencies,
         kyc_status=kyc_status,
     )
     login_user(user, remember=True)
 
-    return jsonify({"success": True})
+    with Session(db.engine) as db_session:
+        wallet_fresh = db_session.scalars(
+            select(WalletModel).where(WalletModel.id == wallet.id)
+        ).first()
+
+        return jsonify(
+            {
+                "id": wallet_fresh.id,
+                "amount_in_lowest_denom": wallet_fresh.amount_in_lowest_denom,
+                "color": wallet_fresh.color.value,
+                "device_token": wallet_fresh.device_token,
+                "uma": wallet_fresh.uma.to_dict(),
+                "currency": wallet_fresh.currency.to_dict(),
+            }
+        )
 
 
 @bp.get("/<uma_user_name>")

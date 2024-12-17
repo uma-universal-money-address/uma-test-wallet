@@ -256,6 +256,32 @@ def construct_blueprint(
                 }
             )
 
+    @bp.put("/wallet/<wallet_id>")
+    @login_required
+    def update_wallet(wallet_id: str) -> Response:
+        with Session(db.engine) as db_session:
+            wallet = db_session.scalars(
+                select(Wallet).where(Wallet.id == wallet_id)
+            ).first()
+            if wallet is None:
+                abort_with_error(404, f"Wallet {wallet_id} not found.")
+            request_json = request.json
+            wallet.color = request_json.get("color")
+            db_session.commit()
+
+            response = jsonify(
+                {
+                    "id": wallet.id,
+                    "amount_in_lowest_denom": wallet.amount_in_lowest_denom,
+                    "color": wallet.color.value,
+                    "device_token": wallet.device_token,
+                    "uma": wallet.uma.to_dict(),
+                    "currency": wallet.currency.to_dict(),
+                }
+            )
+            response.status_code = 201
+            return response
+
     @bp.get("/transactions")
     @login_required
     def transactions() -> Response:

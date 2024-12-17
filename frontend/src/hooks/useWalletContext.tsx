@@ -48,6 +48,31 @@ export interface WalletContextData {
 
 const Context = React.createContext<WalletContextData>(null!);
 
+export const fetchWallets = async (): Promise<Wallet[]> => {
+  const res = await fetch(`${getBackendUrl()}/user/wallets`, {
+    method: "GET",
+    credentials: "include",
+  });
+  if (res.ok) {
+    const { wallets } = await (res.json() as Promise<{ wallets: RawWallet[] }>);
+    return wallets.map((rawWallet) => ({
+      id: rawWallet.id,
+      amountInLowestDenom: rawWallet.amount_in_lowest_denom,
+      color: RAW_WALLET_COLOR_MAPPING[rawWallet.color],
+      deviceToken: rawWallet.device_token,
+      name: rawWallet.name,
+      uma: {
+        userId: rawWallet.uma.user_id,
+        username: rawWallet.uma.username,
+        default: rawWallet.uma.default,
+      },
+      currency: rawWallet.currency,
+    }));
+  } else {
+    throw new Error("Failed to fetch wallets.");
+  }
+};
+
 export const WalletContextProvider = ({
   children,
 }: {
@@ -60,52 +85,16 @@ export const WalletContextProvider = ({
   const hasCurrentWallet = !!currentWallet;
 
   useEffect(() => {
-    async function fetchWallets() {
+    async function fetchWalletsInternal() {
       setIsLoading(true);
       try {
-        const response = await fetch(`${getBackendUrl()}/user/wallets`, {
-          method: "GET",
-          credentials: "include",
-        }).then((res) => {
-          if (res.ok) {
-            return res.json() as Promise<{ wallets: RawWallet[] }>;
-          } else {
-            throw new Error("Failed to fetch wallets.");
-          }
-        });
+        const wallets = await fetchWallets();
         if (!ignore) {
-          setWallets(
-            response.wallets.map((rawWallet) => ({
-              id: rawWallet.id,
-              amountInLowestDenom: rawWallet.amount_in_lowest_denom,
-              color: RAW_WALLET_COLOR_MAPPING[rawWallet.color],
-              deviceToken: rawWallet.device_token,
-              name: rawWallet.name,
-              uma: {
-                userId: rawWallet.uma.user_id,
-                username: rawWallet.uma.username,
-                default: rawWallet.uma.default,
-              },
-              currency: rawWallet.currency,
-            })),
-          );
+          setWallets(wallets);
           const defaultWallet =
-            response.wallets.find((wallet) => wallet.uma.default) ||
-            response.wallets[0];
+            wallets.find((wallet) => wallet.uma.default) || wallets[0];
           if (!hasCurrentWallet) {
-            setCurrentWallet({
-              id: defaultWallet.id,
-              amountInLowestDenom: defaultWallet.amount_in_lowest_denom,
-              color: RAW_WALLET_COLOR_MAPPING[defaultWallet.color],
-              deviceToken: defaultWallet.device_token,
-              name: defaultWallet.name,
-              uma: {
-                userId: defaultWallet.uma.user_id,
-                username: defaultWallet.uma.username,
-                default: defaultWallet.uma.default,
-              },
-              currency: defaultWallet.currency,
-            });
+            setCurrentWallet(defaultWallet);
           }
           setIsLoading(false);
         }
@@ -117,7 +106,7 @@ export const WalletContextProvider = ({
     }
 
     let ignore = false;
-    fetchWallets();
+    fetchWalletsInternal();
     return () => {
       ignore = true;
     };

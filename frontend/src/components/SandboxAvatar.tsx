@@ -85,7 +85,7 @@ export const SandboxAvatar = (props: Props) => {
           fontSize: `${getFontSize(size)}px`,
           lineHeight: `${getLineHeight(size)}px`,
         }}
-        className="border rounded-xl flex items-center justify-center bg-shine"
+        className="rounded-xl flex items-center justify-center bg-shine"
       >
         <span className="text-white items-center flex justify-center font-semibold tracking-[-0.2px]">
           {props.ownContact.number}

@@ -23,3 +23,16 @@ export const RAW_WALLET_COLOR_MAPPING: Record<string, WalletColor> = {
   NINE: WalletColor.GREEN,
   TEN: WalletColor.ORANGE,
 };
+
+export const RAW_WALLET_COLOR_TO_NUMBER_MAPPING: Record<WalletColor, string> = {
+  [WalletColor.BLACK]: "ONE",
+  [WalletColor.BLUE]: "TWO",
+  [WalletColor.LAVENDER]: "THREE",
+  [WalletColor.LIME]: "FOUR",
+  [WalletColor.NIGHT]: "FIVE",
+  [WalletColor.RED]: "SIX",
+  [WalletColor.FUCHSIA]: "SEVEN",
+  [WalletColor.TEAL]: "EIGHT",
+  [WalletColor.GREEN]: "NINE",
+  [WalletColor.ORANGE]: "TEN",
+};

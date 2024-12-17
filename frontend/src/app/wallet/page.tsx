@@ -107,8 +107,13 @@ export default function Page() {
                       : undefined
                   }
                   wallet={wallet}
+                  walletIndex={index}
                   exchangeRates={exchangeRates}
                   isLoading={isLoadingWallets || isLoadingExchangeRates}
+                  options={{
+                    showAddBalance: true,
+                    showSend: true,
+                  }}
                 />
               </SlideWallet>
             );
