@@ -1,18 +1,34 @@
 import { type ExchangeRates } from "@/hooks/useExchangeRates";
+import { Currency } from "@/types/Currency";
+import { convertToNormalDenomination } from "./convertToNormalDenomination";
 
 export const convertCurrency = (
   exchangeRates: ExchangeRates,
   originalAmount: {
     amount: number;
-    currencyCode: string;
+    currency: Currency;
   },
   currencyCode: string,
 ) => {
   const exchangeRateOriginalCurrency =
-    exchangeRates[originalAmount.currencyCode];
+    exchangeRates[originalAmount.currency.code];
   const exchangeRateNewCurrency = exchangeRates[currencyCode];
 
-  if (originalAmount.currencyCode !== "SAT" && !exchangeRateOriginalCurrency) {
+  if (currencyCode === "SAT") {
+    // Exchange rate is for BTC, so convert to normal denom, convert to BTC, and then multiply by 1e8 to get SAT.
+    return (
+      (Number(
+        convertToNormalDenomination(
+          originalAmount.amount,
+          originalAmount.currency,
+        ),
+      ) /
+        exchangeRateOriginalCurrency) *
+      1e8
+    );
+  }
+
+  if (originalAmount.currency.code !== "SAT" && !exchangeRateOriginalCurrency) {
     throw new Error(
       `Exchange rate for ${exchangeRateOriginalCurrency} not found.`,
     );
@@ -23,7 +39,7 @@ export const convertCurrency = (
   }
 
   // Convert SAT to BTC and then to the target currency.
-  if (originalAmount.currencyCode === "SAT") {
+  if (originalAmount.currency.code === "SAT") {
     return (originalAmount.amount / 1e8) * exchangeRateNewCurrency;
   }
 

@@ -666,11 +666,8 @@ class SendingVasp:
         wallet_balance, wallet_currency_code = self.ledger_service.get_wallet_balance(
             sender_uma
         )
-        sending_currency_code = payreq_data.sender_currencies[0].code
-        if sending_currency_code != wallet_currency_code:
-            abort_with_error(400, "Sending currency is not supported.")
 
-        uma_currency = self.currency_service.get_uma_currency(sending_currency_code)
+        uma_currency = self.currency_service.get_uma_currency(wallet_currency_code)
         sending_currency_multiplier = uma_currency.millisatoshi_per_unit
         sending_currency_amount = round(
             (amount_as_msats + payreq_data.exchange_fees_msats)
@@ -713,7 +710,7 @@ class SendingVasp:
         self.ledger_service.subtract_wallet_balance(
             transaction_hash=transaction_hash,
             amount=sending_currency_amount,
-            currency_code=sending_currency_code,
+            currency_code=wallet_currency_code,
             sender_uma=sender_uma,
             receiver_uma=payreq_data.receiver_uma,
         )

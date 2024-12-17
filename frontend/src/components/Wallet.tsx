@@ -1,6 +1,4 @@
 "use client";
-import { useToast } from "@/hooks/use-toast";
-import { useBalance } from "@/hooks/useBalance";
 import { ExchangeRates } from "@/hooks/useExchangeRates";
 import { type Wallet as WalletType } from "@/hooks/useWalletContext";
 import { getBackendDomain } from "@/lib/backendDomain";
@@ -12,7 +10,6 @@ import { SandboxAvatar } from "./SandboxAvatar";
 import { Button } from "./ui/button";
 
 interface Props {
-  uma: string | undefined;
   wallet: WalletType | undefined;
   walletIndex: number | undefined;
   exchangeRates: ExchangeRates | undefined;
@@ -25,7 +22,6 @@ interface Props {
 }
 
 export const Wallet = ({
-  uma,
   wallet,
   walletIndex,
   exchangeRates,
@@ -33,40 +29,37 @@ export const Wallet = ({
   options,
 }: Props) => {
   const router = useRouter();
-  const { toast } = useToast();
-  const {
-    balance,
-    isLoading: isLoadingBalance,
-    error,
-  } = useBalance({
-    uma,
-  });
-
-  if (error) {
-    toast({
-      title: `Failed to fetch user balance: ${error}`,
-      variant: "error",
-    });
-  }
-
   const handleSend = () => {
     router.push("/send");
   };
 
   let estimate: React.ReactNode | null = null;
-  if (!isLoadingBalance && balance && exchangeRates) {
-    const currencyToEstimate = balance.currency.code === "USD" ? "SAT" : "USD";
-    estimate = convertCurrency(
-      exchangeRates,
-      {
-        amount: balance.amountInLowestDenom,
-        currencyCode: balance.currency.code,
-      },
-      currencyToEstimate,
-    ).toLocaleString("en", {
-      style: "currency",
-      currency: currencyToEstimate,
-    });
+  if (!isLoading && wallet && exchangeRates) {
+    const currencyToEstimate = wallet.currency.code === "SAT" ? "USD" : "SAT";
+    if (currencyToEstimate === "SAT") {
+      estimate = `${convertCurrency(
+        exchangeRates,
+        {
+          amount: wallet.amountInLowestDenom,
+          currency: wallet.currency,
+        },
+        currencyToEstimate,
+      ).toLocaleString("en", {
+        maximumFractionDigits: 0,
+      })} sats`;
+    } else {
+      estimate = convertCurrency(
+        exchangeRates,
+        {
+          amount: wallet.amountInLowestDenom,
+          currency: wallet.currency,
+        },
+        currencyToEstimate,
+      ).toLocaleString("en", {
+        style: "currency",
+        currency: currencyToEstimate,
+      });
+    }
   }
 
   return (
@@ -132,23 +125,23 @@ export const Wallet = ({
       )}
       <div className="flex flex-col gap-2.5 px-8">
         <div className="flex flex-row items-end gap-1">
-          {!isLoading && !isLoadingBalance && balance ? (
+          {!isLoading && wallet ? (
             <div className="text-5xl font-light leading-[48px] tracking-[-1.92px] animate-[slideUpSmall_0.4s_ease-in-out_forwards]">
               {Number(
                 convertToNormalDenomination(
-                  balance.amountInLowestDenom,
-                  balance.currency,
+                  wallet.amountInLowestDenom,
+                  wallet.currency,
                 ),
               ).toLocaleString("en", {
-                currency: balance.currency.code,
+                currency: wallet.currency.code,
               })}
             </div>
           ) : (
             <div className="w-[128px] h-[48px]" />
           )}
-          {!isLoading && !isLoadingBalance && balance ? (
+          {!isLoading && wallet ? (
             <div className="text-[15px] font-semibold leading-[20px] tracking-[-0.187px] animate-[slideUpSmall_0.4s_ease-in-out_forwards]">
-              {balance.currency.code}
+              {wallet.currency.code}
             </div>
           ) : (
             <div className="w-[28px] h-[20px]" />

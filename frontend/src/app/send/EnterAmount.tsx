@@ -48,7 +48,7 @@ export const EnterAmount = () => {
       setConvertedToUsd(
         convertCurrency(
           exchangeRates,
-          { amount, currencyCode: selectedCurrency.code },
+          { amount, currency: selectedCurrency },
           "USD",
         ),
       );

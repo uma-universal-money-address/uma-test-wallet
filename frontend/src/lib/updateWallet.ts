@@ -1,24 +1,25 @@
-import { Currency } from "@/types/Currency";
+import { RawWallet } from "@/hooks/useWalletContext";
 import { getBackendUrl } from "./backendUrl";
 import {
+  RAW_WALLET_COLOR_MAPPING,
   RAW_WALLET_COLOR_TO_NUMBER_MAPPING,
   WalletColor,
 } from "./walletColorMapping";
 
 interface WalletUpdateProps {
-  color?: WalletColor;
-  currency?: Currency;
+  color?: WalletColor | undefined;
+  currencyCode?: string | undefined;
 }
 
 export const updateWallet = async (
   walletId: string,
   options: WalletUpdateProps,
 ) => {
-  const { color, currency } = options;
+  const { color, currencyCode } = options;
 
   const body = {
     color: color ? RAW_WALLET_COLOR_TO_NUMBER_MAPPING[color] : undefined,
-    currency,
+    currencyCode,
   };
 
   try {
@@ -33,7 +34,20 @@ export const updateWallet = async (
     if (!response.ok) {
       throw new Error("Failed to update wallet.");
     }
-    return response.json();
+    const wallet = await (response.json() as Promise<RawWallet>);
+    return {
+      id: wallet.id,
+      amountInLowestDenom: wallet.amount_in_lowest_denom,
+      color: RAW_WALLET_COLOR_MAPPING[wallet.color],
+      deviceToken: wallet.device_token,
+      name: wallet.name,
+      uma: {
+        userId: wallet.uma.user_id,
+        username: wallet.uma.username,
+        default: wallet.uma.default,
+      },
+      currency: wallet.currency,
+    };
   } catch (e: unknown) {
     const error = e as Error;
     throw error;

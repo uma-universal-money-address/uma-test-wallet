@@ -1,14 +1,16 @@
 import { getBackendUrl } from "@/lib/backendUrl";
 import { getUmaFromUsername } from "@/lib/uma";
+import { Currency } from "@/types/Currency";
 import { useEffect, useState } from "react";
 import { useAppState } from "./useAppState";
 import { useContacts, type ContactInfo } from "./useContacts";
+import { CurrenciesInfo, useCurrencies } from "./useCurrencies";
 import { useWallets } from "./useWalletContext";
 
 export interface Transaction {
   id: string;
   amountInLowestDenom: number;
-  currencyCode: string;
+  currency: Currency;
   name: string;
   createdAt: string;
   otherUma: string;
@@ -28,6 +30,7 @@ const hydrateTransactions = (
   rawTransactions: RawTransaction[],
   contacts: ContactInfo[],
   uma: string,
+  currencies: CurrenciesInfo[],
 ): Transaction[] => {
   return rawTransactions.map((rawTransaction) => {
     const isSender = rawTransaction.senderUma === uma;
@@ -37,10 +40,24 @@ const hydrateTransactions = (
     const contact = contacts.find((contact) => contact.uma === otherUma);
     const name = otherUma;
     const userId = contact?.userId;
+
+    const currency = currencies.find(
+      (currency) => currency.code === rawTransaction.currencyCode,
+    );
+
+    if (!currency) {
+      throw new Error("Currency not found.");
+    }
+
     return {
       id: rawTransaction.id,
       amountInLowestDenom: rawTransaction.amountInLowestDenom,
-      currencyCode: rawTransaction.currencyCode,
+      currency: {
+        code: currency.code,
+        symbol: currency.symbol,
+        name: currency.name,
+        decimals: currency.decimals,
+      },
       name,
       createdAt: new Date(
         Date.parse(rawTransaction.createdAt),
@@ -58,6 +75,7 @@ export function useTransactions() {
     isLoading: isLoadingContacts,
   } = useContacts();
   const { isLoading: isLoadingWallets } = useWallets();
+  const { currencies, isLoading: isLoadingCurrencies } = useCurrencies();
   const { currentWallet } = useAppState();
 
   const [transactions, setTransactions] = useState<Transaction[]>();
@@ -65,7 +83,11 @@ export function useTransactions() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    async function fetchTransactions(contacts: ContactInfo[], uma: string) {
+    async function fetchTransactions(
+      contacts: ContactInfo[],
+      uma: string,
+      currencies: CurrenciesInfo[],
+    ) {
       setIsLoading(true);
       try {
         const response = await fetch(
@@ -82,7 +104,9 @@ export function useTransactions() {
           }
         });
         if (!ignore) {
-          setTransactions(hydrateTransactions(response, contacts, uma));
+          setTransactions(
+            hydrateTransactions(response, contacts, uma, currencies),
+          );
           setIsLoading(false);
         }
       } catch (e: unknown) {
@@ -98,11 +122,14 @@ export function useTransactions() {
       ownUmaContacts &&
       !isLoadingContacts &&
       currentWallet &&
-      !isLoadingWallets
+      !isLoadingWallets &&
+      currencies &&
+      !isLoadingCurrencies
     ) {
       fetchTransactions(
         [...recentContacts, ...ownUmaContacts],
         getUmaFromUsername(currentWallet.uma.username),
+        currencies,
       );
     }
     return () => {
@@ -112,8 +139,10 @@ export function useTransactions() {
     recentContacts,
     ownUmaContacts,
     currentWallet,
+    currencies,
     isLoadingContacts,
     isLoadingWallets,
+    isLoadingCurrencies,
   ]);
 
   return {
