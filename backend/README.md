@@ -43,7 +43,7 @@ touch instance/vasp.sqlite
 Run migrations on the db:
 
 ```bash
-FLASK_CONFIG="local-dev.py" pipenv run alembic upgrade head
+FLASK_CONFIG="config/local-dev.py" pipenv run alembic upgrade head
 ```
 
 > The schema is defined with SQLAlchemy ORMs in `vasp/models`

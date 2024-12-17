@@ -10,8 +10,9 @@ export const fetchWithRedirect = async (
     const json = await res.json();
     if (json.logged_in) {
       window.location.href = window.location.origin + "/wallet";
-    } else if (!window.location.pathname.includes("/login")) {
-      window.location.href = window.location.origin + "/login";
+    } else if (window.location.pathname !== "/") {
+      // Redirect to home page if not already there
+      window.location.href = window.location.origin;
     }
   }
 
