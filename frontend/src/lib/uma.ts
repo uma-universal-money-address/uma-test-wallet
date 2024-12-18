@@ -1,4 +1,5 @@
 import { Wallet } from "@/hooks/useWalletContext";
+import { UmaError } from "@/types/UmaError";
 import { getBackendDomain } from "./backendDomain";
 import { getBackendUrl } from "./backendUrl";
 import { RAW_WALLET_COLOR_MAPPING } from "./walletColorMapping";
@@ -20,6 +21,10 @@ export const createUma = async (umaUserName: string): Promise<Wallet> => {
     credentials: "include",
     body: JSON.stringify({ uma_user_name: umaUserName }),
   });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new UmaError(error.reason || "Failed to create UMA username.", error);
+  }
   const rawWallet = await response.json();
   return {
     id: rawWallet.id,
