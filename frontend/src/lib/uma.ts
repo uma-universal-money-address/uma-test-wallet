@@ -21,6 +21,21 @@ export const createUma = async (umaUserName: string) => {
   return response.json();
 };
 
+export const pickRandomUma = async () => {
+  const response = await fetch(`${getBackendUrl()}/uma/generate_random_uma`, {
+    method: "GET",
+  });
+  const json = (await response.json()) as {
+    uma: string | null;
+    error: string | null;
+  };
+  if (json.error) {
+    console.error(json.error);
+    return null;
+  }
+  return json.uma && json.uma.length > 0 ? json.uma : null;
+};
+
 export const getUmaFromUsername = (umaUserName: string) => {
   return `$${umaUserName}@${getBackendDomain()}`;
 };

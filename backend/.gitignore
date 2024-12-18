@@ -13,3 +13,7 @@ build/
 *.egg-info/
 
 .env
+
+*.pem
+*.crt
+
