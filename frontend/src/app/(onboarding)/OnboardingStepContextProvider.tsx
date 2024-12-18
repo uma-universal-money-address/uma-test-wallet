@@ -27,6 +27,7 @@ export interface OnboardingStepContextData {
   umaInputMessage: string | undefined;
   wallet?: Wallet;
   walletColor: WalletColor;
+  currencyCode: string;
   stepNumber: number;
   history: number[];
   stepProps: StepProps;
@@ -38,6 +39,7 @@ export interface OnboardingStepContextData {
   setUmaInputMessage: (umaInputMessage: string | undefined) => void;
   setWallet: (wallet: Wallet) => void;
   setWalletColor: (walletColor: WalletColor) => void;
+  setCurrencyCode: (currencyCode: string) => void;
   setIsLoading: (isLoading: boolean) => void;
   setError: (error: Error | null) => void;
 }
@@ -91,6 +93,7 @@ function OnboardingStepContextProvider({
     umaError: undefined,
     umaInputMessage: undefined,
     walletColor: WalletColor.BLACK,
+    currencyCode: "SAT",
     history: [],
     isLoading: false,
     onNext: () => {
@@ -154,6 +157,19 @@ function OnboardingStepContextProvider({
         wallet: {
           ...prevData.wallet!,
           color: walletColor,
+        },
+      }));
+    },
+    setCurrencyCode: (currencyCode) => {
+      setData((prevData) => ({
+        ...prevData,
+        currencyCode,
+        wallet: {
+          ...prevData.wallet!,
+          currency: {
+            ...prevData.wallet!.currency,
+            code: currencyCode,
+          },
         },
       }));
     },

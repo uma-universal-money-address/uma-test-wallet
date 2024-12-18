@@ -17,6 +17,7 @@ from vasp.user import DEFAULT_PREFERENCES
 from vasp.uma_vasp.user import User
 from vasp.models.Currency import Currency
 from uma import KycStatus
+from vasp.uma_vasp.currencies import CURRENCIES
 
 from typing import TYPE_CHECKING
 
@@ -132,7 +133,12 @@ def create_uma() -> Response:
                 "color": wallet_fresh.color.value,
                 "device_token": wallet_fresh.device_token,
                 "uma": wallet_fresh.uma.to_dict(),
-                "currency": wallet_fresh.currency.to_dict(),
+                "currency": {
+                    "code": wallet_fresh.currency.code,
+                    "name": CURRENCIES[wallet_fresh.currency.code].name,
+                    "symbol": CURRENCIES[wallet_fresh.currency.code].symbol,
+                    "decimals": CURRENCIES[wallet_fresh.currency.code].decimals,
+                },
             }
         )
 

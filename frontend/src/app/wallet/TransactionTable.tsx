@@ -18,20 +18,40 @@ const TransactionRow = ({
   wallets: Wallet[];
 }) => {
   const isReceiving = transaction.amountInLowestDenom > 0;
-  const estimateLocaleString = convertCurrency(
-    exchangeRates,
-    {
-      amount: isReceiving
-        ? transaction.amountInLowestDenom
-        : -transaction.amountInLowestDenom,
-      currencyCode: transaction.currencyCode,
-    },
-    "USD",
-  ).toLocaleString("en", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 8,
-  });
+
+  let estimate: number;
+  let estimateLocaleString: string;
+  if (transaction.currency.code === "SAT") {
+    estimate = convertCurrency(
+      exchangeRates,
+      {
+        amount: isReceiving
+          ? transaction.amountInLowestDenom
+          : -transaction.amountInLowestDenom,
+        currency: transaction.currency,
+      },
+      "USD",
+    );
+    estimateLocaleString = `${estimate.toLocaleString("en", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 8,
+    })}`;
+  } else {
+    estimate = convertCurrency(
+      exchangeRates,
+      {
+        amount: isReceiving
+          ? transaction.amountInLowestDenom
+          : -transaction.amountInLowestDenom,
+        currency: transaction.currency,
+      },
+      "SAT",
+    );
+    estimateLocaleString = `${estimate.toLocaleString("en", {
+      maximumFractionDigits: 0,
+    })} sats`;
+  }
 
   const handleClick = () => {
     console.log("TODO: Open transaction details");
@@ -42,15 +62,17 @@ const TransactionRow = ({
       "en",
       {
         maximumFractionDigits: 8,
+        minimumFractionDigits: transaction.currency.decimals,
       },
-    )} sats`}</span>
+    )} ${transaction.currency.code}`}</span>
   ) : (
     <span className="text-nowrap">{`${(-transaction.amountInLowestDenom).toLocaleString(
       "en",
       {
         maximumFractionDigits: 8,
+        minimumFractionDigits: transaction.currency.decimals,
       },
-    )} sats`}</span>
+    )} ${transaction.currency.code}`}</span>
   );
 
   const walletIndex = wallets.findIndex(

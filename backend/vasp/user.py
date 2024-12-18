@@ -250,7 +250,12 @@ def construct_blueprint(
                             "color": wallet.color.value,
                             "device_token": wallet.device_token,
                             "uma": wallet.uma.to_dict(),
-                            "currency": wallet.currency.to_dict(),
+                            "currency": {
+                                "code": wallet.currency.code,
+                                "name": CURRENCIES[wallet.currency.code].name,
+                                "symbol": CURRENCIES[wallet.currency.code].symbol,
+                                "decimals": CURRENCIES[wallet.currency.code].decimals,
+                            },
                         }
                         for wallet in wallets
                     ]
@@ -267,7 +272,21 @@ def construct_blueprint(
             if wallet is None:
                 abort_with_error(404, f"Wallet {wallet_id} not found.")
             request_json = request.json
-            wallet.color = request_json.get("color")
+
+            color = request_json.get("color")
+            if color:
+                wallet.color = color
+
+            currency_code = request_json.get("currencyCode")
+            if currency_code:
+                currency = Currency(
+                    wallet_id=wallet.id,
+                    code=currency_code,
+                )
+                db_session.delete(wallet.currency)
+                db_session.add(currency)
+                wallet.currency = currency
+
             db_session.commit()
 
             response = jsonify(
@@ -277,7 +296,12 @@ def construct_blueprint(
                     "color": wallet.color.value,
                     "device_token": wallet.device_token,
                     "uma": wallet.uma.to_dict(),
-                    "currency": wallet.currency.to_dict(),
+                    "currency": {
+                        "code": wallet.currency.code,
+                        "name": CURRENCIES[wallet.currency.code].name,
+                        "symbol": CURRENCIES[wallet.currency.code].symbol,
+                        "decimals": CURRENCIES[wallet.currency.code].decimals,
+                    },
                 }
             )
             response.status_code = 201

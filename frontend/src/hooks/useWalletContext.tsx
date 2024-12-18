@@ -30,7 +30,7 @@ export interface Wallet {
   currency: Currency;
 }
 
-interface RawWallet {
+export interface RawWallet {
   id: string;
   amount_in_lowest_denom: number;
   color: RawWalletColor;

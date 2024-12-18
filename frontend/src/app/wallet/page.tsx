@@ -5,7 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { useWallets } from "@/hooks/useWalletContext";
-import { getUmaFromUsername } from "@/lib/uma";
 import { useEffect, useState } from "react";
 import { TransactionTable } from "./TransactionTable";
 
@@ -63,9 +62,17 @@ export default function Page() {
     error: exchangeRatesError,
     isLoading: isLoadingExchangeRates,
   } = useExchangeRates();
+
   const currentWallet = useAppState((state) => state.currentWallet);
   const [currIndex, setCurrIndex] = useState(-1);
   const [prevIndex, setPrevIndex] = useState(-1);
+
+  if (error) {
+    toast({
+      title: `Failed to fetch user balance: ${error}`,
+      variant: "error",
+    });
+  }
 
   useEffect(() => {
     if (currentWallet && wallets && wallets.length > 0) {
@@ -101,11 +108,6 @@ export default function Page() {
                 walletIndex={index}
               >
                 <Wallet
-                  uma={
-                    wallet
-                      ? getUmaFromUsername(wallet?.uma.username)
-                      : undefined
-                  }
                   wallet={wallet}
                   walletIndex={index}
                   exchangeRates={exchangeRates}
