@@ -1,25 +1,26 @@
-from sqlalchemy import select, exc
-from sqlalchemy.orm import Session
 import logging
+import random
+from typing import TYPE_CHECKING, List
 from uuid import uuid4
 
-from typing import List
-from flask import Blueprint, request, Response, jsonify
-from flask_login import login_user, current_user
-
-from vasp.db import db
-from vasp.models.Uma import Uma as UmaModel
-from vasp.models.Wallet import Wallet as WalletModel, Color
-from vasp.models.User import User as UserModel
-from vasp.models.Preference import Preference
-from vasp.uma_vasp.uma_exception import abort_with_error
-from vasp.user import DEFAULT_PREFERENCES
-from vasp.uma_vasp.user import User
-from vasp.models.Currency import Currency
+from flask import Blueprint, Response, jsonify, request
+from flask_login import current_user, login_user
+from sqlalchemy import exc, select
+from sqlalchemy.orm import Session
 from uma import KycStatus
 from vasp.uma_vasp.currencies import CURRENCIES
 
-from typing import TYPE_CHECKING
+from vasp.db import db
+from vasp.models.Currency import Currency
+from vasp.models.Preference import Preference
+from vasp.models.Uma import Uma as UmaModel
+from vasp.models.User import User as UserModel
+from vasp.models.Wallet import Color
+from vasp.models.Wallet import Wallet as WalletModel
+from vasp.uma_vasp.uma_exception import abort_with_error
+from vasp.uma_vasp.user import User
+from vasp.user import DEFAULT_PREFERENCES
+from vasp.username_dict import APPROVED_ADJECTIVES, APPROVED_NOUNS
 
 if TYPE_CHECKING:
     current_user: User
@@ -150,3 +151,38 @@ async def uma(uma_user_name: str) -> Response:
             select(UmaModel).where(UmaModel.username == uma_user_name)
         ).first()
         return jsonify({"available": uma_model is None})
+
+
+@bp.get("/generate_random_uma")
+async def generate_random_uma() -> Response:
+    random_uma = await _generate_random_uma()
+    return (
+        jsonify({"uma": random_uma})
+        if random_uma
+        else jsonify({"error": "Random generation attempts exhausted"})
+    )
+
+
+async def _generate_random_uma(
+    batch_size: int = 100, max_attempts: int = 100
+) -> str | None:
+    attempts = 0
+
+    while attempts < max_attempts:
+        generated_usernames = set[str](
+            f"{random.choice(APPROVED_ADJECTIVES).lower()}-{random.choice(APPROVED_NOUNS).lower()}-{random.randint(0, 999):03d}"
+            for _ in range(batch_size)
+        )
+        available_set = await _available_umas_in_set(generated_usernames)
+        if available_set:
+            return random.choice(list(available_set))
+        attempts += 1
+    return None
+
+
+async def _available_umas_in_set(umaSet: set[str]) -> set[str]:
+    with Session(db.engine) as db_session:
+        existing_uma = db_session.scalars(
+            select(UmaModel).where(UmaModel.username.in_(umaSet))
+        ).all()
+        return umaSet - set(existing_uma)
