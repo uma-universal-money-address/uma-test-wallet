@@ -5,10 +5,9 @@ from uuid import uuid4
 
 from flask import Blueprint, Response, jsonify, request
 from flask_login import current_user, login_user
-from sqlalchemy import exc, select
+from sqlalchemy import exc, func, select
 from sqlalchemy.orm import Session
 from uma import KycStatus
-from vasp.uma_vasp.currencies import CURRENCIES
 
 from vasp.db import db
 from vasp.models.Currency import Currency
@@ -17,6 +16,7 @@ from vasp.models.Uma import Uma as UmaModel
 from vasp.models.User import User as UserModel
 from vasp.models.Wallet import Color
 from vasp.models.Wallet import Wallet as WalletModel
+from vasp.uma_vasp.currencies import CURRENCIES
 from vasp.uma_vasp.uma_exception import abort_with_error
 from vasp.uma_vasp.user import User
 from vasp.user import DEFAULT_PREFERENCES
@@ -110,7 +110,15 @@ def create_uma() -> Response:
     uma_user_name = data["uma_user_name"]
     if not uma_user_name:
         abort_with_error(400, "UMA user name is required.")
-
+    if current_user.is_authenticated:
+        with Session(db.engine) as db_session:
+            count_uma_current_user = db_session.scalar(
+                select(func.count(UmaModel.username)).where(
+                    UmaModel.user_id == current_user.id
+                )
+            )
+            if count_uma_current_user >= 10:
+                abort_with_error(400, "You have reached the maximum number of UMAs.")
     currencies = ["SAT"]
     # Default to verified for the purpose of this demo app
     kyc_status = KycStatus.VERIFIED
