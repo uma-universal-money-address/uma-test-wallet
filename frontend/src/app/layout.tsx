@@ -66,7 +66,7 @@ export default function RootLayout({
         className={`${inter.variable} ${roboto_mono.variable} h-dvh flex items-center justify-center sm:bg-[#F9F9F9]`}
       >
         <PushNotificationManager />
-        <div className="max-w-[432px] sm:min-w-[400px] w-full h-full max-h-[916px] sm:border-[0.5px] border-[#EBEEF2] sm:rounded-[32px] sm:px-4 sm:pt-6 bg-white">
+        <div className="max-w-[432px] sm:min-w-[400px] w-full h-dvh max-h-[916px] sm:border-[0.5px] border-[#EBEEF2] sm:rounded-[32px] sm:px-4 sm:pt-6 bg-white">
           {children}
           <Toaster />
         </div>

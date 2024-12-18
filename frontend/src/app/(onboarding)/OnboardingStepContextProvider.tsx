@@ -1,12 +1,11 @@
 import { useToast } from "@/hooks/use-toast";
 import { Wallet } from "@/hooks/useWalletContext";
 import { WalletColor } from "@/lib/walletColorMapping";
-import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { CreateUma, CreateUmaButtons } from "./CreateUma";
 import { CreatingTestUmaLoading } from "./CreatingTestUmaLoading";
 import { Finished, FinishedButtons } from "./Finished";
-import { StepProps } from "./Step";
+import { StepProps } from "./Steps";
 import {
   WalletCustomization,
   WalletCustomizationButtons,
@@ -78,12 +77,13 @@ export const ONBOARDING_STEP_MAPPING: Record<OnboardingStep, StepProps> = {
 
 function OnboardingStepContextProvider({
   stepOrder,
+  onFinish,
   children,
 }: {
   stepOrder: OnboardingStep[];
+  onFinish: () => void;
   children: React.ReactNode;
 }) {
-  const router = useRouter();
   const { toast } = useToast();
 
   const [data, setData] = useState<OnboardingStepContextData>({
@@ -112,7 +112,7 @@ function OnboardingStepContextProvider({
             stepProps: nextStepProps,
           };
         } else {
-          router.push("/wallet");
+          onFinish();
         }
         return prevData;
       });

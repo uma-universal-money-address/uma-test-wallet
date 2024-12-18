@@ -4,7 +4,7 @@ import {
   WalletColor,
 } from "@/lib/walletColorMapping";
 import { Currency } from "@/types/Currency";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useAppState } from "./useAppState";
 import { RawUma, Uma } from "./useUmaContext";
 
@@ -42,6 +42,7 @@ export interface RawWallet {
 
 export interface WalletContextData {
   wallets: Wallet[] | undefined;
+  fetchWallets: () => Promise<Wallet[] | undefined>;
   error?: string;
   isLoading: boolean;
 }
@@ -84,8 +85,8 @@ export const WalletContextProvider = ({
   const { currentWallet, setCurrentWallet } = useAppState();
   const hasCurrentWallet = !!currentWallet;
 
-  useEffect(() => {
-    async function fetchWalletsInternal() {
+  const fetchWalletsAndUpdateState = useCallback(
+    async (ignore?: boolean) => {
       setIsLoading(true);
       try {
         const wallets = await fetchWallets();
@@ -96,13 +97,21 @@ export const WalletContextProvider = ({
           if (!hasCurrentWallet) {
             setCurrentWallet(defaultWallet);
           }
-          setIsLoading(false);
         }
+        return wallets;
       } catch (e: unknown) {
         const error = e as Error;
         setError(error.message);
+      } finally {
         setIsLoading(false);
       }
+    },
+    [hasCurrentWallet, setCurrentWallet],
+  );
+
+  useEffect(() => {
+    async function fetchWalletsInternal() {
+      await fetchWalletsAndUpdateState(ignore);
     }
 
     let ignore = false;
@@ -110,12 +119,13 @@ export const WalletContextProvider = ({
     return () => {
       ignore = true;
     };
-  }, [hasCurrentWallet, setCurrentWallet]);
+  }, [fetchWalletsAndUpdateState]);
 
   return (
     <Context.Provider
       value={{
         wallets,
+        fetchWallets: fetchWalletsAndUpdateState,
         error,
         isLoading,
       }}

@@ -2,7 +2,7 @@
 
 import { SandboxButton } from "@/components/SandboxButton";
 import Image from "next/image";
-import { StepButtonProps } from "./Step";
+import { StepButtonProps } from "./Steps";
 
 export const Finished = () => {
   return (
