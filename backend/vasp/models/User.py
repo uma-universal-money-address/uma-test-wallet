@@ -8,6 +8,7 @@ from vasp.models.Wallet import Wallet
 from vasp.models.Preference import Preference
 from vasp.models.PushSubscription import PushSubscription
 from vasp.models.WebAuthnCredential import WebAuthnCredential
+from vasp.models.PayReqResponse import PayReqResponse
 from typing import List
 from uma import KycStatus
 from vasp.utils import generate_uuid
@@ -38,6 +39,10 @@ class User(Base):
     )
 
     push_subscriptions: Mapped[List["PushSubscription"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+
+    payreq_responses: Mapped[List["PayReqResponse"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
 

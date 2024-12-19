@@ -13,7 +13,7 @@ from flask_login import login_user, login_required, logout_user, current_user
 from vasp.redirect import redirect_frontend
 
 from enum import Enum
-from vasp.utils import get_vasp_domain
+from vasp.utils import get_vasp_domain, get_uma_from_username
 from vasp.db import db
 from vasp.models.User import User as UserModel
 from vasp.models.WebAuthnCredential import WebAuthnCredential
@@ -89,19 +89,26 @@ def construct_blueprint(
         if not jwt_private_key:
             abort_with_error(500, "JWT private key not set in config.")
 
+        query_params = parse_qs(parsed_url.query)
+        [username] = query_params["uma_username"]
+
+        if username:
+            session["uma"] = get_uma_from_username(username)
+        else:
+            session["uma"] = current_user.get_default_uma_address()
+
         user_nwc_jwt = jwt.encode(
             {
                 "sub": str(current_user.id),
                 "aud": get_vasp_domain(),
                 "exp": datetime.timestamp(datetime.now() + timedelta(minutes=10)),
                 "iss": get_vasp_domain(),
-                "address": current_user.get_default_uma_address(),
+                "address": (session["uma"]),
             },
             jwt_private_key,
             algorithm="ES256",
         )
 
-        query_params = parse_qs(parsed_url.query)
         query_params["token"] = [user_nwc_jwt]
         query_params["currency"] = [
             json.dumps(

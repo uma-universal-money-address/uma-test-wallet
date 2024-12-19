@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from vasp.models.User import User
     from vasp.models.Wallet import Wallet
     from vasp.models.Transaction import Transaction
+    from vasp.models.PayReqResponse import PayReqResponse
 
 """Stores uma information users."""
 
@@ -27,6 +28,10 @@ class Uma(Base):
     )
 
     transactions: Mapped[List["Transaction"]] = relationship(
+        back_populates="uma", cascade="all, delete-orphan"
+    )
+
+    payreq_responses: Mapped[List["PayReqResponse"]] = relationship(
         back_populates="uma", cascade="all, delete-orphan"
     )
 

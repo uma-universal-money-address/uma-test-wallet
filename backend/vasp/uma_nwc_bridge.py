@@ -3,7 +3,6 @@ from typing import Any, Tuple
 
 import jwt
 from bolt11 import decode as bolt11_decode
-from flask_login import current_user
 from flask import Blueprint, Response, current_app, jsonify, request, session
 from vasp.uma_vasp.currencies import CURRENCIES
 from lightspark import LightsparkSyncClient
@@ -14,7 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import or_
 from vasp.db import db
-from vasp.utils import get_vasp_domain
+from vasp.utils import get_vasp_domain, get_username_from_uma
 from vasp.models.Quote import Quote
 from vasp.models.Transaction import Transaction
 from vasp.uma_vasp.config import Config
@@ -95,11 +94,10 @@ class UmaNwcBridge:
         )
 
     def transactions(self) -> Response:
-        user_id = session.get("user_id")
-        user = User.from_id(user_id)
+        uma = session.get("uma")
 
-        if user is None:
-            abort_with_error(404, "User not found")
+        if uma is None:
+            abort_with_error(404, "Uma not found in session")
 
         with Session(db.engine) as db_session:
             # TODO: Add pagination
@@ -107,8 +105,8 @@ class UmaNwcBridge:
                 select(Transaction)
                 .where(
                     or_(
-                        Transaction.sender_uma == user.get_default_uma_address(),
-                        Transaction.receiver_uma == user.get_default_uma_address(),
+                        Transaction.sender_uma == uma,
+                        Transaction.receiver_uma == uma,
                     )
                 )
                 .order_by(Transaction.created_at.desc())
@@ -122,7 +120,7 @@ class UmaNwcBridge:
                 {
                     "amountInLowestDenom": (
                         transaction.amount_in_lowest_denom
-                        if transaction.user_id == user_id
+                        if transaction.sender_uma == uma
                         else -transaction.amount_in_lowest_denom
                     ),
                     "currencyCode": transaction.currency_code,
@@ -135,12 +133,9 @@ class UmaNwcBridge:
             return jsonify(response)
 
     async def handle_pay_invoice(self) -> dict[str, Any]:
-        user_id = session.get("user_id")
-        if not user_id:
-            abort_with_error(401, "Unauthorized")
-        user = User.from_id(user_id)
-        if user is None:
-            abort_with_error(404, f"User {user_id} not found.")
+        uma = session.get("uma")
+        if uma is None:
+            abort_with_error(404, "Uma not found in session.")
 
         request_json = await request.get_json()
         if not request_json:
@@ -184,9 +179,9 @@ class UmaNwcBridge:
         amount_sats = payment.amount.convert_to(
             CurrencyUnit.SATOSHI
         ).preferred_currency_value_rounded
-        default_uma = user.get_default_uma_address()
+
         self.ledger_service.subtract_wallet_balance(
-            transaction_hash, amount_sats, "SAT", default_uma, "NWC"
+            transaction_hash, amount_sats, "SAT", uma, "NWC"
         )
         preimage = payment_result.payment_preimage
         if not preimage:
@@ -267,12 +262,13 @@ class UmaNwcBridge:
         ).to_dict()
 
     def handle_get_info(self) -> dict[str, Any]:
-        user_id = session["user_id"]
-        user = User.from_id(user_id)
-        if user is None:
-            abort_with_error(404, f"User {user_id} not found.")
+        uma = session["uma"]
+        if uma is None:
+            abort_with_error(404, "Uma not found in session.")
 
-        uma_currencies = self.currency_service.get_uma_currencies_for_user(user_id)
+        uma_currencies = self.currency_service.get_uma_currencies_for_uma(
+            get_username_from_uma(uma)
+        )
         currencies = [
             user_currency_to_uma_auth_currency(currency) for currency in uma_currencies
         ]
@@ -294,7 +290,7 @@ class UmaNwcBridge:
                 "execute_quote",
                 "pay_to_address",
             ],
-            lud16=user.get_default_uma_address(),
+            lud16=uma,
             currencies=currencies,
         ).to_dict()
 
@@ -577,7 +573,7 @@ def construct_blueprint(
         return nwc_bridge
 
     @bp.before_request
-    def user_id_from_jwt() -> None:
+    def data_from_jwt() -> None:
         auth_header = request.headers.get("Authorization")
         if not auth_header:
             abort_with_error(401, "Unauthorized")
@@ -599,15 +595,19 @@ def construct_blueprint(
             )
             user_id = decoded.get("sub")
             session["user_id"] = int(user_id)
+            uma = decoded.get("address")
+            session["uma"] = uma
         except jwt.exceptions.InvalidTokenError as e:
             print("Invalid token error", e)
             abort_with_error(401, "Unauthorized")
 
     @bp.get("/balance")
     def balance() -> dict[str, Any]:
-        default_uma = current_user.get_default_uma_address()
+        uma = session.get("uma")
+        if uma is None:
+            abort_with_error(404, "Uma not found in session.")
         return GetBalanceResponse(
-            balance=ledger_service.get_wallet_balance(uma=default_uma)[0],
+            balance=ledger_service.get_wallet_balance(uma)[0],
             currency=UmaCurrency(
                 code="SAT",
                 symbol=CURRENCIES["SAT"].symbol,
@@ -665,6 +665,10 @@ def construct_blueprint(
         user = User.from_id(user_id)
         if user is None:
             abort_with_error(404, f"User {user_id} not found.")
+        uma = session.get("uma")
+        if uma is None:
+            abort_with_error(404, "Uma not found in session.")
+
         body = await request.get_json()
         requested_permissions = body.get("permissions")
         if not requested_permissions:
@@ -679,7 +683,7 @@ def construct_blueprint(
             "sub": str(user_id),
             "aud": get_vasp_domain(),
             "iss": get_vasp_domain(),
-            "address": user.get_default_uma_address(),
+            "address": uma,
         }
 
         # TODO: Consider saving permissions or adding them to claims in some condensed form.
