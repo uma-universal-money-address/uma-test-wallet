@@ -1,6 +1,13 @@
 "use client";
 
+import { SandboxAvatar } from "@/components/SandboxAvatar";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UmaSwitcherFooter } from "@/components/UmaSwitcherFooter";
 import { useToast } from "@/hooks/use-toast";
@@ -30,7 +37,11 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
     isLoading: isLoadingWallets,
     error: walletsError,
   } = useWallets();
-  const { currentWallet } = useAppState();
+  const { currentWallet, setCurrentWallet } = useAppState();
+
+  const hasMultipleWallets = wallets && wallets.length > 1;
+  const currentWalletIndex =
+    wallets?.findIndex((wallet) => wallet.id === currentWallet?.id) || 0;
 
   const handlePermissions = async () => {
     const requestRes = await Notification.requestPermission();
@@ -70,7 +81,56 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
             {isLoadingUmas || isLoadingWallets || !currentWallet ? (
               <Skeleton className="w-[200px] h-[15px] rounded-full" />
             ) : (
-              getUmaFromUsername(currentWallet.uma.username)
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger disabled={!hasMultipleWallets}>
+                    <div className="flex items-center">
+                      <SandboxAvatar
+                        ownContact={{
+                          wallet: currentWallet,
+                          number: currentWalletIndex + 1,
+                        }}
+                        size="md"
+                      />
+                      <div className="ml-[6px]">
+                        {getUmaFromUsername(currentWallet.uma.username)}
+                      </div>
+                      {hasMultipleWallets && (
+                        <Image
+                          src="/icons/chevron-down-small.svg"
+                          alt="Chevron down"
+                          width={24}
+                          height={24}
+                        />
+                      )}
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {wallets?.map((wallet, index) =>
+                      wallet.id === currentWallet.id ? null : (
+                        <DropdownMenuItem
+                          key={wallet.id}
+                          onClick={() => setCurrentWallet(wallet)}
+                        >
+                          <SandboxAvatar
+                            ownContact={{
+                              wallet: currentWallet,
+                              number: index + 1,
+                            }}
+                            size="md"
+                          />
+                          {getUmaFromUsername(wallet.uma.username)}
+                        </DropdownMenuItem>
+                      ),
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button
+                  variant={"ghost"}
+                  disabled={!hasMultipleWallets}
+                  style={{ gap: 0 }}
+                ></Button>
+              </>
             )}
           </span>
         </div>
