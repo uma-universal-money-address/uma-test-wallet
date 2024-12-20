@@ -5,6 +5,7 @@ import { ExchangeRates, useExchangeRates } from "@/hooks/useExchangeRates";
 import { type Transaction, useTransactions } from "@/hooks/useTransactions";
 import { useWallets, Wallet } from "@/hooks/useWalletContext";
 import { convertCurrency } from "@/lib/convertCurrency";
+import { convertToNormalDenomination } from "@/lib/convertToNormalDenomination";
 import { getUmaFromUsername } from "@/lib/uma";
 import { useEffect } from "react";
 
@@ -57,8 +58,15 @@ const TransactionRow = ({
     console.log("TODO: Open transaction details");
   };
 
+  const amountInNormalDenom = Number(
+    convertToNormalDenomination(
+      transaction.amountInLowestDenom,
+      transaction.currency,
+    ),
+  );
+
   const amount = isReceiving ? (
-    <span className="text-nowrap text-[#19981E]">{`+${transaction.amountInLowestDenom.toLocaleString(
+    <span className="text-nowrap text-[#19981E]">{`+${amountInNormalDenom.toLocaleString(
       "en",
       {
         maximumFractionDigits: 8,
@@ -66,7 +74,7 @@ const TransactionRow = ({
       },
     )} ${transaction.currency.code}`}</span>
   ) : (
-    <span className="text-nowrap">{`${(-transaction.amountInLowestDenom).toLocaleString(
+    <span className="text-nowrap">{`${(-amountInNormalDenom).toLocaleString(
       "en",
       {
         maximumFractionDigits: 8,

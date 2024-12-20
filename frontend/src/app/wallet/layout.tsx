@@ -74,7 +74,7 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
   }, [umasError, walletsError, toast]);
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-full">
       <div className="flex items-center justify-between px-4 py-[3px]">
         <div className="flex items-center">
           <span className="text-primary text-[15px] font-semibold leading-5 tracking-[-0.187px]">
@@ -165,11 +165,8 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
         {children}
       </main>
       {wallets && wallets.length > 0 && (
-        <div className="pt-2 px-4 pb-3 border-[#EBEEF2] border">
-          <UmaSwitcherFooter
-            wallets={wallets || []}
-            isLoading={isLoadingWallets || !currentWallet}
-          />
+        <div className="pt-2 px-4 pb-3 border-[#EBEEF2] border-t">
+          <UmaSwitcherFooter wallets={wallets || []} />
         </div>
       )}
     </div>

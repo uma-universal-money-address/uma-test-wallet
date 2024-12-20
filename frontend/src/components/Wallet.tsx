@@ -66,7 +66,7 @@ export const Wallet = ({
     <div
       style={{
         backgroundColor: wallet ? wallet.color : "rgba(0, 0, 0, 0.3)",
-        transition: "background-color 0.3s",
+        transition: "background-color 0.3s, height 0.3s",
       }}
       className="flex flex-col justify-between min-h-[214px] text-gray-50 py-6 gap-6 rounded-3xl shadow-[0px_0px_0px_1px_rgba(0, 0, 0, 0.06), 0px_1px_1px_-0.5px_rgba(0, 0, 0, 0.06), 0px_3px_3px_-1.5px_rgba(0, 0, 0, 0.06), 0px_6px_6px_-3px_rgba(0, 0, 0, 0.06), 0px_12px_12px_-6px_rgba(0, 0, 0, 0.06), 0px_24px_24px_-12px_rgba(0, 0, 0, 0.06);]"
     >

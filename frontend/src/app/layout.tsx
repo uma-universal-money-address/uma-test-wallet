@@ -62,10 +62,14 @@ export default function RootLayout({
           crossOrigin="use-credentials"
         />
       </head>
-      <body className={`${inter.variable} ${roboto_mono.variable} h-dvh`}>
+      <body
+        className={`${inter.variable} ${roboto_mono.variable} h-dvh flex items-center justify-center sm:bg-[#F9F9F9]`}
+      >
         <PushNotificationManager />
-        {children}
-        <Toaster />
+        <div className="max-w-[432px] sm:min-w-[400px] w-full h-full max-h-[916px] sm:border-[0.5px] border-[#EBEEF2] sm:rounded-[32px] sm:px-4 sm:pt-6 bg-white">
+          {children}
+          <Toaster />
+        </div>
       </body>
     </html>
   );
