@@ -5,12 +5,19 @@ import { cva } from "class-variance-authority";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Button, ButtonProps } from "./ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 
 interface Props {
   loading?: boolean;
   disabled?: boolean;
   buttonProps?: ButtonProps;
   className?: string;
+  tooltip?: string | undefined;
   children: React.ReactNode;
 }
 
@@ -25,7 +32,7 @@ export const SandboxButton = (props: Props) => {
     setIsPressed(false);
   };
 
-  return (
+  const button = (
     <Button
       {...props.buttonProps}
       disabled={props.disabled || props.loading}
@@ -48,5 +55,16 @@ export const SandboxButton = (props: Props) => {
       {props.loading && <Loader2 className="animate-spin" />}
       {props.children}
     </Button>
+  );
+
+  return props.tooltip ? (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipContent>{props.tooltip}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  ) : (
+    button
   );
 };

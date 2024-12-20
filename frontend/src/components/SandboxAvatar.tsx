@@ -82,6 +82,7 @@ export const SandboxAvatar = (props: Props) => {
           boxShadow: props.shadow ? "0px 1px 1px rgba(0, 0, 0, 0.25)" : "",
           width: `${getWidthHeight(size)}px`,
           height: `${getWidthHeight(size)}px`,
+          minWidth: `${getWidthHeight(size)}px`,
           fontSize: `${getFontSize(size)}px`,
           lineHeight: `${getLineHeight(size)}px`,
         }}
@@ -101,6 +102,7 @@ export const SandboxAvatar = (props: Props) => {
           boxShadow: props.shadow ? "0px 1px 1px rgba(0, 0, 0, 0.25)" : "",
           width: `${getWidthHeight(size)}px`,
           height: `${getWidthHeight(size)}px`,
+          minWidth: `${getWidthHeight(size)}px`,
           fontSize: `${getFontSize(size)}px`,
           lineHeight: `${getLineHeight(size)}px`,
         }}
@@ -118,6 +120,7 @@ export const SandboxAvatar = (props: Props) => {
           boxShadow: props.shadow ? "0px 1px 1px rgba(0, 0, 0, 0.25)" : "",
           width: `${getWidthHeight(size)}px`,
           height: `${getWidthHeight(size)}px`,
+          minWidth: `${getWidthHeight(size)}px`,
           fontSize: `${getFontSize(size)}px`,
           lineHeight: `${getLineHeight(size)}px`,
         }}
@@ -143,6 +146,7 @@ export const SandboxAvatar = (props: Props) => {
         boxShadow: props.shadow ? "0px 1px 1px rgba(0, 0, 0, 0.25)" : "",
         width: `${getWidthHeight(size)}px`,
         height: `${getWidthHeight(size)}px`,
+        minWidth: `${getWidthHeight(size)}px`,
       }}
     >
       <AvatarImage src={avatarSrc} />
