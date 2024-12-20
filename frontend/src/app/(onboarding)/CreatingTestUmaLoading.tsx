@@ -26,7 +26,7 @@ export const CreatingTestUmaLoading = () => {
   });
 
   return (
-    <div className="flex flex-col h-full w-full items-center justify-center gap-4 pb-10">
+    <div className="flex flex-col h-full w-full items-center justify-center gap-4 pb-4 px-6">
       <h1 className="text-primary text-[22px] font-normal leading-[28px] tracking-[-0.275px]">
         Creating your test UMA
       </h1>

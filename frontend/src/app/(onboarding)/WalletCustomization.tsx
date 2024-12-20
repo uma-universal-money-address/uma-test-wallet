@@ -284,7 +284,7 @@ export const WalletCustomization = () => {
   };
 
   return (
-    <div className="flex flex-col h-full w-full items-center px-6 pb-3">
+    <div className="flex flex-col h-full items-center px-6 pb-3">
       <div className="w-full pb-5">
         <Wallet
           wallet={wallet}
