@@ -11,6 +11,7 @@ from vasp.uma_vasp.currencies import CURRENCIES
 from uma import Currency
 from vasp.models.Currency import Currency as CurrencyModel
 from vasp.models.Wallet import Wallet as WalletModel
+from vasp.models.Uma import Uma as UmaModel
 import time
 
 
@@ -63,12 +64,19 @@ class DemoCurrencyService(ICurrencyService):
             decimals=CURRENCIES[currency_code].decimals,
         )
 
-    def get_uma_currencies_for_user(self, user_id: str) -> list[Currency]:
+    def get_uma_currencies_for_uma(self, username: str) -> list[Currency]:
         with Session(db.engine) as db_session:
+            wallet = db_session.scalars(
+                select(WalletModel).join(UmaModel).where(UmaModel.username == username)
+            ).first()
+            currencies = db_session.scalars(
+                select(CurrencyModel).where(CurrencyModel.wallet_id == wallet.id)
+            ).all()
             currencies = db_session.scalars(
                 select(CurrencyModel)
                 .join(WalletModel)
-                .where(WalletModel.user_id == user_id)
+                .join(UmaModel)
+                .where(UmaModel.username == username)
             ).all()
             return [self.get_uma_currency(currency.code) for currency in currencies]
 

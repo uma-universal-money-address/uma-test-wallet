@@ -218,16 +218,6 @@ def construct_blueprint(
             response.status_code = 201
             return response
 
-    @bp.get("/uma")
-    @login_required
-    async def uma() -> Response:
-        user_id = current_user.id
-
-        user = User.from_id(user_id)
-        if user is None:
-            abort_with_error(404, f"User {user_id} not found.")
-        return jsonify({"uma": user.get_default_uma_address()})
-
     @bp.get("/umas")
     @login_required
     def umas() -> Response:

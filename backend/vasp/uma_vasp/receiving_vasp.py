@@ -18,7 +18,7 @@ from lightspark import (
     IncomingPayment,
 )
 from vasp.db import db
-from vasp.utils import get_vasp_domain, get_username_from_uma
+from vasp.utils import get_vasp_domain, get_username_from_uma, get_uma_from_username
 from vasp.uma_vasp.address_helpers import get_domain_from_uma_address
 from vasp.uma_vasp.config import Config
 from vasp.uma_vasp.interfaces.compliance_service import IComplianceService
@@ -31,6 +31,7 @@ from vasp.uma_vasp.currencies import CURRENCIES
 from vasp.uma_vasp.lightspark_helpers import get_node
 from vasp.uma_vasp.uma_exception import UmaException, abort_with_error
 from vasp.uma_vasp.user import User
+from vasp.models.PayReqResponse import PayReqResponse as PayReqResponseModel
 from vasp.models.Transaction import Transaction
 from vasp.models.Uma import Uma
 from uma import (
@@ -91,7 +92,7 @@ class ReceivingVasp:
         self.nonce_cache = nonce_cache
 
     def handle_lnurlp_request(self, username: str) -> Dict[str, Any]:
-        print(f"Handling LNURLP query for user {username}")
+        print(f"Handling LNURLP query for uma {username}")
         lnurlp_request: LnurlpRequest
         try:
             lnurlp_request = parse_lnurlp_request(flask_request.url)
@@ -104,15 +105,8 @@ class ReceivingVasp:
                 status_code=400,
             )
 
-        user = self.user_service.get_user_from_uma(username)
-        if not user:
-            raise UmaException(
-                f"Cannot find user {lnurlp_request.receiver_address}",
-                status_code=404,
-            )
-
         if not lnurlp_request.is_uma_request():
-            return self._handle_non_uma_lnurlp_request(user).to_dict()
+            return self._handle_non_uma_lnurlp_request(username).to_dict()
 
         if not self.compliance_service.should_accept_transaction_from_vasp(
             none_throws(lnurlp_request.vasp_domain), lnurlp_request.receiver_address
@@ -148,7 +142,7 @@ class ReceivingVasp:
                     status_code=400,
                 )
 
-        metadata = self._create_metadata(user)
+        metadata = self._create_metadata(username)
         payer_data_options = create_counterparty_data_options(
             {
                 "name": False,
@@ -158,7 +152,7 @@ class ReceivingVasp:
             }
         )
         callback = self.config.get_complete_url(
-            get_vasp_domain(), f"{PAY_REQUEST_CALLBACK}{user.id}"
+            get_vasp_domain(), f"{PAY_REQUEST_CALLBACK}{username}"
         )
 
         response = create_uma_lnurlp_response(
@@ -170,38 +164,34 @@ class ReceivingVasp:
             min_sendable_sats=1,
             max_sendable_sats=10_000_000,
             payer_data_options=payer_data_options,
-            currency_options=self.currency_service.get_uma_currencies_for_user(
-                user.get_id()
-            ),
+            currency_options=self.currency_service.get_uma_currencies_for_uma(username),
             receiver_kyc_status=KycStatus.VERIFIED,
         )
 
         return response.to_dict()
 
-    def _handle_non_uma_lnurlp_request(self, receiver_user: User) -> LnurlpResponse:
-        metadata = self._create_metadata(receiver_user)
+    def _handle_non_uma_lnurlp_request(self, username: str) -> LnurlpResponse:
+        metadata = self._create_metadata(username)
         return LnurlpResponse(
             tag="payRequest",
             callback=self.config.get_complete_url(
                 get_vasp_domain(),
-                f"{PAY_REQUEST_CALLBACK}{receiver_user.id}",
+                f"{PAY_REQUEST_CALLBACK}{username}",
             ),
             min_sendable=1_000,
             max_sendable=10_000_000_000,
             encoded_metadata=metadata,
-            currencies=self.currency_service.get_uma_currencies_for_user(
-                receiver_user.get_id()
-            ),
+            currencies=self.currency_service.get_uma_currencies_for_uma(username),
             required_payer_data=None,
             compliance=None,
             uma_version=None,
         )
 
-    async def handle_pay_request_callback(self, user_id: str) -> Dict[str, Any]:
-        user = self.user_service.get_user_from_id(user_id)
+    async def handle_pay_request_callback(self, username: str) -> Dict[str, Any]:
+        user = self.user_service.get_user_from_uma(username)
         if not user:
             raise UmaException(
-                f"Cannot find user {user_id}",
+                f"Cannot find user {username}",
                 status_code=404,
             )
 
@@ -220,12 +210,12 @@ class ReceivingVasp:
                 status_code=400,
             )
         if not request.is_uma_request():
-            return self._handle_non_uma_pay_request(request, user).to_dict()
+            return self._handle_non_uma_pay_request(request, username).to_dict()
 
         payer_data = none_throws(request.payer_data)
         vasp_domain = get_domain_from_uma_address(payer_data.get("identifier", ""))
         if not self.compliance_service.should_accept_transaction_from_vasp(
-            vasp_domain, user.get_default_uma_address()
+            vasp_domain, get_uma_from_username(username)
         ):
             raise UmaException(
                 f"Cannot accept transactions from vasp {vasp_domain}",
@@ -245,7 +235,7 @@ class ReceivingVasp:
                 nonce_cache=self.nonce_cache,
             )
 
-        metadata = self._create_metadata(user) + json.dumps(payer_data)
+        metadata = self._create_metadata(username) + json.dumps(payer_data)
 
         receiving_currency_code = none_throws(request.receiving_currency_code)
         msats_per_currency_unit = self.currency_service.get_uma_currency(
@@ -253,7 +243,7 @@ class ReceivingVasp:
         ).millisatoshi_per_unit
         receiver_fees_msats = 0 if receiving_currency_code == "SAT" else 2_000
 
-        receiver_uma = user.get_default_uma_address()
+        receiver_uma = get_uma_from_username(username)
         compliance_data = compliance_from_payer_data(payer_data)
         if compliance_data:
             self.compliance_service.pre_screen_transaction(
@@ -271,10 +261,12 @@ class ReceivingVasp:
 
         node = get_node(self.lightspark_client, self.config.node_id)
 
-        return create_pay_req_response(
+        # Doesn't have access to invoice data's payment_hash but we need it to save the pay req response to be matched later
+        pay_req_response = create_pay_req_response(
             request=request,
             invoice_creator=LightsparkInvoiceCreator(
-                self.lightspark_client, self.config
+                self.lightspark_client,
+                self.config,
             ),
             metadata=metadata,
             receiving_currency_code=receiving_currency_code,
@@ -293,12 +285,48 @@ class ReceivingVasp:
                 "name": user.full_name,
                 "email": user.email_address,
             },
-        ).to_dict()
+        )
+
+        if pay_req_response.payment_info is None:
+            raise UmaException(
+                "Error because payment_info is missing from payreq",
+                status_code=500,
+            )
+        payment_info = pay_req_response.payment_info
+
+        invoice_data = self.lightspark_client.get_decoded_payment_request(
+            pay_req_response.encoded_invoice
+        )
+
+        with Session(db.engine) as db_session:
+            uma = db_session.scalars(
+                select(Uma).where(Uma.username == username)
+            ).first()
+            if not uma:
+                raise UmaException(
+                    f"Cannot find UMA for user {username}",
+                    status_code=404,
+                )
+            payreq_response_model = PayReqResponseModel(
+                user_id=user.id,
+                uma_id=uma.id,
+                sender_uma=payer_data.get("identifier", ""),
+                payment_hash=invoice_data.payment_hash,
+                expires_at=invoice_data.expires_at,
+                amount_in_lowest_denom=payment_info.amount,
+                currency_code=payment_info.currency_code,
+                exchange_fees_msats=payment_info.exchange_fees_msats,
+                multiplier=payment_info.multiplier,
+            )
+            db_session.add(payreq_response_model)
+            db_session.commit()
+
+        return pay_req_response.to_dict()
 
     def _handle_non_uma_pay_request(
-        self, request: PayRequest, receiver_user: User
+        self, request: PayRequest, username: str
     ) -> PayReqResponse:
-        metadata = self._create_metadata(receiver_user)
+        metadata = self._create_metadata(username)
         if request.payer_data is not None:
             metadata += json.dumps(request.payer_data)
         receiving_currency = self.currency_service.get_uma_currency(
@@ -342,6 +370,16 @@ class ReceivingVasp:
                 status_code=404,
             )
 
+        with Session(db.engine) as db_session:
+            username = db_session.scalars(
+                select(Uma.username).where(Uma.user_id == user.id, Uma.default)
+            ).first()
+            if not username:
+                raise UmaException(
+                    f"Cannot find UMA for user {user_id}",
+                    status_code=404,
+                )
+
         flask_request_data = await flask_request.json
         amount = flask_request_data.get("amount")
 
@@ -350,9 +388,7 @@ class ReceivingVasp:
             currency_code = "SAT"
         receiver_currencies = [
             currency
-            for currency in self.currency_service.get_uma_currencies_for_user(
-                user.get_id()
-            )
+            for currency in self.currency_service.get_uma_currencies_for_uma(username)
             if currency.code == currency_code
         ]
         if len(receiver_currencies) == 0:
@@ -385,7 +421,7 @@ class ReceivingVasp:
         )
 
         invoice = create_uma_invoice(
-            receiver_uma=user.get_default_uma_address(),
+            receiver_uma=get_uma_from_username(username),
             receiving_currency_amount=amount,
             receiving_currency=invoice_currency,
             expiration=two_days_from_now,
@@ -404,6 +440,15 @@ class ReceivingVasp:
                 f"Cannot find user {user_id}",
                 status_code=404,
             )
+        with Session(db.engine) as db_session:
+            username = db_session.scalars(
+                select(Uma.username).where(Uma.user_id == user.id, Uma.default)
+            ).first()
+            if not username:
+                raise UmaException(
+                    f"Cannot find UMA for user {user_id}",
+                    status_code=404,
+                )
 
         flask_request_data = await flask_request.json
         amount = await flask_request_data.get("amount")
@@ -413,9 +458,7 @@ class ReceivingVasp:
             currency_code = "SAT"
         receiver_currencies = [
             currency
-            for currency in self.currency_service.get_uma_currencies_for_user(
-                user.get_id()
-            )
+            for currency in self.currency_service.get_uma_currencies_for_uma(username)
             if currency.code == currency_code
         ]
         if len(receiver_currencies) == 0:
@@ -455,7 +498,7 @@ class ReceivingVasp:
             )
 
         invoice = create_uma_invoice(
-            receiver_uma=user.get_default_uma_address(),
+            receiver_uma=get_uma_from_username(username),
             receiving_currency_amount=amount,
             receiving_currency=invoice_currency,
             expiration=two_days_from_now,
@@ -489,10 +532,10 @@ class ReceivingVasp:
 
         return Response(status=200)
 
-    def _create_metadata(self, user: User) -> str:
+    def _create_metadata(self, username: str) -> str:
         metadata = [
-            ["text/plain", f"Pay to {get_vasp_domain()} user {user.full_name}"],
-            ["text/identifier", user.get_default_uma_address()],
+            ["text/plain", f"Pay to {get_vasp_domain()} user {username}"],
+            ["text/identifier", get_uma_from_username(username)],
         ]
         return json.dumps(metadata)
 
@@ -541,22 +584,23 @@ def register_routes(
 
     @app.route("/.well-known/lnurlp/<username>")
     def handle_lnurlp_request(username: str) -> Dict[str, Any]:
+        username = get_username_from_uma(username)
         user = user_service.get_user_from_uma(username)
         if not user:
             abort_with_error(404, f"Cannot find user {username}")
         receiving_vasp = get_receiving_vasp()
         return receiving_vasp.handle_lnurlp_request(username)
 
-    @app.post(PAY_REQUEST_CALLBACK + "<user_id>")
-    async def handle_uma_pay_request_callback(user_id: str) -> Dict[str, Any]:
+    @app.post(PAY_REQUEST_CALLBACK + "<username>")
+    async def handle_uma_pay_request_callback(username: str) -> Dict[str, Any]:
         receiving_vasp = get_receiving_vasp()
-        return await receiving_vasp.handle_pay_request_callback(user_id)
+        return await receiving_vasp.handle_pay_request_callback(username)
 
-    @app.get(PAY_REQUEST_CALLBACK + "<user_id>")
+    @app.get(PAY_REQUEST_CALLBACK + "<username>")
     @login_required
-    async def handle_lnurl_pay_request_callback(user_id: str) -> Dict[str, Any]:
+    async def handle_lnurl_pay_request_callback(username: str) -> Dict[str, Any]:
         receiving_vasp = get_receiving_vasp()
-        return await receiving_vasp.handle_pay_request_callback(user_id)
+        return await receiving_vasp.handle_pay_request_callback(username)
 
     @app.post("/api/uma/create_invoice")
     @login_required
@@ -605,31 +649,38 @@ def register_routes(
                     )
 
                 with Session(db.engine) as db_session:
-                    # TODO: Should cache transaction and uma data in receiving_vasp and retrieve here instead of looking for sender transaction. Otherwise, we don't necessarily know the umas if the payment was sent from an external uma.
-                    transaction = db_session.scalars(
-                        select(Transaction).where(
-                            Transaction.transaction_hash == transaction_hash
+                    payreq_response = db_session.scalars(
+                        select(PayReqResponseModel).where(
+                            PayReqResponseModel.payment_hash == transaction_hash
                         )
                     ).first()
-                    if not transaction:
+                    if not payreq_response:
                         abort_with_error(
                             500,
-                            f"Cannot find transaction for transaction_hash: {transaction_hash}",
+                            f"Cannot find payreq_response for transaction_hash: {transaction_hash}",
                         )
 
-                    user = user_service.get_user_from_uma(transaction.receiver_uma)
+                    user = user_service.get_user_from_id(payreq_response.user_id)
                     if not user:
                         abort_with_error(
                             500,
-                            f"Cannot find user for receiver_uma: {transaction.receiver_uma}",
+                            f"Cannot find user: {payreq_response.user_id}",
+                        )
+
+                    receiver_uma_model = db_session.scalars(
+                        select(Uma).where(Uma.id == payreq_response.uma_id)
+                    ).first()
+                    if not receiver_uma_model:
+                        abort_with_error(
+                            500,
+                            f"Cannot find UMA: {payreq_response.uma_id}",
                         )
 
                     receiving_transaction = db_session.scalars(
                         select(Transaction)
                         .join(Uma)
                         .where(
-                            Uma.username
-                            == get_username_from_uma(transaction.receiver_uma)
+                            Uma.id == payreq_response.uma_id,
                         )
                         .where(Transaction.transaction_hash == transaction_hash)
                     ).first()
@@ -641,16 +692,16 @@ def register_routes(
 
                     ledger_service.add_wallet_balance(
                         transaction_hash=transaction_hash,
-                        amount=-transaction.amount_in_lowest_denom,
-                        currency_code=transaction.currency_code,
-                        sender_uma=transaction.sender_uma,
-                        receiver_uma=transaction.receiver_uma,
+                        amount=payreq_response.amount_in_lowest_denom,
+                        currency_code=payreq_response.currency_code,
+                        sender_uma=payreq_response.sender_uma,
+                        receiver_uma=get_uma_from_username(receiver_uma_model.username),
                     )
 
                     user.send_push_notification(
                         config=config,
                         title="Payment received",
-                        body=f"Received payment of {-transaction.amount_in_lowest_denom} {transaction.currency_code}",
+                        body=f"Received payment of {-payreq_response.amount_in_lowest_denom} {payreq_response.currency_code}",
                     )
 
                     logging.info(

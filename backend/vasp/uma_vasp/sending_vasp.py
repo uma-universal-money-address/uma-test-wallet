@@ -158,8 +158,8 @@ class SendingVasp:
             sender_uma=sender_uma,
             receiver_uma=receiver_uma,
         )
-        sender_currencies = self.currency_service.get_uma_currencies_for_user(
-            current_user.get_id()
+        sender_currencies = self.currency_service.get_uma_currencies_for_uma(
+            get_username_from_uma(sender_uma)
         )
 
         return {
@@ -188,8 +188,8 @@ class SendingVasp:
             sender_uma=sender_uma,
             receiver_uma=receiver_uma,
         )
-        sender_currencies = self.currency_service.get_uma_currencies_for_user(
-            current_user.get_id()
+        sender_currencies = self.currency_service.get_uma_currencies_for_uma(
+            get_username_from_uma(sender_uma)
         )
         return {
             "senderCurrencies": [currency.to_dict() for currency in sender_currencies],
@@ -513,7 +513,9 @@ class SendingVasp:
         ):
             abort_with_error(403, "Transaction is not allowed.")
 
-        sender_currencies = self.currency_service.get_uma_currencies_for_user(user.id)
+        sender_currencies = self.currency_service.get_uma_currencies_for_uma(
+            get_username_from_uma(sender_uma)
+        )
 
         invoice_data = self.lightspark_client.get_decoded_payment_request(
             payreq_response.encoded_invoice
@@ -558,8 +560,8 @@ class SendingVasp:
         receiving_currency_code: str,
         is_amount_in_msats: bool,
     ) -> SendingVaspPayReqResponse:
-        sender_currencies = self.currency_service.get_uma_currencies_for_user(
-            current_user.get_id()
+        sender_currencies = self.currency_service.get_uma_currencies_for_uma(
+            get_username_from_uma(initial_request_data.sender_uma)
         )
 
         payreq = create_pay_request(

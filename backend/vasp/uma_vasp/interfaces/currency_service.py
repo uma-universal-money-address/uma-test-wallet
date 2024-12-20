@@ -22,5 +22,5 @@ class ICurrencyService(ABC):
         pass
 
     @abstractmethod
-    def get_uma_currencies_for_user(self, user_id: str) -> list[Currency]:
+    def get_uma_currencies_for_uma(self, username: str) -> list[Currency]:
         pass

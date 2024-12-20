@@ -134,6 +134,7 @@ export const Wallet = ({
                 ),
               ).toLocaleString("en", {
                 currency: wallet.currency.code,
+                minimumFractionDigits: wallet.currency.decimals,
               })}
             </div>
           ) : (
