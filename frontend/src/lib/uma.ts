@@ -45,15 +45,18 @@ export const pickRandomUma = async () => {
   const response = await fetch(`${getBackendUrl()}/uma/generate_random_uma`, {
     method: "GET",
   });
-  const json = (await response.json()) as {
-    uma: string | null;
-    error: string | null;
+  const { uma, error } = (await response.json()) as {
+    uma?: string;
+    error?: string;
   };
-  if (json.error) {
-    console.error(json.error);
-    return null;
+
+  if (error) {
+    throw new Error(error);
+  } else if (!uma) {
+    throw new Error("Empty UMA response.");
   }
-  return json.uma && json.uma.length > 0 ? json.uma : null;
+
+  return uma;
 };
 
 export const getUmaFromUsername = (umaUserName: string) => {
