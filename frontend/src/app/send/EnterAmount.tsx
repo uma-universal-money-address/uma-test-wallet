@@ -9,15 +9,21 @@ import {
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { convertCurrency } from "@/lib/convertCurrency";
 import { convertToLowestDenomination } from "@/lib/convertToLowestDenomination";
+import { fundWallet } from "@/lib/fundWallet";
 import { type Currency } from "@/types/Currency";
 import assert from "assert";
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useState, type KeyboardEvent } from "react";
 import { Footer } from "./Footer";
-import { useSendPaymentContext } from "./SendPaymentContextProvider";
+import {
+  SendPaymentStep,
+  useSendPaymentContext,
+} from "./SendPaymentContextProvider";
 import { createPayreq } from "./umaRequests";
 
 export const EnterAmount = () => {
   const {
+    step,
     onNext,
     amount,
     setAmount,
@@ -34,7 +40,9 @@ export const EnterAmount = () => {
   const [inputAmountString, setInputAmountString] = useState<string>(
     amount.toString(),
   );
-
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const walletId = searchParams.get("walletId");
   const hasAmount = amount > 0;
 
   const {
@@ -120,7 +128,11 @@ export const EnterAmount = () => {
 
   const handleKeyboard = (e: KeyboardEvent) => {
     if (e.key === "Enter" && hasAmount) {
-      handleSubmit();
+      if (step === SendPaymentStep.FundWallet) {
+        handleFundWallet();
+      } else {
+        handleSubmit();
+      }
     }
   };
 
@@ -148,6 +160,25 @@ export const EnterAmount = () => {
     }
 
     onNext();
+  };
+
+  const handleFundWallet = async () => {
+    assert(walletId);
+    try {
+      await fundWallet(walletId, {
+        currencyCode: selectedCurrency.code,
+        amountInLowestDenom: convertToLowestDenomination(
+          amount,
+          selectedCurrency,
+        ),
+      });
+    } catch (e: unknown) {
+      const error = e as Error;
+      setError(error);
+      setIsLoading(false);
+      return;
+    }
+    router.push(`/wallet`);
   };
 
   const conversionString = `${convertedToUsd.toLocaleString("en", {
@@ -206,9 +237,11 @@ export const EnterAmount = () => {
         </div>
       </div>
       <Footer
-        onSubmit={handleSubmit}
+        onSubmit={
+          step === SendPaymentStep.FundWallet ? handleFundWallet : handleSubmit
+        }
         isLoading={isLoading}
-        buttonText="Preview"
+        buttonText={step === SendPaymentStep.FundWallet ? "Confirm" : "Preview"}
         disabled={!hasAmount}
       />
     </div>

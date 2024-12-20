@@ -39,7 +39,7 @@ export const CreatingTestUmaLoading = () => {
         />
       </div>
       <p className="text-secondary text-[15px] font-normal leading-[20px] tracking-[-0.187px]">
-        Adding funds on regtest...
+        Mixing you a drink...
       </p>
     </div>
   );

@@ -37,8 +37,24 @@ function PageContent() {
   useEffect(() => {
     const uma = searchParams.get("uma");
     const amount = searchParams.get("amount");
-
+    const fundWallet = searchParams.get("fundWallet");
+    const toFundCurrency = searchParams.get("toFundCurrency");
+    const walletId = searchParams.get("walletId");
     (async () => {
+      if (fundWallet && toFundCurrency && walletId) {
+        const currency = JSON.parse(toFundCurrency);
+        setUmaLookupResponse({
+          receiverCurrencies: [currency],
+          senderCurrencies: [currency],
+          minSendableMsats: 0,
+          maxSendableMsats: 0,
+          callbackUuid: "",
+          receiverKycStatus: "",
+        });
+        setStep(SendPaymentStep.FundWallet);
+        return;
+      }
+
       if (uma) {
         setIsLoading(true);
 
@@ -92,6 +108,9 @@ function PageContent() {
       break;
     case SendPaymentStep.Confirm:
       content = <Confirm />;
+      break;
+    case SendPaymentStep.FundWallet:
+      content = <EnterAmount />;
       break;
     default:
       throw new Error(`Unknown step`);

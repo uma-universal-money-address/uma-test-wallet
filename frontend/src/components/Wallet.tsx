@@ -19,6 +19,7 @@ interface Props {
     showUma?: boolean;
     showSend?: boolean;
   };
+  onboardingStep?: number | undefined;
 }
 
 export const Wallet = ({
@@ -27,10 +28,18 @@ export const Wallet = ({
   exchangeRates,
   isLoading,
   options,
+  onboardingStep,
 }: Props) => {
   const router = useRouter();
   const handleSend = () => {
     router.push("/send");
+  };
+  const handleFundWallet = () => {
+    router.push(
+      `/send?fundWallet=true&walletId=${wallet?.id}&toFundCurrency=${JSON.stringify(
+        wallet?.currency,
+      )}`,
+    );
   };
 
   let estimate: React.ReactNode | null = null;
@@ -40,7 +49,7 @@ export const Wallet = ({
       estimate = `${convertCurrency(
         exchangeRates,
         {
-          amount: wallet.amountInLowestDenom,
+          amount: onboardingStep ? 100000 : wallet.amountInLowestDenom,
           currency: wallet.currency,
         },
         currencyToEstimate,
@@ -51,7 +60,7 @@ export const Wallet = ({
       estimate = convertCurrency(
         exchangeRates,
         {
-          amount: wallet.amountInLowestDenom,
+          amount: onboardingStep ? 100000 : wallet.amountInLowestDenom,
           currency: wallet.currency,
         },
         currencyToEstimate,
@@ -110,7 +119,7 @@ export const Wallet = ({
         <div className="flex flex-row grow items-center text-white opacity-50 justify-between pl-8 h-[26px] pr-[22px]">
           <span className="text-white">Balance</span>
           {options?.showAddBalance && (
-            <Button variant="ghost">
+            <Button variant="ghost" onClick={handleFundWallet}>
               <Image
                 alt="Plus"
                 src="/icons/plus.svg"
@@ -127,15 +136,20 @@ export const Wallet = ({
         <div className="flex flex-row items-end gap-1">
           {!isLoading && wallet ? (
             <div className="text-5xl font-light leading-[48px] tracking-[-1.92px] animate-[slideUpSmall_0.4s_ease-in-out_forwards]">
-              {Number(
-                convertToNormalDenomination(
-                  wallet.amountInLowestDenom,
-                  wallet.currency,
-                ),
-              ).toLocaleString("en", {
-                currency: wallet.currency.code,
-                minimumFractionDigits: wallet.currency.decimals,
-              })}
+              {onboardingStep
+                ? Number(
+                    convertToNormalDenomination(100000, wallet.currency),
+                  ).toLocaleString("en", {
+                    currency: wallet.currency.code,
+                  })
+                : Number(
+                    convertToNormalDenomination(
+                      wallet.amountInLowestDenom,
+                      wallet.currency,
+                    ),
+                  ).toLocaleString("en", {
+                    currency: wallet.currency.code,
+                  })}
             </div>
           ) : (
             <div className="w-[128px] h-[48px]" />
