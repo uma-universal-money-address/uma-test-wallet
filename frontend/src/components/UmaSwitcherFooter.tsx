@@ -25,6 +25,8 @@ import {
   DrawerTitle,
 } from "./ui/drawer";
 
+const MAX_WALLETS = 10;
+
 const WalletRows = ({
   currentWallet,
   wallets,
@@ -116,7 +118,15 @@ export const UmaSwitcherFooter = ({ wallets, refreshWallets }: Props) => {
   const [isCreatingUma, setIsCreatingUma] = useState(false);
 
   const handleCreateUma = () => {
-    setIsCreatingUma(true);
+    const hasMaxWallets = wallets.length >= MAX_WALLETS;
+    if (hasMaxWallets) {
+      toast({
+        title:
+          "You have reached the maximum number of test UMAs for this account",
+      });
+    } else {
+      setIsCreatingUma(true);
+    }
   };
 
   const handleChooseWallet = (wallet: Wallet) => {
@@ -132,7 +142,7 @@ export const UmaSwitcherFooter = ({ wallets, refreshWallets }: Props) => {
           key={wallet.id}
           className={`
             animate-[fadeInAndSlideUp_0.5s_ease-in-out_forwards]
-            transition-transform active:scale-95 duration-100
+            transition-transform active:scale-95 duration-100 cursor-pointer
             ${
               wallet.id === currentWallet.id
                 ? "ring-1 ring-offset-8 ring-[#C0C9D6] rounded-xl"
@@ -153,15 +163,23 @@ export const UmaSwitcherFooter = ({ wallets, refreshWallets }: Props) => {
   }
 
   return (
-    <div className="flex flex-row p-4 w-full items-center justify-center gap-4">
+    <div className="flex flex-row p-4 w-full items-center justify-start overflow-x-scroll no-scrollbar gap-4">
       {walletButtons}
       {currentWallet && wallets && (
-        <Drawer open={isDrawerOpen}>
+        <Drawer open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)}>
           <Button
             className="p-2 bg-[#EBEEF2] hover:bg-gray-300 h-8 w-8 rounded-lg"
             onClick={() => setIsDrawerOpen(true)}
+            size="icon"
+            variant="icon"
           >
-            <Image src="/icons/plus.svg" alt="Add UMA" width={24} height={24} />
+            <Image
+              src="/icons/plus.svg"
+              alt="Add UMA"
+              width={24}
+              height={24}
+              className="max-w-6"
+            />
           </Button>
           <DrawerContent className="w-full">
             {isCreatingUma ? (
@@ -215,6 +233,8 @@ const UmaSelectorDrawerContent = ({
     router.push("/settings");
   };
 
+  const hasMaxWallets = wallets.length >= MAX_WALLETS;
+
   return (
     <>
       <DrawerHeader className="">
@@ -245,6 +265,11 @@ const UmaSelectorDrawerContent = ({
             size: "lg",
             onClick: handleCreateUma,
           }}
+          tooltip={
+            hasMaxWallets
+              ? "You have reached the maximum number of test UMAs for this account"
+              : undefined
+          }
           className="w-full gap-2 items-center justify-center"
         >
           <Image
