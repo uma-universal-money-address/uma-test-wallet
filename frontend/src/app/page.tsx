@@ -1,11 +1,13 @@
 "use client";
+import { useRouter } from "next/navigation";
 import OnboardingStepContextProvider, {
   OnboardingStep,
-  useOnboardingStepContext,
 } from "./(onboarding)/OnboardingStepContextProvider";
-import { Step } from "./(onboarding)/Step";
+import { Steps } from "./(onboarding)/Steps";
 
 export default function Home() {
+  const router = useRouter();
+
   return (
     <div className="flex flex-col h-full">
       <OnboardingStepContextProvider
@@ -16,15 +18,10 @@ export default function Home() {
           OnboardingStep.WalletCustomization,
           OnboardingStep.Finished,
         ]}
+        onFinish={() => router.push("/wallet")}
       >
         <Steps />
       </OnboardingStepContextProvider>
     </div>
   );
 }
-
-const Steps = () => {
-  const { stepProps } = useOnboardingStepContext();
-
-  return <Step {...stepProps} />;
-};

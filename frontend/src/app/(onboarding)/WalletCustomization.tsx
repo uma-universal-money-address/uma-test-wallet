@@ -30,7 +30,7 @@ import { startRegistration } from "@simplewebauthn/browser";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useOnboardingStepContext } from "./OnboardingStepContextProvider";
-import { StepButtonProps } from "./Step";
+import { StepButtonProps } from "./Steps";
 
 const OtherCurrencies = ({
   handleClose,
@@ -285,7 +285,7 @@ export const WalletCustomization = () => {
 
   return (
     <div className="flex flex-col h-full w-full items-center px-6 pb-3">
-      <div className="w-full pt-4 pb-5">
+      <div className="w-full pb-5">
         <Wallet
           wallet={wallet}
           walletIndex={wallets.length}
@@ -338,9 +338,9 @@ export const WalletCustomizationButtons = ({ onNext }: StepButtonProps) => {
     // Skip registration if already has login methods
     if (loginMethods?.webAuthnCredentials?.length) {
       onNext();
+    } else {
+      setIsRegistrationOpen(true);
     }
-
-    setIsRegistrationOpen(true);
   };
 
   const handleRegister = async () => {

@@ -36,6 +36,7 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
     wallets,
     isLoading: isLoadingWallets,
     error: walletsError,
+    fetchWallets,
   } = useWallets();
   const { currentWallet, setCurrentWallet } = useAppState();
 
@@ -72,6 +73,13 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
       });
     }
   }, [umasError, walletsError, toast]);
+
+  const handleRefreshWallets = async () => {
+    const updatedWallets = await fetchWallets();
+    if (updatedWallets) {
+      setCurrentWallet(updatedWallets[updatedWallets.length - 1]);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -166,7 +174,10 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
       </main>
       {wallets && wallets.length > 0 && (
         <div className="pt-2 px-4 pb-3 border-[#EBEEF2] border-t">
-          <UmaSwitcherFooter wallets={wallets || []} />
+          <UmaSwitcherFooter
+            wallets={wallets || []}
+            refreshWallets={handleRefreshWallets}
+          />
         </div>
       )}
     </div>

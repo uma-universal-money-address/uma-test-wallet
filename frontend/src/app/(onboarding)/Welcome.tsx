@@ -7,7 +7,7 @@ import { convertArrayBuffersToBase64 } from "@/lib/convertArrayBuffersToBase64";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { StepButtonProps } from "./Step";
+import { StepButtonProps } from "./Steps";
 
 export const Welcome = () => {
   return (

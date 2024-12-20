@@ -6,7 +6,7 @@ import { getBackendDomain } from "@/lib/backendDomain";
 import { checkUmaAvailability, createUma } from "@/lib/uma";
 import { useEffect, useRef, useState } from "react";
 import { useOnboardingStepContext } from "./OnboardingStepContextProvider";
-import { StepButtonProps } from "./Step";
+import { StepButtonProps } from "./Steps";
 
 export const CreateUma = () => {
   const inputRef = useRef<HTMLInputElement>(null);

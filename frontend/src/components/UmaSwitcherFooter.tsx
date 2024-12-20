@@ -1,12 +1,19 @@
 "use client";
 
+import OnboardingStepContextProvider, {
+  OnboardingStep,
+  useOnboardingStepContext,
+} from "@/app/(onboarding)/OnboardingStepContextProvider";
+import { Steps } from "@/app/(onboarding)/Steps";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
 import { Wallet } from "@/hooks/useWalletContext";
 import { convertToNormalDenomination } from "@/lib/convertToNormalDenomination";
 import { getUmaFromUsername } from "@/lib/uma";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { SandboxAvatar } from "./SandboxAvatar";
 import { SandboxButton } from "./SandboxButton";
 import { Button } from "./ui/button";
@@ -16,7 +23,6 @@ import {
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from "./ui/drawer";
 
 const WalletRows = ({
@@ -100,20 +106,22 @@ const WalletRows = ({
 
 interface Props {
   wallets: Wallet[];
+  refreshWallets: () => Promise<void>;
 }
 
-export const UmaSwitcherFooter = ({ wallets }: Props) => {
-  const router = useRouter();
+export const UmaSwitcherFooter = ({ wallets, refreshWallets }: Props) => {
+  const { toast } = useToast();
   const { currentWallet, setCurrentWallet } = useAppState();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isCreatingUma, setIsCreatingUma] = useState(false);
 
-  const handleOpenSettings = () => {
-    router.push("/settings");
+  const handleCreateUma = () => {
+    setIsCreatingUma(true);
   };
-
-  const handleCreateUma = () => {};
 
   const handleChooseWallet = (wallet: Wallet) => {
     setCurrentWallet(wallet);
+    setIsDrawerOpen(false);
   };
 
   let walletButtons: JSX.Element[] = [];
@@ -148,65 +156,116 @@ export const UmaSwitcherFooter = ({ wallets }: Props) => {
     <div className="flex flex-row p-4 w-full items-center justify-center gap-4">
       {walletButtons}
       {currentWallet && wallets && (
-        <Drawer>
-          <DrawerTrigger asChild>
-            <Button className="p-2 bg-[#EBEEF2] hover:bg-gray-300 h-8 w-8 rounded-lg">
-              <Image
-                src="/icons/plus.svg"
-                alt="Add UMA"
-                width={24}
-                height={24}
-              />
-            </Button>
-          </DrawerTrigger>
+        <Drawer open={isDrawerOpen}>
+          <Button
+            className="p-2 bg-[#EBEEF2] hover:bg-gray-300 h-8 w-8 rounded-lg"
+            onClick={() => setIsDrawerOpen(true)}
+          >
+            <Image src="/icons/plus.svg" alt="Add UMA" width={24} height={24} />
+          </Button>
           <DrawerContent className="w-full">
-            <DrawerHeader className="">
-              <DrawerTitle className="flex flex-row w-full py-2">
-                <div className="flex flex-row w-full justify-between items-center">
-                  <span className="text-[26px] font-normal leading-[34px] tracking-[-0.325px]">
-                    Account
-                  </span>
-                  <Button
-                    variant="icon"
-                    size="icon"
-                    onClick={handleOpenSettings}
-                  >
-                    <Image
-                      src="/icons/settings.svg"
-                      alt="Settings"
-                      width={24}
-                      height={24}
-                    />
-                  </Button>
-                </div>
-              </DrawerTitle>
-            </DrawerHeader>
-            <WalletRows
-              currentWallet={currentWallet}
-              wallets={wallets}
-              handleChooseWallet={handleChooseWallet}
-            />
-            <div className="flex flex-col px-6 pb-12 gap-[10px]">
-              <SandboxButton
-                buttonProps={{
-                  size: "lg",
-                  onClick: handleCreateUma,
+            {isCreatingUma ? (
+              <OnboardingStepContextProvider
+                stepOrder={[
+                  OnboardingStep.CreateUma,
+                  OnboardingStep.CreatingTestUmaLoading,
+                  OnboardingStep.WalletCustomization,
+                ]}
+                onFinish={() => {
+                  setIsCreatingUma(false);
+                  setIsDrawerOpen(false);
+                  refreshWallets();
+                  toast({
+                    title: "New test UMA created",
+                  });
                 }}
-                className="w-full gap-2 items-center justify-center"
               >
-                <Image
-                  src="/icons/plus.svg"
-                  alt="plus"
-                  width={24}
-                  height={24}
-                  className="invert"
-                />
-                Create a new test UMA
-              </SandboxButton>
-            </div>
+                <StepDrawerTitle />
+                <Steps />
+              </OnboardingStepContextProvider>
+            ) : (
+              <UmaSelectorDrawerContent
+                wallets={wallets}
+                currentWallet={currentWallet}
+                handleCreateUma={handleCreateUma}
+                handleChooseWallet={handleChooseWallet}
+              />
+            )}
           </DrawerContent>
         </Drawer>
       )}
     </div>
+  );
+};
+
+const UmaSelectorDrawerContent = ({
+  currentWallet,
+  wallets,
+  handleCreateUma,
+  handleChooseWallet,
+}: {
+  currentWallet: Wallet;
+  wallets: Wallet[];
+  handleCreateUma: () => void;
+  handleChooseWallet: (wallet: Wallet) => void;
+}) => {
+  const router = useRouter();
+
+  const handleOpenSettings = () => {
+    router.push("/settings");
+  };
+
+  return (
+    <>
+      <DrawerHeader className="">
+        <DrawerTitle className="flex flex-row w-full py-2">
+          <div className="flex flex-row w-full justify-between items-center">
+            <span className="text-[26px] font-normal leading-[34px] tracking-[-0.325px]">
+              Account
+            </span>
+            <Button variant="icon" size="icon" onClick={handleOpenSettings}>
+              <Image
+                src="/icons/settings.svg"
+                alt="Settings"
+                width={24}
+                height={24}
+              />
+            </Button>
+          </div>
+        </DrawerTitle>
+      </DrawerHeader>
+      <WalletRows
+        currentWallet={currentWallet}
+        wallets={wallets}
+        handleChooseWallet={handleChooseWallet}
+      />
+      <div className="flex flex-col px-6 pt-3 pb-12 gap-[10px]">
+        <SandboxButton
+          buttonProps={{
+            size: "lg",
+            onClick: handleCreateUma,
+          }}
+          className="w-full gap-2 items-center justify-center"
+        >
+          <Image
+            src="/icons/plus.svg"
+            alt="plus"
+            width={24}
+            height={24}
+            className="invert"
+          />
+          Create a new test UMA
+        </SandboxButton>
+      </div>
+    </>
+  );
+};
+
+const StepDrawerTitle = () => {
+  const { stepProps } = useOnboardingStepContext();
+  return (
+    <VisuallyHidden>
+      <DrawerTitle>{stepProps.title || "Create a new test UMA"}</DrawerTitle>
+    </VisuallyHidden>
   );
 };
