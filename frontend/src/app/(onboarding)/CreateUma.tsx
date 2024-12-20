@@ -3,7 +3,7 @@
 import { SandboxButton } from "@/components/SandboxButton";
 import { UmaInput } from "@/components/UmaInput";
 import { getBackendDomain } from "@/lib/backendDomain";
-import { checkUmaAvailability, createUma } from "@/lib/uma";
+import { checkUmaAvailability, createUma, pickRandomUma } from "@/lib/uma";
 import { useEffect, useRef, useState } from "react";
 import { useOnboardingStepContext } from "./OnboardingStepContextProvider";
 import { StepButtonProps } from "./Steps";
@@ -86,11 +86,22 @@ export const CreateUma = () => {
 
 export const CreateUmaButtons = ({ onNext }: StepButtonProps) => {
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
-  const { uma, setWallet, setUmaError, setUmaInputMessage } =
+  const { uma, setUma, setWallet, setUmaError, setUmaInputMessage } =
     useOnboardingStepContext();
+  const [isLoadingPickForMe, setIsLoadingPickForMe] = useState(false);
 
-  const handlePickForMe = () => {
-    // TODO: Implement
+  const handlePickForMe = async () => {
+    setUmaError(undefined);
+    setIsLoadingPickForMe(true);
+    try {
+      const randomUma = await pickRandomUma();
+      setUma(randomUma);
+    } catch (error) {
+      console.error(error);
+      setUmaError("Failed to pick a random UMA username.");
+    } finally {
+      setIsLoadingPickForMe(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -141,6 +152,7 @@ export const CreateUmaButtons = ({ onNext }: StepButtonProps) => {
           size: "lg",
           onClick: handlePickForMe,
         }}
+        loading={isLoadingPickForMe}
         className="w-full"
       >
         Pick for me
