@@ -23,7 +23,7 @@ export const Step = (props: StepProps) => {
   const { onNext } = useOnboardingStepContext();
 
   return (
-    <div className="flex flex-col h-full gap-8 pt-6">
+    <div className="flex flex-col h-full gap-8 pt-6 max-w-[400px]">
       {(props.title || props.description) && (
         <div className="flex flex-col gap-2 px-8">
           {props.title && (

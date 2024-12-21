@@ -9,7 +9,7 @@ export default function Home() {
   const router = useRouter();
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full items-center justify-center">
       <OnboardingStepContextProvider
         stepOrder={[
           OnboardingStep.Welcome,
