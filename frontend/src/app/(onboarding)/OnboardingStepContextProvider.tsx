@@ -65,7 +65,7 @@ export const ONBOARDING_STEP_MAPPING: Record<OnboardingStep, StepProps> = {
   [OnboardingStep.WalletCustomization]: {
     title: "Your test UMA is ready",
     description:
-      "We've also loaded your UMA with testing funds to start making payments on regtest",
+      "Select a currency to load your UMA with test funds and start making payments on regtest",
     content: WalletCustomization,
     buttons: WalletCustomizationButtons,
   },
@@ -101,7 +101,6 @@ function OnboardingStepContextProvider({
         const nextStepNumber = prevData.stepNumber + 1;
         const nextStepProps =
           ONBOARDING_STEP_MAPPING[stepOrder[nextStepNumber]];
-
         if (nextStepProps instanceof Function) {
           nextStepProps();
         } else if (nextStepProps) {

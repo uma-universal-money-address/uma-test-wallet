@@ -7,6 +7,7 @@ export enum SendPaymentStep {
   SelectRecipient = "SelectRecipient",
   EnterAmount = "EnterAmount",
   Confirm = "Confirm",
+  FundWallet = "FundWallet",
 }
 
 export interface SendPaymentContextData {
@@ -35,6 +36,7 @@ const STEP_MAPPING: Record<SendPaymentStep, SendPaymentStep | undefined> = {
   [SendPaymentStep.SelectRecipient]: SendPaymentStep.EnterAmount,
   [SendPaymentStep.EnterAmount]: SendPaymentStep.Confirm,
   [SendPaymentStep.Confirm]: undefined,
+  [SendPaymentStep.FundWallet]: undefined,
 };
 
 const FIRST_STEP = SendPaymentStep.SelectRecipient;

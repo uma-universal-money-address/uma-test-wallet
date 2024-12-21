@@ -1,32 +1,28 @@
-from typing import Dict
+import base64
+from typing import TYPE_CHECKING, Dict
+
+from flask import Blueprint, Response, jsonify, request
+from flask_login import current_user, login_required
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-import base64
 
-
-from flask import Blueprint, Response, request, jsonify
-from flask_login import current_user, login_required
-
-from . import notifications
 from vasp.db import db
-from vasp.utils import get_uma_from_username, get_username_from_uma
-from vasp.models.User import User as UserModel
-from vasp.models.Wallet import Wallet
 from vasp.models.Currency import Currency
-from vasp.models.Uma import Uma
-from vasp.uma_vasp.uma_exception import abort_with_error
-from vasp.uma_vasp.user import User
 from vasp.models.Preference import Preference, PreferenceType
 from vasp.models.Transaction import Transaction
+from vasp.models.Uma import Uma
+from vasp.models.User import User as UserModel
+from vasp.models.Wallet import Wallet
 from vasp.models.WebAuthnCredential import WebAuthnCredential
-from vasp.uma_vasp.interfaces.ledger_service import ILedgerService
-from vasp.uma_vasp.interfaces.currency_service import (
-    ICurrencyService,
-)
-from vasp.uma_vasp.currencies import CURRENCIES
 from vasp.uma_vasp.config import Config
+from vasp.uma_vasp.currencies import CURRENCIES
+from vasp.uma_vasp.interfaces.currency_service import ICurrencyService
+from vasp.uma_vasp.interfaces.ledger_service import ILedgerService
+from vasp.uma_vasp.uma_exception import abort_with_error
+from vasp.uma_vasp.user import User
+from vasp.utils import get_uma_from_username, get_username_from_uma
 
-from typing import TYPE_CHECKING
+from . import notifications
 
 if TYPE_CHECKING:
     current_user: User
@@ -296,6 +292,44 @@ def construct_blueprint(
             )
             response.status_code = 201
             return response
+
+    @bp.put("/wallet/fund/<wallet_id>")
+    def fund_wallet(wallet_id: str) -> Response:
+        with Session(db.engine) as db_session:
+            wallet = db_session.scalars(
+                select(Wallet).where(Wallet.id == wallet_id)
+            ).first()
+            if wallet is None:
+                abort_with_error(404, f"Wallet {wallet_id} not found.")
+            request_json = request.json
+            amount_in_lowest_denom = request_json.get("amountInLowestDenom")
+            if amount_in_lowest_denom:
+                wallet.amount_in_lowest_denom += amount_in_lowest_denom
+            db_session.commit()
+            transaction = Transaction(
+                user_id=wallet.user_id,
+                uma_id=wallet.uma.id,
+                transaction_hash="demo_funding_transaction_hash",
+                amount_in_lowest_denom=amount_in_lowest_denom,
+                currency_code=wallet.currency.code,
+                sender_uma="$demo-funding-tx@uma.me",
+                receiver_uma=wallet.uma.username,
+            )
+            db_session.add(transaction)
+            db_session.commit()
+            return jsonify(
+                {
+                    "id": wallet.id,
+                    "amount_in_lowest_denom": wallet.amount_in_lowest_denom,
+                    "uma": wallet.uma.to_dict(),
+                    "currency": {
+                        "code": wallet.currency.code,
+                        "name": CURRENCIES[wallet.currency.code].name,
+                        "symbol": CURRENCIES[wallet.currency.code].symbol,
+                        "decimals": CURRENCIES[wallet.currency.code].decimals,
+                    },
+                }
+            )
 
     @bp.get("/transactions")
     @login_required

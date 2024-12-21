@@ -70,7 +70,7 @@ def register_uma(
                 new_wallet = WalletModel(
                     id=str(uuid4()),
                     user_id=user.id,
-                    amount_in_lowest_denom=8000,
+                    amount_in_lowest_denom=0,
                     color=Color.ONE,
                 )
                 new_uma = UmaModel(
@@ -96,7 +96,6 @@ def register_uma(
                     db_session.add(preference)
 
                 db_session.commit()
-
                 return User.from_model(user), new_wallet
 
         except exc.SQLAlchemyError as err:

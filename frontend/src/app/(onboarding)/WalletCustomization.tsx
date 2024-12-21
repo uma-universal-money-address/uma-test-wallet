@@ -23,6 +23,7 @@ import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { useLoginMethods } from "@/hooks/useLoginMethods";
 import { fetchWallets, Wallet as WalletType } from "@/hooks/useWalletContext";
 import { getBackendUrl } from "@/lib/backendUrl";
+import { fundWallet } from "@/lib/fundWallet";
 import { updateWallet } from "@/lib/updateWallet";
 import { WalletColor } from "@/lib/walletColorMapping";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
@@ -133,7 +134,8 @@ const OtherCurrencies = ({
 };
 
 const CurrencyOptions = () => {
-  const { wallet, setError, setWallet } = useOnboardingStepContext();
+  const { wallet, setError, setWallet, setCurrencyCode } =
+    useOnboardingStepContext();
   const [isOtherCurrencyOpen, setIsOtherCurrencyOpen] = useState(false);
 
   const handleOtherCurrency = () => {
@@ -156,6 +158,7 @@ const CurrencyOptions = () => {
         setError(new Error("Failed to update wallet currency."));
       }
       setWallet(res);
+      setCurrencyCode(currencyCode);
     } catch (e) {
       const error = e as unknown as Error;
       console.error(error);
@@ -217,7 +220,7 @@ export const WalletCustomization = () => {
   const [wallets, setWallets] = useState<WalletType[]>([]);
   const [isLoadingWallets, setIsLoadingWallets] = useState(true);
   const [walletsError, setWalletsError] = useState<string | undefined>();
-  const { wallet, walletColor, setWalletColor, setError } =
+  const { wallet, walletColor, setWalletColor, setError, stepNumber } =
     useOnboardingStepContext();
   const {
     exchangeRates,
@@ -282,11 +285,11 @@ export const WalletCustomization = () => {
     } finally {
     }
   };
-
   return (
     <div className="flex flex-col h-full items-center px-6 pb-3">
       <div className="w-full pb-5">
         <Wallet
+          onboardingStep={stepNumber}
           wallet={wallet}
           walletIndex={wallets.length}
           exchangeRates={exchangeRates}
@@ -318,7 +321,7 @@ export const WalletCustomization = () => {
 };
 
 export const WalletCustomizationButtons = ({ onNext }: StepButtonProps) => {
-  const { setError } = useOnboardingStepContext();
+  const { setError, wallet } = useOnboardingStepContext();
   const {
     loginMethods,
     isLoading: isLoadingLoginMethods,
@@ -335,6 +338,13 @@ export const WalletCustomizationButtons = ({ onNext }: StepButtonProps) => {
   }, [errorLoadingLoginMethods, setError]);
 
   const handleSubmit = async () => {
+    if (wallet) {
+      await fundWallet(wallet.id, {
+        currencyCode: wallet.currency.code,
+        amountInLowestDenom: 100000,
+      });
+    }
+
     // Skip registration if already has login methods
     if (loginMethods?.webAuthnCredentials?.length) {
       onNext();

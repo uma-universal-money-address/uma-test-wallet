@@ -12,6 +12,7 @@ const HEADER_TEXT_MAPPING: Record<SendPaymentStep, string> = {
   [SendPaymentStep.SelectRecipient]: "",
   [SendPaymentStep.EnterAmount]: "Amount to send",
   [SendPaymentStep.Confirm]: "Preview send",
+  [SendPaymentStep.FundWallet]: "Add funds",
 };
 
 export const Header = () => {
@@ -19,7 +20,10 @@ export const Header = () => {
   const { step, onBack } = useSendPaymentContext();
 
   const handleBack = () => {
-    if (step === SendPaymentStep.SelectRecipient) {
+    if (
+      step === SendPaymentStep.SelectRecipient ||
+      step === SendPaymentStep.FundWallet
+    ) {
       router.push("/wallet");
       return;
     }
