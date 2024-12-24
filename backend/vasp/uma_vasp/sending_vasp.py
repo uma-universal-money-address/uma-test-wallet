@@ -88,13 +88,7 @@ class SendingVasp:
         self.nonce_cache = nonce_cache
         self.uma_request_storage = uma_request_storage
 
-    def handle_uma_lookup(self, receiver_uma: str) -> Dict[str, Any]:
-        sender_uma = flask_request.args.get("senderUma")
-        if sender_uma and not is_valid_uma(sender_uma):
-            abort_with_error(400, "Invalid sender UMA address.")
-        elif not sender_uma:
-            sender_uma = current_user.get_default_uma_address()
-
+    def handle_uma_lookup(self, sender_uma: str, receiver_uma: str) -> Dict[str, Any]:
         if not self.compliance_service.should_accept_transaction_to_vasp(
             receiving_vasp_domain=get_domain_from_uma_address(receiver_uma),
             sending_uma_address=sender_uma,
@@ -248,10 +242,8 @@ class SendingVasp:
             current_user.id,
         ).to_json()
 
-    async def handle_request_pay_invoice(
-        self, user_id: str, invoice: Invoice
-    ) -> Response:
-        flask_request_data = await flask_request.json
+    def handle_request_pay_invoice(self, user_id: str, invoice: Invoice) -> Response:
+        flask_request_data = flask_request.json
         receiver_uma = invoice.receiver_uma
         receiving_domain = get_domain_from_uma_address(receiver_uma)
         receiver_vasp_pubkey = fetch_public_key_for_vasp(
@@ -282,7 +274,7 @@ class SendingVasp:
 
         return Response(status=200)
 
-    async def handle_pay_invoice(self) -> Dict[str, Any]:
+    def handle_pay_invoice(self) -> Dict[str, Any]:
         flask_request_data = flask_request.json
         invoice_string = flask_request_data.get("invoice")
         if not invoice_string:
@@ -671,9 +663,13 @@ class SendingVasp:
 
         uma_currency = self.currency_service.get_uma_currency(wallet_currency_code)
         sending_currency_multiplier = uma_currency.millisatoshi_per_unit
-        sending_currency_amount = round(
-            (amount_as_msats + payreq_data.exchange_fees_msats)
-            / sending_currency_multiplier
+        # Round up to 1 if the converted amount rounds to 0.
+        sending_currency_amount = (
+            round(
+                (amount_as_msats + payreq_data.exchange_fees_msats)
+                / sending_currency_multiplier
+            )
+            or 1
         )
         sending_max_fee = round(amount_as_msats * 0.0017)
 
@@ -905,7 +901,12 @@ def register_routes(
     @login_required
     def handle_uma_lookup(receiver_uma: str) -> Dict[str, Any]:
         sending_vasp = get_sending_vasp_internal()
-        return sending_vasp.handle_uma_lookup(receiver_uma)
+        sender_uma = flask_request.args.get("senderUma")
+        if sender_uma and not is_valid_uma(sender_uma):
+            abort_with_error(400, "Invalid sender UMA address.")
+        elif not sender_uma:
+            sender_uma = current_user.get_default_uma_address()
+        return sending_vasp.handle_uma_lookup(sender_uma, receiver_uma)
 
     @app.route("/api/umapayreq/<callback_uuid>")
     @login_required
@@ -921,13 +922,13 @@ def register_routes(
 
     @app.post("/api/uma/pay_invoice")
     @login_required
-    async def handle_pay_invoice() -> Dict[str, Any]:
+    def handle_pay_invoice() -> Dict[str, Any]:
         sending_vasp = get_sending_vasp_internal()
-        return await sending_vasp.handle_pay_invoice()
+        return sending_vasp.handle_pay_invoice()
 
     @app.post("/api/uma/request_pay_invoice")
     @login_required
-    async def handle_request_pay_invoice() -> Response:
+    def handle_request_pay_invoice() -> Response:
         flask_request_data = flask_request.json
         invoice_string = flask_request_data.get("invoice")
         if not invoice_string:
@@ -955,9 +956,7 @@ def register_routes(
             abort_with_error(401, "Unauthorized")
 
         sending_vasp = get_sending_vasp_internal()
-        return await sending_vasp.handle_request_pay_invoice(
-            user_id=user.id, invoice=invoice
-        )
+        return sending_vasp.handle_request_pay_invoice(user_id=user.id, invoice=invoice)
 
     @app.route("/api/uma/pending_requests/<user_id>")
     @login_required

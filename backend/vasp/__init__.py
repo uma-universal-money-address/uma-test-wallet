@@ -8,10 +8,12 @@ from typing import Optional
 from flask import (
     Flask,
     Response,
+    Request,
     current_app,
     jsonify,
     redirect,
     request,
+    session,
 )
 from flask_caching import Cache
 from flask_cors import CORS
@@ -72,14 +74,23 @@ def create_app() -> Flask:
     login_manager.init_app(app)
     login_manager.login_view = "auth.login_redirect"
 
+    @login_manager.request_loader
+    def load_user_from_jwt_session(request: Request) -> Optional[User]:
+        # This loads the user_id from the session if it exists.
+        # This happens for UMA Auth connections where the user is authed via JWT (see data_from_jwt() in uma_nwc_bridge.py)
+        user_id_from_session = session.get("user_id")
+        if user_id_from_session:
+            return User.from_id(user_id_from_session)
+        return None
+
     @login_manager.user_loader
     def load_user(user_id: str) -> Optional[User]:
         return User.from_id(user_id)
 
     CORS(
         app,
-        origins=["http://localhost:3000"],
-        allow_headers=["access-control-allow-origin", "Content-Type"],
+        origins=["http://localhost:3000", "http://localhost:3001"],
+        allow_headers=["Access-Control-Allow-Origin", "Content-Type"],
         supports_credentials=True,
     )
 

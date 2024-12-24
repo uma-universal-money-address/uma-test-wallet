@@ -20,6 +20,7 @@ from vasp.models.WebAuthnCredential import WebAuthnCredential
 from vasp.uma_vasp.uma_exception import abort_with_error
 from vasp.uma_vasp.user import User
 from vasp.models.Wallet import Wallet
+from vasp.models.Uma import Uma
 from vasp.models.Currency import Currency
 from vasp.uma_vasp.currencies import CURRENCIES
 from vasp.uma_vasp.interfaces.webauthn_challenge_cache import IWebauthnChallengeCache
@@ -80,11 +81,6 @@ def construct_blueprint(
                 f"Invalid redirect URL: {parsed_url.netloc}. Domain should be {expected_domain}",
             )
 
-        with Session(db.engine) as db_session:
-            currency = db_session.scalars(
-                select(Currency).join(Wallet).where(Wallet.user_id == current_user.id)
-            ).first()
-
         jwt_private_key = current_app.config.get("NWC_JWT_PRIVKEY")
         if not jwt_private_key:
             abort_with_error(500, "JWT private key not set in config.")
@@ -96,6 +92,14 @@ def construct_blueprint(
             session["uma"] = get_uma_from_username(username)
         else:
             session["uma"] = current_user.get_default_uma_address()
+
+        with Session(db.engine) as db_session:
+            wallet = db_session.scalars(
+                select(Wallet).join(Uma).where(Uma.username == username)
+            ).first()
+            currency = db_session.scalars(
+                select(Currency).where(Currency.wallet_id == wallet.id)
+            ).first()
 
         user_nwc_jwt = jwt.encode(
             {
@@ -109,6 +113,7 @@ def construct_blueprint(
             algorithm="ES256",
         )
 
+        query_params = parse_qs(parsed_url.query)
         query_params["token"] = [user_nwc_jwt]
         query_params["currency"] = [
             json.dumps(
@@ -142,19 +147,21 @@ def construct_blueprint(
         return jsonify({"success": True})
 
     @bp.get("/login/redirect")
-    async def login_redirect() -> WerkzeugResponse:
-        user = await get_user_for_login()
-        if user:
-            login_user(user, remember=True)
-            return jsonify({"logged_in": True})
-        else:
-            return jsonify({"logged_in": False})
+    def login_redirect() -> WerkzeugResponse:
+        next_url = request.args.get("next")
+
+        # Only redirect if base url is the same
+        if request.host == current_app.config.get("VASP_DOMAIN") and next_url:
+            return redirect_frontend("/login?next=" + next_url)
+
+        # Let the frontend redirect otherwise there will be a CORS issues
+        return jsonify({})
 
     @bp.get("/logout")
     @login_required
     def logout() -> None:
         logout_user()
-        redirect_frontend("/login")
+        redirect_frontend("/")
 
     @bp.get("/logged_in")
     def logged_in() -> WerkzeugResponse:
@@ -163,8 +170,8 @@ def construct_blueprint(
         else:
             return jsonify({"logged_in": False})
 
-    async def get_user_for_login() -> Optional[User]:
-        [id, auth_method] = await gen_resolve_id()
+    def get_user_for_login() -> Optional[User]:
+        [id, auth_method] = gen_resolve_id()
 
         # Check db for user
         with Session(db.engine) as db_session:
@@ -181,7 +188,7 @@ def construct_blueprint(
                 existing_user = User.from_model(user)
                 return existing_user
 
-    async def gen_resolve_id() -> tuple[str, AuthMethod]:
+    def gen_resolve_id() -> tuple[str, AuthMethod]:
         # TODO: determine the id and auth method from the request
         logging.debug("TODO: determine the id and auth method from the request")
         return ("1", AuthMethod.Google)

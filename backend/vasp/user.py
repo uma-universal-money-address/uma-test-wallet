@@ -156,7 +156,7 @@ def construct_blueprint(
 
     @bp.route("/avatar", methods=["GET", "POST"])
     @login_required
-    async def avatar() -> Response:
+    def avatar() -> Response:
         with Session(db.engine) as db_session:
             user_model = db_session.scalars(
                 select(UserModel).where(UserModel.id == current_user.id)
@@ -183,7 +183,7 @@ def construct_blueprint(
 
     @bp.route("/full-name", methods=["GET", "POST"])
     @login_required
-    async def full_name() -> Response:
+    def full_name() -> Response:
         with Session(db.engine) as db_session:
             user_model = db_session.scalars(
                 select(UserModel).where(UserModel.id == current_user.id)
@@ -203,7 +203,7 @@ def construct_blueprint(
 
     @bp.post("/device-token")
     @login_required
-    async def device_token() -> Response:
+    def device_token() -> Response:
         with Session(db.engine) as db_session:
             wallet = db_session.scalars(
                 select(Wallet).where(Wallet.user_id == current_user.id)
@@ -336,7 +336,7 @@ def construct_blueprint(
 
     @bp.route("/preferences", methods=["POST", "GET"])
     @login_required
-    async def preferences() -> Response:
+    def preferences() -> Response:
         with Session(db.engine) as db_session:
             preferences = db_session.scalars(
                 select(Preference).where(Preference.user_id == current_user.id)
@@ -387,7 +387,7 @@ def construct_blueprint(
 
     @bp.get("/currencies")
     @login_required
-    async def currencies() -> Response:
+    def currencies() -> Response:
         user_id = current_user.id
 
         with Session(db.engine) as db_session:
@@ -402,7 +402,7 @@ def construct_blueprint(
 
     @bp.get("/login_methods")
     @login_required
-    async def login_methods() -> Response:
+    def login_methods() -> Response:
         with Session(db.engine) as db_session:
             webauthn_credentials = db_session.scalars(
                 select(WebAuthnCredential).where(
