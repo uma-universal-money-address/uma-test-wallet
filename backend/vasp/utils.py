@@ -2,6 +2,7 @@ from flask import current_app
 from cryptography.hazmat.primitives.asymmetric import ec
 from OpenSSL import crypto
 from uuid import uuid4
+import os
 
 
 def get_vasp_domain() -> str:
@@ -59,3 +60,13 @@ def get_username_from_uma(uma: str) -> str:
         uma = uma.split("@")[0]
 
     return uma
+
+
+FRONTEND_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://sandbox.localhost:3000",
+    "https://sandbox.uma.me",
+]
+
+is_dev: bool = os.environ.get("FLASK_ENV") == "development"

@@ -1,8 +1,6 @@
-import os
 from flask import redirect
 from werkzeug.wrappers import Response
-
-is_dev: bool = os.environ.get("FLASK_ENV") == "development"
+from vasp.utils import is_dev
 
 
 def redirect_frontend(path: str) -> Response:
