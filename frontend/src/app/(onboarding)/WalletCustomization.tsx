@@ -88,7 +88,7 @@ const OtherCurrencies = ({
           currency. You can always change this later in Settings.
         </DialogDescription>
       </VisuallyHidden.Root>
-      <DialogContent className="sm:max-w-[425px] max-sm:h-full max-h-dvh overflow-scroll justify-start">
+      <DialogContent className="min-w-[400px] max-sm:h-full max-h-dvh overflow-scroll justify-start">
         <div className="flex flex-col gap-2 px-8 pb-3 pt-[68px]">
           <h1 className="text-primary text-[26px] font-normal leading-[34px] tracking-[-0.325px]">
             Select preferred currency

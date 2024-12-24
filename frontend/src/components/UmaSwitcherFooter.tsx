@@ -162,7 +162,7 @@ export const UmaSwitcherFooter = ({ wallets, refreshWallets }: Props) => {
   }
 
   return (
-    <div className="flex flex-row p-4 w-full items-center justify-start overflow-x-scroll no-scrollbar gap-4">
+    <div className="flex flex-row py-4 max-w-full items-center gap-4">
       {walletButtons}
       <Button
         className="p-2 bg-[#EBEEF2] hover:bg-gray-300 h-8 w-8 rounded-lg"
@@ -238,7 +238,7 @@ const UmaSelectorDialogContent = ({
 
   return (
     <>
-      <div className="flex flex-row w-full justify-between items-center px-6 py-2">
+      <div className="flex flex-row w-full justify-between items-center px-6 py-2 min-w-[400px]">
         <span className="text-[26px] font-normal leading-[34px] tracking-[-0.325px]">
           Account
         </span>
