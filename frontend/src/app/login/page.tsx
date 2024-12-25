@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLoggedIn } from "@/hooks/useLoggedIn";
 import { getBackendUrl } from "@/lib/backendUrl";
 import { convertArrayBuffersToBase64 } from "@/lib/convertArrayBuffersToBase64";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -79,10 +80,8 @@ export default function Page() {
         const [path, redirectUri] = next?.split("?redirect_uri=") || [];
 
         if (!path || !redirectUri) {
-          toast({
-            title: "Failed to redirect.",
-            variant: "error",
-          });
+          // Redirect to wallet page if no next query param
+          router.push("/wallet");
         } else {
           router.push(
             `${getBackendUrl()}${path}?redirect_uri=${encodeURIComponent(
@@ -104,17 +103,40 @@ export default function Page() {
   };
 
   return (
-    <div className="flex flex-col h-full items-center justify-center">
-      <SandboxButton
-        buttonProps={{
-          size: "lg",
-          onClick: handleLogin,
-        }}
-        loading={isLoadingLogin}
-        className="w-full"
-      >
-        Login
-      </SandboxButton>
+    <div className="flex flex-col h-full w-full justify-between">
+      <div className="flex flex-col h-full w-full items-center justify-center">
+        <div className="p-5 border border-[#DDE3F3] rounded-[34px]">
+          <Image
+            className="dark:invert"
+            src="/uma-sandbox-icon.svg"
+            alt="UMA logo"
+            width={180}
+            height={38}
+            priority
+          />
+        </div>
+        <div className="flex flex-col gap-2 items-center pt-8 pb-[56px] text-center">
+          <h1 className="text-primary text-[26px] font-bold leading-[34px] tracking-[-0.325px]">
+            UMA Sandbox
+          </h1>
+          <p className="text-secondary text-[15px] font-normal leading-[20px] tracking-[-0.187px] max-w-[304px]">
+            Create a test Universal Money Address (UMA) and simulate sending and
+            receiving money on regtest
+          </p>
+        </div>
+      </div>
+      <div className="w-full px-6 pb-4">
+        <SandboxButton
+          buttonProps={{
+            size: "lg",
+            onClick: handleLogin,
+          }}
+          loading={isLoadingLogin}
+          className="w-full"
+        >
+          Login
+        </SandboxButton>
+      </div>
     </div>
   );
 }
