@@ -14,7 +14,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
 import UmaContextProvider, { useUma } from "@/hooks/useUmaContext";
 import WalletContextProvider, { useWallets } from "@/hooks/useWalletContext";
-import { subscribeToPush } from "@/lib/notificationActions";
 import { getUmaFromUsername } from "@/lib/uma";
 import Image from "next/image";
 import { useEffect } from "react";
@@ -43,13 +42,6 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
   const hasMultipleWallets = wallets && wallets.length > 1;
   const currentWalletIndex =
     wallets?.findIndex((wallet) => wallet.id === currentWallet?.id) || 0;
-
-  const handlePermissions = async () => {
-    const requestRes = await Notification.requestPermission();
-    if (requestRes === "granted") {
-      await subscribeToPush();
-    }
-  };
 
   const handleCopy = () => {
     if (isLoadingUmas || isLoadingWallets) {
@@ -139,14 +131,6 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
           )}
         </div>
         <div className="flex items-center">
-          <Button variant="icon" size="icon" onClick={handlePermissions}>
-            <Image
-              src="/icons/bell.svg"
-              alt="Notifications"
-              width={24}
-              height={24}
-            />
-          </Button>
           <Button variant="icon" size="icon" onClick={handleCopy}>
             <Image
               src="/icons/square-behind-square-6.svg"
