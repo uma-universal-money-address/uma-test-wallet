@@ -76,26 +76,24 @@ const config: Config = {
           "100%": { transform: "rotate(360deg)" },
         },
         slideLeft: {
-          "0%": { transform: "translateX(240px)", opacity: "0" },
-          "100%": { transform: "translateX(0)", opacity: "1" },
+          "0%": { transform: "translateX(400px)" },
+          "100%": { transform: "translateX(0)" },
         },
         slideRight: {
-          "0%": { transform: "translateX(-240px)", opacity: "0" },
-          "100%": { transform: "translateX(0)", opacity: "1" },
+          "0%": { transform: "translateX(-400px)" },
+          "100%": { transform: "translateX(0)" },
         },
         slideOutLeft: {
-          "0%": { transform: "translateX(0)", opacity: "1" },
+          "0%": { transform: "translateX(0)" },
           "100%": {
-            transform: "translateX(-240px)",
-            opacity: "0",
+            transform: "translateX(-400px)",
             display: "none",
           },
         },
         slideOutRight: {
-          "0%": { transform: "translateX(0)", opacity: "1" },
+          "0%": { transform: "translateX(0)" },
           "100%": {
-            transform: "translateX(240px)",
-            opacity: "0",
+            transform: "translateX(400px)",
             display: "none",
           },
         },
