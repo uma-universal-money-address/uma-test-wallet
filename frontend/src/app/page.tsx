@@ -1,4 +1,5 @@
 "use client";
+import { PwaInstallBanner } from "@/components/PwaInstallBanner";
 import { useLoggedIn } from "@/hooks/useLoggedIn";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -19,6 +20,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-full items-center justify-center">
+      <PwaInstallBanner />
       <OnboardingStepContextProvider
         stepOrder={[
           OnboardingStep.Welcome,
