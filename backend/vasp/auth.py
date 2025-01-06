@@ -154,11 +154,11 @@ def construct_blueprint(
         # Let the frontend redirect otherwise there will be a CORS issues
         return jsonify({})
 
-    @bp.get("/logout")
+    @bp.post("/logout")
     @login_required
-    def logout() -> None:
+    def logout() -> WerkzeugResponse:
         logout_user()
-        redirect_frontend("/")
+        return jsonify({"success": True})
 
     @bp.get("/logged_in")
     def logged_in() -> WerkzeugResponse:
