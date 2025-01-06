@@ -67,13 +67,6 @@ export default function Page() {
   const [currIndex, setCurrIndex] = useState(-1);
   const [prevIndex, setPrevIndex] = useState(-1);
 
-  if (error) {
-    toast({
-      title: `Failed to fetch user balance: ${error}`,
-      variant: "error",
-    });
-  }
-
   useEffect(() => {
     if (currentWallet && wallets && wallets.length > 0) {
       const currWalletIndex = wallets.findIndex(

@@ -69,7 +69,7 @@ export async function sendNotification(message: string) {
       body: JSON.stringify({
         title: "Test Notification",
         body: message,
-        icon: "/uma-sandbox-icon.png",
+        icon: "/uma-sandbox-app.png",
       }),
     });
     return { success: true };

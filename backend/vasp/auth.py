@@ -147,8 +147,8 @@ def construct_blueprint(
     def login_redirect() -> WerkzeugResponse:
         next_url = request.args.get("next")
 
-        # Only redirect if base url is the same
-        if request.host == current_app.config.get("VASP_DOMAIN") and next_url:
+        # Only redirect frontend if it's an uma auth redirect
+        if next_url and next_url.find("redirect_uri") != -1:
             return redirect_frontend("/login?next=" + next_url)
 
         # Let the frontend redirect otherwise there will be a CORS issues

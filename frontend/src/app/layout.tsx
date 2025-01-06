@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   icons: [
     {
       rel: "icon",
-      url: "/uma-sandbox-icon.svg",
+      url: "/uma-sandbox-app.svg",
     },
     {
       rel: "apple-touch-icon",
