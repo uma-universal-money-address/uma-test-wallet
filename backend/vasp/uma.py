@@ -152,7 +152,7 @@ def create_uma() -> Response:
 
 
 @bp.get("/<uma_user_name>")
-async def uma(uma_user_name: str) -> Response:
+def uma(uma_user_name: str) -> Response:
     with Session(db.engine) as db_session:
         uma_model = db_session.scalars(
             select(UmaModel).where(UmaModel.username == uma_user_name)
@@ -161,8 +161,8 @@ async def uma(uma_user_name: str) -> Response:
 
 
 @bp.get("/generate_random_uma")
-async def generate_random_uma() -> Response:
-    random_uma = await _generate_random_uma()
+def generate_random_uma() -> Response:
+    random_uma = _generate_random_uma()
     return (
         jsonify({"uma": random_uma})
         if random_uma
@@ -170,9 +170,7 @@ async def generate_random_uma() -> Response:
     )
 
 
-async def _generate_random_uma(
-    batch_size: int = 100, max_attempts: int = 100
-) -> str | None:
+def _generate_random_uma(batch_size: int = 100, max_attempts: int = 100) -> str | None:
     attempts = 0
 
     while attempts < max_attempts:
@@ -180,14 +178,14 @@ async def _generate_random_uma(
             f"{random.choice(APPROVED_ADJECTIVES).lower()}-{random.choice(APPROVED_NOUNS).lower()}-{random.randint(0, 999):03d}"
             for _ in range(batch_size)
         )
-        available_set = await _available_umas_in_set(generated_usernames)
+        available_set = _available_umas_in_set(generated_usernames)
         if available_set:
             return random.choice(list(available_set))
         attempts += 1
     return None
 
 
-async def _available_umas_in_set(umaSet: set[str]) -> set[str]:
+def _available_umas_in_set(umaSet: set[str]) -> set[str]:
     with Session(db.engine) as db_session:
         existing_uma = db_session.scalars(
             select(UmaModel).where(UmaModel.username.in_(umaSet))

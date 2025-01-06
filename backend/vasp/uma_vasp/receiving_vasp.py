@@ -187,7 +187,7 @@ class ReceivingVasp:
             uma_version=None,
         )
 
-    async def handle_pay_request_callback(self, username: str) -> Dict[str, Any]:
+    def handle_pay_request_callback(self, username: str) -> Dict[str, Any]:
         user = self.user_service.get_user_from_uma(username)
         if not user:
             raise UmaException(
@@ -362,7 +362,7 @@ class ReceivingVasp:
             payee_data=None,
         )
 
-    async def handle_create_uma_invoice(self, user_id: str) -> str:
+    def handle_create_uma_invoice(self, user_id: str) -> str:
         user = self.user_service.get_user_from_id(user_id)
         if not user:
             raise UmaException(
@@ -380,7 +380,7 @@ class ReceivingVasp:
                     status_code=404,
                 )
 
-        flask_request_data = await flask_request.json
+        flask_request_data = flask_request.json
         amount = flask_request_data.get("amount")
 
         currency_code = flask_request_data.get("currency_code")
@@ -433,7 +433,7 @@ class ReceivingVasp:
         )
         return invoice.to_bech32_string()
 
-    async def create_and_send_invoice(self, user_id: str) -> Response:
+    def create_and_send_invoice(self, user_id: str) -> Response:
         user = self.user_service.get_user_from_id(user_id)
         if not user:
             raise UmaException(
@@ -450,8 +450,8 @@ class ReceivingVasp:
                     status_code=404,
                 )
 
-        flask_request_data = await flask_request.json
-        amount = await flask_request_data.get("amount")
+        flask_request_data = flask_request.json
+        amount = flask_request_data.get("amount")
 
         currency_code = flask_request_data.get("currency_code")
         if not currency_code:
@@ -592,30 +592,30 @@ def register_routes(
         return receiving_vasp.handle_lnurlp_request(username)
 
     @app.post(PAY_REQUEST_CALLBACK + "<username>")
-    async def handle_uma_pay_request_callback(username: str) -> Dict[str, Any]:
+    def handle_uma_pay_request_callback(username: str) -> Dict[str, Any]:
         receiving_vasp = get_receiving_vasp()
-        return await receiving_vasp.handle_pay_request_callback(username)
+        return receiving_vasp.handle_pay_request_callback(username)
 
     @app.get(PAY_REQUEST_CALLBACK + "<username>")
     @login_required
-    async def handle_lnurl_pay_request_callback(username: str) -> Dict[str, Any]:
+    def handle_lnurl_pay_request_callback(username: str) -> Dict[str, Any]:
         receiving_vasp = get_receiving_vasp()
-        return await receiving_vasp.handle_pay_request_callback(username)
+        return receiving_vasp.handle_pay_request_callback(username)
 
     @app.post("/api/uma/create_invoice")
     @login_required
-    async def handle_create_uma_invoice() -> str:
+    def handle_create_uma_invoice() -> str:
         receiving_vasp = get_receiving_vasp()
-        return await receiving_vasp.handle_create_uma_invoice(current_user.id)
+        return receiving_vasp.handle_create_uma_invoice(current_user.id)
 
     @app.post("/api/uma/create_and_send_invoice")
     @login_required
-    async def handle_create_and_send_invoice() -> Response:
+    def handle_create_and_send_invoice() -> Response:
         receiving_vasp = get_receiving_vasp()
-        return await receiving_vasp.create_and_send_invoice(current_user.id)
+        return receiving_vasp.create_and_send_invoice(current_user.id)
 
     @app.post("/webhooks/transaction")
-    async def handle_post_transaction() -> Response:
+    def handle_post_transaction() -> Response:
         signature_header = flask_request.headers.get(webhooks.SIGNATURE_HEADER)
         if not signature_header:
             abort_with_error(400, "Missing signature header")

@@ -29,6 +29,9 @@ from vasp.uma_vasp.lightspark_helpers import get_node
 from vasp.uma_vasp.sending_vasp import SendingVasp, get_sending_vasp
 from vasp.uma_vasp.uma_exception import abort_with_error
 from vasp.uma_vasp.user import User
+from vasp.models.Currency import Currency as CurrencyModel
+from vasp.models.Uma import Uma as UmaModel
+from vasp.models.Wallet import Wallet
 from uma import Currency
 from uma.nonce_cache import INonceCache
 from uma.public_key_cache import IPublicKeyCache
@@ -132,12 +135,12 @@ class UmaNwcBridge:
             ]
             return jsonify(response)
 
-    async def handle_pay_invoice(self) -> dict[str, Any]:
+    def handle_pay_invoice(self) -> dict[str, Any]:
         uma = session.get("uma")
         if uma is None:
             abort_with_error(404, "Uma not found in session.")
 
-        request_json = await request.get_json()
+        request_json = request.get_json()
         if not request_json:
             abort_with_error(400, "Request must be JSON")
         try:
@@ -188,8 +191,8 @@ class UmaNwcBridge:
             abort_with_error(500, "Payment preimage not found.")
         return PayInvoiceResponse(preimage=preimage).to_dict()
 
-    async def handle_create_invoice(self) -> dict[str, Any]:
-        request_json = await request.get_json()
+    def handle_create_invoice(self) -> dict[str, Any]:
+        request_json = request.get_json()
         if not request_json:
             abort_with_error(400, "Request must be JSON")
         try:
@@ -276,7 +279,7 @@ class UmaNwcBridge:
         return GetInfoResponse(
             alias="UMA Sandbox",
             pubkey=self.config.signing_pubkey_hex,
-            network=self.config.bitcoin_network,
+            network=self.config.bitcoin_network.lower(),
             methods=[
                 "pay_invoice",
                 "make_invoice",
@@ -295,7 +298,9 @@ class UmaNwcBridge:
         ).to_dict()
 
     def handle_lookup_user(self, receiver_uma: str) -> dict[str, Any]:
-        lookup_response = self.sending_vasp.handle_uma_lookup(receiver_uma)
+        lookup_response = self.sending_vasp.handle_uma_lookup(
+            sender_uma=session["uma"], receiver_uma=receiver_uma
+        )
         currencies = lookup_response.get("receiverCurrencies") or []
         return LookupUserResponse(
             currencies=[
@@ -346,7 +351,9 @@ class UmaNwcBridge:
             and locked_currency_side.lower() != "receiving"
         ):
             abort_with_error(400, "Invalid locked currency side")
-        uma_lookup_result = self.sending_vasp.handle_uma_lookup(receiving_uma)
+        uma_lookup_result = self.sending_vasp.handle_uma_lookup(
+            sender_uma=session["uma"], receiver_uma=receiving_uma
+        )
         receiving_currencies = uma_lookup_result.get("receiverCurrencies")
         if not receiving_currencies:
             abort_with_error(400, "Receiver not found")
@@ -381,7 +388,7 @@ class UmaNwcBridge:
                 else int(locked_currency_amount)
             ),
             receiving_currency_code=receiving_currency_code,
-            user_id=session["user_id"],
+            user_id=session.get("user_id"),
         )
 
         with Session(db.engine) as db_session:
@@ -397,7 +404,7 @@ class UmaNwcBridge:
                 total_sending_amount=round(uma_payreq_result.amount_msats / 1000),
                 total_receiving_amount=uma_payreq_result.amount_receiving_currency,
                 callback_uuid=uma_payreq_result.callback_uuid,
-                user_id=session["user_id"],
+                user_id=session.get("user_id"),
             )
             db_session.add(quote)
             db_session.commit()
@@ -430,7 +437,7 @@ class UmaNwcBridge:
             ).first()
             if not quote:
                 abort_with_error(404, "Quote not found")
-            if quote.user_id != session["user_id"]:
+            if quote.user_id != session.get("user_id"):
                 abort_with_error(403, "Quote does not belong to user")
             if quote.settled_at:
                 abort_with_error(400, "Quote already settled")
@@ -445,8 +452,8 @@ class UmaNwcBridge:
 
         return ExecuteQuoteResponse(preimage=payment.get("preimage")).to_dict()
 
-    async def handle_pay_to_address(self) -> dict[str, Any]:
-        request_json = await request.get_json()
+    def handle_pay_to_address(self) -> dict[str, Any]:
+        request_json = request.get_json()
         if not request_json:
             abort_with_error(400, "Request must be JSON")
 
@@ -455,18 +462,10 @@ class UmaNwcBridge:
         except Exception as e:
             abort_with_error(400, f"Invalid request: {e}")
 
-        if (
-            request_data.sending_currency_code != "BTC"
-            and request_data.sending_currency_code != "SAT"
-        ):
-            abort_with_error(
-                400, "Sending currencies besides BTC/SAT are not yet supported"
-            )
-
         amount = request_data.sending_currency_amount
 
         uma_lookup_result = self.sending_vasp.handle_uma_lookup(
-            request_data.receiver_address
+            sender_uma=session["uma"], receiver_uma=request_data.receiver_address
         )
         receiving_currencies = uma_lookup_result.get("receiverCurrencies", [])
         default_currency = (
@@ -498,26 +497,39 @@ class UmaNwcBridge:
             receiving_currency_name = receiving_currency.get("name")
             receiving_currency_decimals = receiving_currency.get("decimals")
 
+        is_in_sats = receiving_currency_code == "SAT"
         uma_payreq_result = self.sending_vasp.handle_uma_payreq(
             uma_lookup_result["callbackUuid"],
-            is_amount_in_msats=True,
-            amount=int(amount) * 1000,
+            is_amount_in_msats=is_in_sats,
+            amount=int(amount) * 1000 if is_in_sats else amount,
             receiving_currency_code=receiving_currency_code,
-            user_id=session["user_id"],
+            user_id=session.get("user_id"),
         )
 
         payment = self.sending_vasp.handle_send_payment(uma_payreq_result.callback_uuid)
+
+        with Session(db.engine) as db_session:
+            wallet = db_session.scalars(
+                select(Wallet)
+                .join(UmaModel)
+                .where(UmaModel.username == get_username_from_uma(session["uma"]))
+            ).first()
+            sending_currency_model = db_session.scalars(
+                select(CurrencyModel).where(CurrencyModel.wallet_id == wallet.id)
+            ).first()
+            sending_currency_code = sending_currency_model.code
+            sending_currency = UmaCurrency(
+                code=sending_currency_code,
+                symbol=CURRENCIES[sending_currency_code].symbol,
+                name=CURRENCIES[sending_currency_code].name,
+                decimals=CURRENCIES[sending_currency_code].decimals,
+            )
 
         quote = UmaQuote(
             payment_hash=uma_payreq_result.payment_hash,
             expires_at=uma_payreq_result.invoice_expires_at,
             multiplier=uma_payreq_result.conversion_rate,
-            sending_currency=UmaCurrency(
-                code="SAT",
-                symbol=CURRENCIES["SAT"].symbol,
-                name=CURRENCIES["SAT"].name,
-                decimals=CURRENCIES["SAT"].decimals,
-            ),
+            sending_currency=sending_currency,
             receiving_currency=UmaCurrency(
                 code=receiving_currency_code,
                 symbol=receiving_currency_symbol,
@@ -594,7 +606,7 @@ def construct_blueprint(
                 },
             )
             user_id = decoded.get("sub")
-            session["user_id"] = int(user_id)
+            session["user_id"] = user_id
             uma = decoded.get("address")
             session["uma"] = uma
         except jwt.exceptions.InvalidTokenError as e:
@@ -621,12 +633,12 @@ def construct_blueprint(
         return get_nwc_bridge().transactions()
 
     @bp.post("/payments/bolt11")
-    async def handle_pay_invoice() -> dict[str, Any]:
-        return await get_nwc_bridge().handle_pay_invoice()
+    def handle_pay_invoice() -> dict[str, Any]:
+        return get_nwc_bridge().handle_pay_invoice()
 
     @bp.post("/invoice")
-    async def handle_create_invoice() -> dict[str, Any]:
-        return await get_nwc_bridge().handle_create_invoice()
+    def handle_create_invoice() -> dict[str, Any]:
+        return get_nwc_bridge().handle_create_invoice()
 
     @bp.route("/invoices/<payment_hash>")
     def handle_get_invoice(payment_hash: str) -> dict[str, Any]:
@@ -647,8 +659,8 @@ def construct_blueprint(
         return get_nwc_bridge().handle_execute_quote(payment_hash)
 
     @bp.post("/payments/lud16")
-    async def handle_pay_address() -> dict[str, Any]:
-        return await get_nwc_bridge().handle_pay_to_address()
+    def handle_pay_address() -> dict[str, Any]:
+        return get_nwc_bridge().handle_pay_to_address()
 
     @bp.post("/payments/keysend")
     def handle_pay_keysend() -> Tuple[Response, int]:
@@ -660,7 +672,7 @@ def construct_blueprint(
         return get_nwc_bridge().handle_get_info()
 
     @bp.post("/token")
-    async def handle_token_exchange() -> Response:
+    def handle_token_exchange() -> Response:
         user_id = session.get("user_id")
         user = User.from_id(user_id)
         if user is None:
@@ -669,7 +681,7 @@ def construct_blueprint(
         if uma is None:
             abort_with_error(404, "Uma not found in session.")
 
-        body = await request.get_json()
+        body = request.get_json()
         requested_permissions = body.get("permissions")
         if not requested_permissions:
             abort_with_error(400, "Permissions are required.")
