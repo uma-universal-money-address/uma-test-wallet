@@ -169,7 +169,7 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
         {children}
       </main>
       {wallets && wallets.length > 0 && (
-        <div className="pt-2 px-4 pb-3 border-[#EBEEF2] border-t">
+        <div className="pt-2 px-4 pb-3 border-[#EBEEF2] border-t overflow-x-scroll no-scrollbar flex justify-center">
           <UmaSwitcherFooter
             wallets={wallets || []}
             refreshWallets={handleRefreshWallets}

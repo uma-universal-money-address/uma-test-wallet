@@ -124,6 +124,9 @@ const config: Config = {
         },
       },
     },
+    screens: {
+      mobile: "480px",
+    },
   },
   plugins: [require("tailwindcss-animate")],
 };

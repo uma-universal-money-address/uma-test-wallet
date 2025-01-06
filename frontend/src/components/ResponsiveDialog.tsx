@@ -25,7 +25,7 @@ export const ResponsiveDialog = ({
   title,
   description,
 }: Props) => {
-  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const isDesktop = useMediaQuery("(min-width: 480px)");
 
   if (isDesktop) {
     return (
