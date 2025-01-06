@@ -74,6 +74,18 @@ export const SandboxAvatar = (props: Props) => {
   const avatarSrc = props.src || EMPTY_AVATAR;
   const size = props.size || "lg";
 
+  const countryFlag = props.country ? (
+    <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center absolute bottom-[-2px] right-[-2px]">
+      <Image
+        className="rounded-full"
+        src={props.country.image}
+        alt={props.country.currency.code}
+        width={16}
+        height={16}
+      />
+    </div>
+  ) : null;
+
   if (props.ownContact) {
     return (
       <div
@@ -86,10 +98,11 @@ export const SandboxAvatar = (props: Props) => {
           fontSize: `${getFontSize(size)}px`,
           lineHeight: `${getLineHeight(size)}px`,
         }}
-        className="rounded-xl flex items-center justify-center bg-shine"
+        className="rounded-xl flex items-center justify-center bg-shine relative"
       >
         <span className="text-white items-center flex justify-center font-semibold tracking-[-0.2px]">
           {props.ownContact.number}
+          {countryFlag}
         </span>
       </div>
     );
@@ -106,9 +119,10 @@ export const SandboxAvatar = (props: Props) => {
           fontSize: `${getFontSize(size)}px`,
           lineHeight: `${getLineHeight(size)}px`,
         }}
-        className="items-center justify-center flex rounded-full bg-primary text-white"
+        className="items-center justify-center flex rounded-full bg-primary text-white relative"
       >
         {props.uma[1].toUpperCase()}
+        {countryFlag}
       </div>
     );
   }
@@ -127,15 +141,7 @@ export const SandboxAvatar = (props: Props) => {
         className="items-center justify-center flex rounded-full bg-[#EBEEF2] text-primary relative"
       >
         {props.country.currency.code.slice(0, 2).toUpperCase()}
-        <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center absolute bottom-[-2px] right-[-2px]">
-          <Image
-            className="rounded-full"
-            src={props.country.image}
-            alt={props.country.currency.code}
-            width={16}
-            height={16}
-          />
-        </div>
+        {countryFlag}
       </div>
     );
   }
