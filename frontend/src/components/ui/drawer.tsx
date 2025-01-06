@@ -49,7 +49,7 @@ const DrawerContent = React.forwardRef<
       {...props}
     >
       <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
-      <div className="flex items-center justify-center max-h-screen overflow-y-scroll no-scrollbar">
+      <div className="flex flex-col justify-center max-h-screen overflow-y-scroll no-scrollbar">
         {children}
       </div>
     </DrawerPrimitive.Content>

@@ -2,15 +2,23 @@
 
 import { SandboxButton } from "@/components/SandboxButton";
 import { useToast } from "@/hooks/use-toast";
+import { useLoggedIn } from "@/hooks/useLoggedIn";
 import { getBackendUrl } from "@/lib/backendUrl";
 import { convertArrayBuffersToBase64 } from "@/lib/convertArrayBuffersToBase64";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Page() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoadingLogin, setIsLoadingLogin] = useState(false);
+  const { isLoggedIn } = useLoggedIn();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      router.push("/wallet");
+    }
+  }, [router, isLoggedIn]);
 
   const handleLogin = async () => {
     setIsLoadingLogin(true);

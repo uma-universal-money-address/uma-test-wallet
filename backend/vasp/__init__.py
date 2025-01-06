@@ -48,6 +48,7 @@ from vasp.db import db, setup_rds_iam_auth
 from vasp.uma_vasp.interfaces.request_storage import IRequestStorage
 from werkzeug.wrappers.response import Response as WerkzeugResponse
 from lightspark import LightsparkSyncClient as LightsparkClient
+from vasp.utils import FRONTEND_ALLOWED_ORIGINS, is_dev
 
 log: logging.Logger = logging.getLogger(__name__)
 
@@ -64,11 +65,17 @@ def create_app() -> Flask:
 
     app.secret_key = require_env("FLASK_SECRET_KEY")
     app.config["REMEMBER_COOKIE_SECURE"] = True
+    app.config["SESSION_COOKIE_SECURE"] = True
+    app.config["SESSION_COOKIE_SAMESITE"] = "None"
+    app.config["REMEMBER_COOKIE_SAMESITE"] = "None"
+    app.config["REMEMBER_COOKIE_NAME"] = "sandbox_remember_token"
 
-    if app.config.get("FLASK_ENV") == "development":
-        app.config["REMEMBER_COOKIE_SAMESITE"] = (
-            "None; Secure"  # Only for local testing
-        )
+    if is_dev:
+        app.config["SESSION_COOKIE_DOMAIN"] = ".localhost:3000"
+        app.config["REMEMBER_COOKIE_DOMAIN"] = ".localhost:3000"
+    else:
+        app.config["SESSION_COOKIE_DOMAIN"] = ".uma.me"
+        app.config["REMEMBER_COOKIE_DOMAIN"] = ".uma.me"
 
     login_manager = LoginManager()
     login_manager.init_app(app)
@@ -89,7 +96,7 @@ def create_app() -> Flask:
 
     CORS(
         app,
-        origins=["http://localhost:3000", "http://localhost:3001"],
+        origins=FRONTEND_ALLOWED_ORIGINS,
         allow_headers=["Access-Control-Allow-Origin", "Content-Type"],
         supports_credentials=True,
     )

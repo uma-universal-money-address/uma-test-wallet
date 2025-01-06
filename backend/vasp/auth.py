@@ -5,7 +5,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 import logging
 import base64
-import os
 
 from typing import Optional, TypedDict, Union, Dict, Any
 from flask import Blueprint, current_app, request, redirect, jsonify, session
@@ -13,7 +12,12 @@ from flask_login import login_user, login_required, logout_user, current_user
 from vasp.redirect import redirect_frontend
 
 from enum import Enum
-from vasp.utils import get_vasp_domain, get_uma_from_username
+from vasp.utils import (
+    get_vasp_domain,
+    get_uma_from_username,
+    FRONTEND_ALLOWED_ORIGINS,
+    is_dev,
+)
 from vasp.db import db
 from vasp.models.User import User as UserModel
 from vasp.models.WebAuthnCredential import WebAuthnCredential
@@ -48,15 +52,8 @@ class WebauthnLoginData(TypedDict):
     credential: Union[Dict[str, Any]]
 
 
-is_dev: bool = os.environ.get("FLASK_ENV") == "development"
-
-
 def get_webauthn_expected_rp_id() -> str:
-    return "localhost" if is_dev else get_vasp_domain()
-
-
-def get_webauthn_expected_origin() -> str:
-    return "http://localhost:3000" if is_dev else f"https://{get_vasp_domain()}"
+    return "localhost" if is_dev else "https://sandbox.uma.me"
 
 
 def construct_blueprint(
@@ -225,7 +222,7 @@ def construct_blueprint(
         auth_verification = webauthn.verify_registration_response(
             credential=request.get_json(),
             expected_challenge=webauthn.base64url_to_bytes(challenge_data.data),
-            expected_origin=get_webauthn_expected_origin(),
+            expected_origin=FRONTEND_ALLOWED_ORIGINS,
             expected_rp_id=get_webauthn_expected_rp_id(),
         )
 
@@ -304,7 +301,7 @@ def construct_blueprint(
                 webauthn.verify_authentication_response(
                     credential=credential,
                     expected_challenge=challenge_data.data.encode(),
-                    expected_origin=get_webauthn_expected_origin(),
+                    expected_origin=FRONTEND_ALLOWED_ORIGINS,
                     expected_rp_id=get_webauthn_expected_rp_id(),
                     credential_public_key=credential_model.credential_public_key,
                     credential_current_sign_count=0,  # Not used

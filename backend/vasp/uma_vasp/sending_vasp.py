@@ -1,5 +1,4 @@
 import logging
-import os
 import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -11,7 +10,7 @@ from lightspark import CurrencyUnit
 from lightspark import LightsparkSyncClient as LightsparkClient
 from lightspark import OutgoingPayment, PaymentDirection, TransactionStatus
 from lightspark.utils.currency_amount import amount_as_msats
-from vasp.utils import get_vasp_domain, is_valid_uma, get_username_from_uma
+from vasp.utils import get_vasp_domain, is_valid_uma, get_username_from_uma, is_dev
 from vasp.uma_vasp.address_helpers import get_domain_from_uma_address
 from vasp.uma_vasp.config import Config
 from vasp.uma_vasp.interfaces.compliance_service import IComplianceService
@@ -105,7 +104,7 @@ class SendingVasp:
             is_subject_to_travel_rule=True,
         )
 
-        if os.environ.get("FLASK_ENV") == "development":
+        if is_dev:
             url = url.replace("https://", "http://")
 
         response = requests.get(url, timeout=20)
