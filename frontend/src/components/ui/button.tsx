@@ -22,10 +22,12 @@ const buttonVariants = cva(
         ghost: "",
         link: "text-primary underline-offset-4 hover:underline",
         icon: "hover:bg-accent",
+        installPrompt: "text-primary bg-[#0068C9] rounded-full px-[10px]",
       },
       size: {
         default: "h-[50px] py-[14.5px]",
         sm: "h-[46px] py-[12.5px]",
+        tiny: "h-[26px] py-0 px-[10px]",
         lg: "h-[50px] py-[14.5px]",
         icon: "h-10 w-10 p-2",
       },
