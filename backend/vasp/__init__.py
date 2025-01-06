@@ -64,10 +64,10 @@ def create_app() -> Flask:
     cache = Cache(app)
 
     app.secret_key = require_env("FLASK_SECRET_KEY")
-    app.config["REMEMBER_COOKIE_SECURE"] = True
-    app.config["SESSION_COOKIE_SECURE"] = True
-    app.config["SESSION_COOKIE_SAMESITE"] = "None"
-    app.config["REMEMBER_COOKIE_SAMESITE"] = "None"
+    app.config["REMEMBER_COOKIE_SECURE"] = False
+    app.config["SESSION_COOKIE_SECURE"] = False
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["REMEMBER_COOKIE_SAMESITE"] = "Lax"
     app.config["REMEMBER_COOKIE_NAME"] = "sandbox_remember_token"
 
     if is_dev:
