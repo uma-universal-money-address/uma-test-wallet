@@ -4,6 +4,10 @@ import { WalletColor } from "@/lib/walletColorMapping";
 import React, { useState } from "react";
 import { CreateUma, CreateUmaButtons } from "./CreateUma";
 import { CreatingTestUmaLoading } from "./CreatingTestUmaLoading";
+import {
+  EnableNotifications,
+  EnableNotificationsButtons,
+} from "./EnableNotifications";
 import { Finished, FinishedButtons } from "./Finished";
 import { StepProps } from "./Steps";
 import {
@@ -17,6 +21,7 @@ export enum OnboardingStep {
   CreateUma = "CreateUma",
   CreatingTestUmaLoading = "CreatingTestUmaLoading",
   WalletCustomization = "WalletCustomization",
+  EnableNotifications = "EnableNotifications",
   Finished = "Finished",
 }
 
@@ -59,6 +64,7 @@ export const ONBOARDING_STEP_MAPPING: Record<OnboardingStep, StepProps> = {
       "You'll use this to simulate sending and receiving payments on regtest",
     content: CreateUma,
     buttons: CreateUmaButtons,
+    isBackable: true,
   },
   [OnboardingStep.CreatingTestUmaLoading]: {
     content: CreatingTestUmaLoading,
@@ -69,6 +75,13 @@ export const ONBOARDING_STEP_MAPPING: Record<OnboardingStep, StepProps> = {
       "Select a currency to load your UMA with test funds and start making payments on regtest",
     content: WalletCustomization,
     buttons: WalletCustomizationButtons,
+  },
+  [OnboardingStep.EnableNotifications]: {
+    title: "Enable notifications",
+    description: "Get push notifications when you receive payments or requests",
+    content: EnableNotifications,
+    buttons: EnableNotificationsButtons,
+    isSkippable: true,
   },
   [OnboardingStep.Finished]: {
     content: Finished,
@@ -122,7 +135,7 @@ function OnboardingStepContextProvider({
         const history = prevData.history.slice();
         const prevStepNumber = history.pop();
 
-        if (prevStepNumber) {
+        if (prevStepNumber !== undefined) {
           const prevStepProps =
             ONBOARDING_STEP_MAPPING[stepOrder[prevStepNumber]];
           return {

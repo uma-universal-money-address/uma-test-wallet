@@ -196,7 +196,7 @@ export const UmaSwitcherFooter = ({ wallets, refreshWallets }: Props) => {
               setIsDialogOpen={setIsDialogOpen}
               setIsCreatingUma={setIsCreatingUma}
             >
-              <Steps />
+              <Steps showHeader={false} />
             </UmaSelectorDialog>
           </OnboardingStepContextProvider>
         ) : (

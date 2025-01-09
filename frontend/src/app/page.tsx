@@ -27,11 +27,12 @@ export default function Home() {
           OnboardingStep.CreateUma,
           OnboardingStep.CreatingTestUmaLoading,
           OnboardingStep.WalletCustomization,
+          OnboardingStep.EnableNotifications,
           OnboardingStep.Finished,
         ]}
         onFinish={() => router.push("/wallet")}
       >
-        <Steps />
+        <Steps showHeader />
       </OnboardingStepContextProvider>
     </div>
   );
