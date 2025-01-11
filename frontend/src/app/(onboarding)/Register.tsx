@@ -99,6 +99,8 @@ export const Register = () => {
           isLoading={isLoadingExchangeRates || isLoadingWallets}
           options={{
             showUma: true,
+            showBalance: true,
+            showHeader: true,
           }}
         />
       </div>

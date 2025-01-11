@@ -173,47 +173,45 @@ export const UmaSwitcherFooter = ({ wallets, refreshWallets }: Props) => {
           className="max-w-6"
         />
       </Button>
-      {currentWallet &&
-        wallets &&
-        (isCreatingUma ? (
-          <OnboardingStepContextProvider
-            stepOrder={[
-              OnboardingStep.CreateUma,
-              OnboardingStep.CreatingTestUmaLoading,
-              OnboardingStep.WalletCustomization,
-            ]}
-            onFinish={() => {
-              setIsCreatingUma(false);
-              setIsDialogOpen(false);
-              refreshWallets();
-              toast({
-                title: "New test UMA created",
-              });
-            }}
+      {isCreatingUma ? (
+        <OnboardingStepContextProvider
+          stepOrder={[
+            OnboardingStep.CreateUma,
+            OnboardingStep.CreatingTestUmaLoading,
+            OnboardingStep.WalletCustomization,
+          ]}
+          onFinish={() => {
+            setIsCreatingUma(false);
+            setIsDialogOpen(false);
+            refreshWallets();
+            toast({
+              title: "New test UMA created",
+            });
+          }}
+        >
+          <UmaSelectorDialog
+            isDialogOpen={isDialogOpen}
+            setIsDialogOpen={setIsDialogOpen}
+            setIsCreatingUma={setIsCreatingUma}
           >
-            <UmaSelectorDialog
-              isDialogOpen={isDialogOpen}
-              setIsDialogOpen={setIsDialogOpen}
-              setIsCreatingUma={setIsCreatingUma}
-            >
-              <Steps showHeader={false} />
-            </UmaSelectorDialog>
-          </OnboardingStepContextProvider>
-        ) : (
-          <ResponsiveDialog
-            open={isDialogOpen}
-            onOpenChange={(isOpen) => setIsDialogOpen(isOpen)}
-            title="Create UMA"
-            description="Create an UMA"
-          >
-            <UmaSelectorDialogContent
-              wallets={wallets}
-              currentWallet={currentWallet}
-              handleCreateUma={handleCreateUma}
-              handleChooseWallet={handleChooseWallet}
-            />
-          </ResponsiveDialog>
-        ))}
+            <Steps showHeader={false} />
+          </UmaSelectorDialog>
+        </OnboardingStepContextProvider>
+      ) : (
+        <ResponsiveDialog
+          open={isDialogOpen}
+          onOpenChange={(isOpen) => setIsDialogOpen(isOpen)}
+          title="Create UMA"
+          description="Create an UMA"
+        >
+          <UmaSelectorDialogContent
+            wallets={wallets}
+            currentWallet={currentWallet}
+            handleCreateUma={handleCreateUma}
+            handleChooseWallet={handleChooseWallet}
+          />
+        </ResponsiveDialog>
+      )}
     </div>
   );
 };
@@ -264,8 +262,8 @@ const UmaSelectorDialogContent = ({
   handleCreateUma,
   handleChooseWallet,
 }: {
-  currentWallet: Wallet;
-  wallets: Wallet[];
+  currentWallet: Wallet | undefined;
+  wallets: Wallet[] | undefined;
   handleCreateUma: () => void;
   handleChooseWallet: (wallet: Wallet) => void;
 }) => {
@@ -275,7 +273,7 @@ const UmaSelectorDialogContent = ({
     router.push("/settings");
   };
 
-  const hasMaxWallets = wallets.length >= MAX_WALLETS;
+  const hasMaxWallets = wallets && wallets.length >= MAX_WALLETS;
 
   return (
     <>
@@ -294,11 +292,13 @@ const UmaSelectorDialogContent = ({
           </Button>
         </div>
       </div>
-      <WalletRows
-        currentWallet={currentWallet}
-        wallets={wallets}
-        handleChooseWallet={handleChooseWallet}
-      />
+      {wallets && currentWallet && (
+        <WalletRows
+          currentWallet={currentWallet}
+          wallets={wallets}
+          handleChooseWallet={handleChooseWallet}
+        />
+      )}
       <div className="flex flex-col px-6 pt-3 pb-4 gap-[10px]">
         <SandboxButton
           buttonProps={{

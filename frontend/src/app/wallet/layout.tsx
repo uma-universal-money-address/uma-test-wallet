@@ -17,6 +17,7 @@ import UmaContextProvider, { useUma } from "@/hooks/useUmaContext";
 import WalletContextProvider, { useWallets } from "@/hooks/useWalletContext";
 import { getUmaFromUsername } from "@/lib/uma";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -31,6 +32,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
 const LayoutContent = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
+  const router = useRouter();
   const { isLoading: isLoadingUmas, error: umasError } = useUma();
   const {
     wallets,
@@ -45,16 +47,20 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
     wallets?.findIndex((wallet) => wallet.id === currentWallet?.id) || 0;
 
   const handleCopy = () => {
-    if (isLoadingUmas || isLoadingWallets) {
+    if (isLoadingUmas || isLoadingWallets || !currentWallet) {
       return;
     }
 
     navigator.clipboard.writeText(
-      getUmaFromUsername(currentWallet!.uma.username),
+      getUmaFromUsername(currentWallet.uma.username),
     );
     toast({
       title: "Copied to clipboard",
     });
+  };
+
+  const handleUmaSettings = () => {
+    router.push("/uma-settings");
   };
 
   useEffect(() => {
@@ -141,7 +147,7 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
               height={24}
             />
           </Button>
-          <Button variant="icon" size="icon">
+          <Button variant="icon" size="icon" onClick={handleUmaSettings}>
             <Image
               src="/icons/settings-gear-2.svg"
               alt="Settings"
@@ -154,7 +160,7 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
       <main className="flex-1 overflow-y-auto overflow-x-hidden">
         {children}
       </main>
-      {wallets && wallets.length > 0 && (
+      {!isLoadingWallets && (
         <div className="pt-2 px-4 pb-3 border-[#EBEEF2] border-t overflow-x-scroll no-scrollbar flex justify-center">
           <UmaSwitcherFooter
             wallets={wallets || []}
