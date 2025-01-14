@@ -698,10 +698,13 @@ def register_routes(
                         receiver_uma=get_uma_from_username(receiver_uma_model.username),
                     )
 
+                    amount_normal_denom = payreq_response.amount_in_lowest_denom / (
+                        10 ** CURRENCIES[payreq_response.currency_code].decimals
+                    )
                     user.send_push_notification(
                         config=config,
-                        title="Payment received",
-                        body=f"Received payment of {-payreq_response.amount_in_lowest_denom} {payreq_response.currency_code}",
+                        title="UMA Sandbox",
+                        body=f"{payreq_response.sender_uma} sent {amount_normal_denom} {payreq_response.currency_code}",
                     )
 
                     logging.info(
