@@ -9,6 +9,7 @@ import {
   EnableNotificationsButtons,
 } from "./EnableNotifications";
 import { Finished, FinishedButtons } from "./Finished";
+import { Register, RegisterButtons } from "./Register";
 import { StepProps } from "./Steps";
 import {
   WalletCustomization,
@@ -21,6 +22,7 @@ export enum OnboardingStep {
   CreateUma = "CreateUma",
   CreatingTestUmaLoading = "CreatingTestUmaLoading",
   WalletCustomization = "WalletCustomization",
+  Register = "Register",
   EnableNotifications = "EnableNotifications",
   Finished = "Finished",
 }
@@ -46,7 +48,10 @@ export interface OnboardingStepContextData {
   setCurrencyCode: (currencyCode: string) => void;
   setIsLoading: (isLoading: boolean) => void;
   setError: (error: Error | null) => void;
+  /** Resets all step data to the initial state. */
   resetStep: () => void;
+  /** Overrides the current step with different step properties */
+  overrideStep: (stepProps: StepProps) => void;
 }
 
 const OnboardingStepContext = React.createContext<OnboardingStepContextData>(
@@ -75,6 +80,13 @@ export const ONBOARDING_STEP_MAPPING: Record<OnboardingStep, StepProps> = {
       "Select a currency to load your UMA with test funds and start making payments on regtest",
     content: WalletCustomization,
     buttons: WalletCustomizationButtons,
+  },
+  [OnboardingStep.Register]: {
+    title: "Save your test UMA",
+    description:
+      "Create a passkey to securely access your test UMA and funds anytime, anywhere.",
+    content: Register,
+    buttons: RegisterButtons,
   },
   [OnboardingStep.EnableNotifications]: {
     title: "Enable notifications",
@@ -208,6 +220,9 @@ function OnboardingStepContextProvider({
         stepProps: ONBOARDING_STEP_MAPPING[stepOrder[0]],
         isLoading: false,
       }));
+    },
+    overrideStep: (stepProps: StepProps) => {
+      setData((prevData) => ({ ...prevData, stepProps }));
     },
   });
 

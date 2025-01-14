@@ -8,26 +8,16 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
 import { UmaInput } from "@/components/UmaInput";
 import { Wallet } from "@/components/Wallet";
 import { useToast } from "@/hooks/use-toast";
 import { useCurrencies } from "@/hooks/useCurrencies";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
-import { useLoginMethods } from "@/hooks/useLoginMethods";
 import { fetchWallets, Wallet as WalletType } from "@/hooks/useWalletContext";
-import { getBackendUrl } from "@/lib/backendUrl";
 import { fundWallet } from "@/lib/fundWallet";
 import { updateWallet } from "@/lib/updateWallet";
 import { WalletColor } from "@/lib/walletColorMapping";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
-import { startRegistration } from "@simplewebauthn/browser";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useOnboardingStepContext } from "./OnboardingStepContextProvider";
@@ -88,7 +78,7 @@ const OtherCurrencies = ({
           currency. You can always change this later in Settings.
         </DialogDescription>
       </VisuallyHidden.Root>
-      <DialogContent className="min-w-[400px] max-sm:h-full max-h-dvh overflow-scroll justify-start">
+      <DialogContent className="min-w-[400px] max-sm:h-full max-h-[916px] overflow-scroll justify-start">
         <div className="flex flex-col gap-2 px-8 pb-3 pt-[68px]">
           <h1 className="text-primary text-[26px] font-normal leading-[34px] tracking-[-0.325px]">
             Select preferred currency
@@ -320,21 +310,7 @@ export const WalletCustomization = () => {
 };
 
 export const WalletCustomizationButtons = ({ onNext }: StepButtonProps) => {
-  const { setError, wallet } = useOnboardingStepContext();
-  const {
-    loginMethods,
-    isLoading: isLoadingLoginMethods,
-    error: errorLoadingLoginMethods,
-  } = useLoginMethods();
-
-  const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
-  const [isLoadingRegister, setIsLoadingRegister] = useState(false);
-
-  useEffect(() => {
-    if (errorLoadingLoginMethods) {
-      setError(new Error(errorLoadingLoginMethods));
-    }
-  }, [errorLoadingLoginMethods, setError]);
+  const { wallet } = useOnboardingStepContext();
 
   const handleFinishStep = async () => {
     if (wallet) {
@@ -346,126 +322,17 @@ export const WalletCustomizationButtons = ({ onNext }: StepButtonProps) => {
     onNext();
   };
 
-  const handleSubmit = async () => {
-    // Skip registration if already has login methods
-    if (loginMethods?.webAuthnCredentials?.length) {
-      handleFinishStep();
-    } else {
-      setIsRegistrationOpen(true);
-    }
-  };
-
-  const handleRegister = async () => {
-    setIsLoadingRegister(true);
-    try {
-      const optionsRes = await fetch(
-        `${getBackendUrl()}/auth/webauthn_options`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-      const options = await optionsRes.json();
-      const attResp = await startRegistration({ optionsJSON: options });
-      const verificationRes = await fetch(
-        `${getBackendUrl()}/auth/webauthn_register`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(attResp),
-        },
-      );
-      const verification = await verificationRes.json();
-      if (verification.success) {
-        handleFinishStep();
-      } else {
-        console.error("Failed to register with WebAuthn.");
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoadingRegister(false);
-    }
-  };
-
   return (
-    <>
-      {isRegistrationOpen && (
-        <Drawer
-          open={isRegistrationOpen}
-          onClose={() => setIsRegistrationOpen(false)}
-        >
-          <DrawerContent>
-            <DrawerHeader className="flex flex-row w-full justify-end">
-              <DrawerClose asChild>
-                <Button variant="icon" size="icon">
-                  <Image
-                    src="/icons/close.svg"
-                    alt="Close"
-                    width={24}
-                    height={24}
-                  />
-                </Button>
-              </DrawerClose>
-            </DrawerHeader>
-            <DrawerTitle>
-              <div className="flex flex-col gap-2 px-8 pb-8">
-                <div className="flex flex-row gap-1">
-                  <Image
-                    src="/icons/passkeys.svg"
-                    alt="Passkeys"
-                    width={32}
-                    height={32}
-                  />
-                  <span className="text-[26px] font-normal leading-[34px] tracking-[-0.325px]">
-                    Create a passkey
-                  </span>
-                </div>
-              </div>
-            </DrawerTitle>
-            <div className="flex flex-col px-6 pb-12 gap-[10px]">
-              <SandboxButton
-                buttonProps={{
-                  variant: "secondary",
-                  size: "lg",
-                  onClick: handleFinishStep,
-                }}
-                className="w-full"
-              >
-                Skip for now
-              </SandboxButton>
-              <SandboxButton
-                buttonProps={{
-                  size: "lg",
-                  onClick: handleRegister,
-                }}
-                loading={isLoadingRegister}
-                className="w-full"
-              >
-                Create passkey
-              </SandboxButton>
-            </div>
-          </DrawerContent>
-        </Drawer>
-      )}
-      <div className="flex flex-col gap-[10px]">
-        <SandboxButton
-          buttonProps={{
-            size: "lg",
-            onClick: handleSubmit,
-          }}
-          disabled={isLoadingLoginMethods}
-          className="w-full"
-        >
-          Continue
-        </SandboxButton>
-      </div>
-    </>
+    <div className="flex flex-col gap-[10px]">
+      <SandboxButton
+        buttonProps={{
+          size: "lg",
+          onClick: handleFinishStep,
+        }}
+        className="w-full"
+      >
+        Add test funds
+      </SandboxButton>
+    </div>
   );
 };

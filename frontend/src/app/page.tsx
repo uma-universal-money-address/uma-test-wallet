@@ -27,6 +27,7 @@ export default function Home() {
           OnboardingStep.CreateUma,
           OnboardingStep.CreatingTestUmaLoading,
           OnboardingStep.WalletCustomization,
+          OnboardingStep.Register,
           OnboardingStep.EnableNotifications,
           OnboardingStep.Finished,
         ]}
