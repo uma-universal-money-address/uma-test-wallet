@@ -14,6 +14,7 @@ const buttonVariants = cva(
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 px-5",
         destructiveOutline:
           "border border-input bg-background hover:bg-destructive text-destructive hover:text-destructive-foreground px-5",
+        delete: "bg-lightRed text-error hover:bg-lightRed/90 px-5",
         outline:
           "border border-input bg-background hover:bg-accent hover:text-accent-foreground px-5",
         secondary:
@@ -29,7 +30,7 @@ const buttonVariants = cva(
         sm: "h-[46px] py-[12.5px]",
         tiny: "h-[26px] py-0 px-[10px]",
         lg: "h-[50px] py-[14.5px]",
-        icon: "h-10 w-10 p-2",
+        icon: "min-h-10 min-w-10 p-2",
       },
     },
     defaultVariants: {

@@ -96,7 +96,7 @@ export default function Page() {
             </div>
             <SandboxButton
               buttonProps={{
-                variant: "destructive",
+                variant: "delete",
                 onClick: handleDeleteUma,
               }}
               className="w-full"
@@ -117,7 +117,7 @@ export default function Page() {
         </ResponsiveDialog>
         <SandboxButton
           buttonProps={{
-            variant: "destructive",
+            variant: "delete",
             onClick: () => setIsDeleteUmaOpen(true),
           }}
           className="w-full"
