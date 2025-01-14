@@ -2,16 +2,18 @@
 
 import { ResponsiveDialog } from "@/components/ResponsiveDialog";
 import { SandboxButton } from "@/components/SandboxButton";
+import { SettingProps, SettingRow } from "@/components/SettingRow";
 import { useToast } from "@/hooks/use-toast";
+import { useAppState } from "@/hooks/useAppState";
 import { getBackendUrl } from "@/lib/backendUrl";
 import { subscribeToPush, unsubscribeUser } from "@/lib/notificationActions";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { SettingProps, SettingRow } from "./SettingRow";
 
 export default function Page() {
   const { toast } = useToast();
   const router = useRouter();
+  const { resetAppState } = useAppState();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
@@ -57,6 +59,7 @@ export default function Page() {
         method: "POST",
         credentials: "include",
       });
+      resetAppState();
       router.push("/");
     } catch (e) {
       toast({

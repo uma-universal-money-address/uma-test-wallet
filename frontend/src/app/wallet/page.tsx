@@ -108,6 +108,8 @@ export default function Page() {
                   options={{
                     showAddBalance: true,
                     showSend: true,
+                    showBalance: true,
+                    showHeader: true,
                   }}
                 />
               </SlideWallet>
