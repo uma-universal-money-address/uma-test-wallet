@@ -22,6 +22,7 @@ body {
     --muted-foreground: 0 0% 45.1%;
     --accent: 0 0% 96.1%;
     --accent-foreground: 0 0% 9%;
+    --light-red: #f7e3e3;
     --error: #e31a1a;
     --error-foreground: 0 0% 98%;
     --destructive: 0 84.2% 60.2%;

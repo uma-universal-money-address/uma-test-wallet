@@ -10,14 +10,28 @@ export interface RawLoginMethods {
   webauthn_credentials: RawWebAuthnCredential[];
 }
 
-interface WebAuthnCredential {
+export interface WebAuthnCredential {
   id: string;
   credentialId: string;
+  lastUsed?: string;
 }
 
 export interface LoginMethods {
   webAuthnCredentials: WebAuthnCredential[];
 }
+
+const internalFetchLoginMethods = async (): Promise<RawLoginMethods> => {
+  return fetch(`${getBackendUrl()}/user/login_methods`, {
+    method: "GET",
+    credentials: "include",
+  }).then((res) => {
+    if (res.ok) {
+      return res.json() as Promise<RawLoginMethods>;
+    } else {
+      throw new Error("Failed to fetch user logged in status.");
+    }
+  });
+};
 
 export const useLoginMethods = () => {
   const [loginMethods, setLoginMethods] = useState<LoginMethods>();
@@ -28,16 +42,7 @@ export const useLoginMethods = () => {
     async function fetchLoginMethods() {
       setIsLoading(true);
       try {
-        const response = await fetch(`${getBackendUrl()}/user/login_methods`, {
-          method: "GET",
-          credentials: "include",
-        }).then((res) => {
-          if (res.ok) {
-            return res.json() as Promise<RawLoginMethods>;
-          } else {
-            throw new Error("Failed to fetch user logged in status.");
-          }
-        });
+        const response = await internalFetchLoginMethods();
         if (!ignore) {
           setLoginMethods({
             webAuthnCredentials: response.webauthn_credentials.map(
@@ -63,9 +68,27 @@ export const useLoginMethods = () => {
     };
   }, []);
 
+  const refresh = async () => {
+    try {
+      const response = await internalFetchLoginMethods();
+      setLoginMethods({
+        webAuthnCredentials: response.webauthn_credentials.map(
+          ({ id, credential_id }) => ({
+            id,
+            credentialId: credential_id,
+          }),
+        ),
+      });
+    } catch (e: unknown) {
+      const error = e as Error;
+      setError(error.message);
+    }
+  };
+
   return {
     loginMethods,
     error,
     isLoading,
+    refresh,
   };
 };

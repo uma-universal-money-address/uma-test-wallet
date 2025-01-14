@@ -472,6 +472,21 @@ def construct_blueprint(
                 }
             )
 
+    @bp.delete("/webauthn/<credential_id>")
+    @login_required
+    def delete_webauthn_credential(credential_id: str) -> Response:
+        with Session(db.engine) as db_session:
+            credential = db_session.scalars(
+                select(WebAuthnCredential)
+                .where(WebAuthnCredential.user_id == current_user.id)
+                .where(WebAuthnCredential.id == credential_id)
+            ).first()
+            if credential is None:
+                abort_with_error(404, f"WebAuthnCredential {credential_id} not found.")
+            db_session.delete(credential)
+            db_session.commit()
+            return jsonify({"message": f"WebAuthnCredential {credential_id} deleted."})
+
     bp.register_blueprint(notifications.construct_blueprint(config=config))
 
     return bp
