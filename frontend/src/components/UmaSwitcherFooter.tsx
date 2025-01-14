@@ -2,12 +2,14 @@
 
 import OnboardingStepContextProvider, {
   OnboardingStep,
+  useOnboardingStepContext,
 } from "@/app/(onboarding)/OnboardingStepContextProvider";
 import { Steps } from "@/app/(onboarding)/Steps";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
 import { Wallet } from "@/hooks/useWalletContext";
 import { convertToNormalDenomination } from "@/lib/convertToNormalDenomination";
+import { deleteWallet } from "@/lib/deleteWallet";
 import { getUmaFromUsername } from "@/lib/uma";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -106,7 +108,7 @@ interface Props {
 export const UmaSwitcherFooter = ({ wallets, refreshWallets }: Props) => {
   const { toast } = useToast();
   const { currentWallet, setCurrentWallet } = useAppState();
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCreatingUma, setIsCreatingUma] = useState(false);
 
   const handleCreateUma = () => {
@@ -123,14 +125,7 @@ export const UmaSwitcherFooter = ({ wallets, refreshWallets }: Props) => {
 
   const handleChooseWallet = (wallet: Wallet) => {
     setCurrentWallet(wallet);
-    setIsDrawerOpen(false);
-  };
-
-  const handleDialogOpenChange = (isOpen: boolean) => {
-    setIsDrawerOpen(isOpen);
-    if (!isOpen) {
-      setIsCreatingUma(false);
-    }
+    setIsDialogOpen(false);
   };
 
   let walletButtons: JSX.Element[] = [];
@@ -166,7 +161,7 @@ export const UmaSwitcherFooter = ({ wallets, refreshWallets }: Props) => {
       {walletButtons}
       <Button
         className="p-2 bg-[#EBEEF2] hover:bg-gray-300 h-8 w-8 rounded-lg"
-        onClick={() => setIsDrawerOpen(true)}
+        onClick={() => setIsDialogOpen(true)}
         size="icon"
         variant="icon"
       >
@@ -178,42 +173,88 @@ export const UmaSwitcherFooter = ({ wallets, refreshWallets }: Props) => {
           className="max-w-6"
         />
       </Button>
-      {currentWallet && wallets && (
-        <ResponsiveDialog
-          open={isDrawerOpen}
-          onOpenChange={handleDialogOpenChange}
-          title="Create UMA"
-          description="Create an UMA"
-        >
-          {isCreatingUma ? (
-            <OnboardingStepContextProvider
-              stepOrder={[
-                OnboardingStep.CreateUma,
-                OnboardingStep.CreatingTestUmaLoading,
-                OnboardingStep.WalletCustomization,
-              ]}
-              onFinish={() => {
-                setIsCreatingUma(false);
-                setIsDrawerOpen(false);
-                refreshWallets();
-                toast({
-                  title: "New test UMA created",
-                });
-              }}
+      {currentWallet &&
+        wallets &&
+        (isCreatingUma ? (
+          <OnboardingStepContextProvider
+            stepOrder={[
+              OnboardingStep.CreateUma,
+              OnboardingStep.CreatingTestUmaLoading,
+              OnboardingStep.WalletCustomization,
+            ]}
+            onFinish={() => {
+              setIsCreatingUma(false);
+              setIsDialogOpen(false);
+              refreshWallets();
+              toast({
+                title: "New test UMA created",
+              });
+            }}
+          >
+            <UmaSelectorDialog
+              isDialogOpen={isDialogOpen}
+              setIsDialogOpen={setIsDialogOpen}
+              setIsCreatingUma={setIsCreatingUma}
             >
               <Steps />
-            </OnboardingStepContextProvider>
-          ) : (
+            </UmaSelectorDialog>
+          </OnboardingStepContextProvider>
+        ) : (
+          <ResponsiveDialog
+            open={isDialogOpen}
+            onOpenChange={(isOpen) => setIsDialogOpen(isOpen)}
+            title="Create UMA"
+            description="Create an UMA"
+          >
             <UmaSelectorDialogContent
               wallets={wallets}
               currentWallet={currentWallet}
               handleCreateUma={handleCreateUma}
               handleChooseWallet={handleChooseWallet}
             />
-          )}
-        </ResponsiveDialog>
-      )}
+          </ResponsiveDialog>
+        ))}
     </div>
+  );
+};
+
+const UmaSelectorDialog = ({
+  children,
+  isDialogOpen,
+  setIsDialogOpen,
+  setIsCreatingUma,
+}: {
+  children: JSX.Element;
+  isDialogOpen: boolean;
+  setIsDialogOpen: (isOpen: boolean) => void;
+  setIsCreatingUma: (isCreatingUma: boolean) => void;
+}) => {
+  const { wallet, resetStep } = useOnboardingStepContext();
+
+  const handleDialogOpenChange = (isOpen: boolean) => {
+    setIsDialogOpen(isOpen);
+    if (!isOpen) {
+      setIsCreatingUma(false);
+
+      // Edge case where the user closes the dialog before the onboarding is finished, delete the wallet
+      if (wallet) {
+        deleteWallet(wallet.id);
+      }
+
+      // Reset the onboarding step
+      resetStep();
+    }
+  };
+
+  return (
+    <ResponsiveDialog
+      open={isDialogOpen}
+      onOpenChange={handleDialogOpenChange}
+      title="Create UMA"
+      description="Create an UMA"
+    >
+      {children}
+    </ResponsiveDialog>
   );
 };
 

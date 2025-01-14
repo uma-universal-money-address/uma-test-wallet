@@ -41,6 +41,7 @@ export interface OnboardingStepContextData {
   setCurrencyCode: (currencyCode: string) => void;
   setIsLoading: (isLoading: boolean) => void;
   setError: (error: Error | null) => void;
+  resetStep: () => void;
 }
 
 const OnboardingStepContext = React.createContext<OnboardingStepContextData>(
@@ -179,6 +180,21 @@ function OnboardingStepContextProvider({
           variant: "error",
         });
       }
+    },
+    resetStep: () => {
+      setData((prevData) => ({
+        ...prevData,
+        uma: "",
+        umaError: undefined,
+        umaInputMessage: undefined,
+        wallet: undefined,
+        walletColor: WalletColor.BLACK,
+        currencyCode: "SAT",
+        stepNumber: 0,
+        history: [],
+        stepProps: ONBOARDING_STEP_MAPPING[stepOrder[0]],
+        isLoading: false,
+      }));
     },
   });
 

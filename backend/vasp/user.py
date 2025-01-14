@@ -293,11 +293,31 @@ def construct_blueprint(
             response.status_code = 201
             return response
 
+    @bp.delete("/wallet/<wallet_id>")
+    @login_required
+    def delete_wallet(wallet_id: str) -> Response:
+        with Session(db.engine) as db_session:
+            wallet = db_session.scalars(
+                select(Wallet)
+                .where(Wallet.user_id == current_user.id)
+                .where(Wallet.id == wallet_id)
+            ).first()
+            if wallet is None:
+                abort_with_error(404, f"Wallet {wallet_id} not found.")
+            db_session.delete(wallet)
+            db_session.delete(wallet.currency)
+            db_session.delete(wallet.uma)
+            db_session.commit()
+            return jsonify({"message": f"Wallet {wallet_id} deleted."})
+
     @bp.put("/wallet/fund/<wallet_id>")
+    @login_required
     def fund_wallet(wallet_id: str) -> Response:
         with Session(db.engine) as db_session:
             wallet = db_session.scalars(
-                select(Wallet).where(Wallet.id == wallet_id)
+                select(Wallet)
+                .where(Wallet.user_id == current_user.id)
+                .where(Wallet.id == wallet_id)
             ).first()
             if wallet is None:
                 abort_with_error(404, f"Wallet {wallet_id} not found.")

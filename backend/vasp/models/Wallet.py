@@ -41,8 +41,12 @@ class Wallet(Base):
     user: Mapped["User"] = relationship(
         back_populates="wallets", foreign_keys=[user_id]
     )
-    uma: Mapped["Uma"] = relationship(back_populates="wallet")
-    currency: Mapped["Currency"] = relationship(back_populates="wallet")
+    uma: Mapped["Uma"] = relationship(
+        back_populates="wallet", cascade="all, delete-orphan"
+    )
+    currency: Mapped["Currency"] = relationship(
+        back_populates="wallet", cascade="all, delete-orphan"
+    )
 
     def to_dict(self) -> Dict[str, Any]:
         return {

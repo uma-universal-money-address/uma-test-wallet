@@ -103,7 +103,7 @@ def register_uma(
             abort_with_error(500, error)
 
 
-@bp.route("", methods=["POST"])
+@bp.post("")
 def create_uma() -> Response:
     data = request.get_json()
     uma_user_name = data["uma_user_name"]

@@ -282,7 +282,6 @@ export const WalletCustomization = () => {
       const error = e as unknown as Error;
       console.error(error);
       setError(error);
-    } finally {
     }
   };
   return (
@@ -337,17 +336,20 @@ export const WalletCustomizationButtons = ({ onNext }: StepButtonProps) => {
     }
   }, [errorLoadingLoginMethods, setError]);
 
-  const handleSubmit = async () => {
+  const handleFinishStep = async () => {
     if (wallet) {
       await fundWallet(wallet.id, {
         currencyCode: wallet.currency.code,
         amountInLowestDenom: 100000,
       });
     }
+    onNext();
+  };
 
+  const handleSubmit = async () => {
     // Skip registration if already has login methods
     if (loginMethods?.webAuthnCredentials?.length) {
-      onNext();
+      handleFinishStep();
     } else {
       setIsRegistrationOpen(true);
     }
@@ -381,7 +383,7 @@ export const WalletCustomizationButtons = ({ onNext }: StepButtonProps) => {
       );
       const verification = await verificationRes.json();
       if (verification.success) {
-        onNext();
+        handleFinishStep();
       } else {
         console.error("Failed to register with WebAuthn.");
       }
@@ -432,7 +434,7 @@ export const WalletCustomizationButtons = ({ onNext }: StepButtonProps) => {
                 buttonProps={{
                   variant: "secondary",
                   size: "lg",
-                  onClick: onNext,
+                  onClick: handleFinishStep,
                 }}
                 className="w-full"
               >
