@@ -40,16 +40,13 @@ class DemoCurrencyService(ICurrencyService):
         return self.conversion_rates
 
     def get_uma_currency(self, currency_code: str) -> Currency:
-        conversion_rates = self.get_conversion_rates()
-
         return Currency(
             code=currency_code,
             name=CURRENCIES[currency_code].name,
             symbol=CURRENCIES[currency_code].symbol,
             millisatoshi_per_unit=(
                 (
-                    _get_currency_multiplier(
-                        conversion_rates,
+                    self.get_currency_multiplier(
                         currency_options=CurrencyOptions(
                             from_currency_code=currency_code,
                             to_currency_code="SAT",
@@ -80,23 +77,24 @@ class DemoCurrencyService(ICurrencyService):
             ).all()
             return [self.get_uma_currency(currency.code) for currency in currencies]
 
+    def get_currency_multiplier(self, currency_options: CurrencyOptions) -> float:
+        conversion_rates = self.get_conversion_rates()
 
-def _get_currency_multiplier(
-    conversion_rates: dict[str, str], currency_options: CurrencyOptions
-) -> float:
-    # Rates convert to BTC
-    if currency_options.to_currency_code == "SAT":
-        to_currency_rate = 1 * 10**8
-    else:
-        to_currency_rate = conversion_rates.get(currency_options.to_currency_code)
+        # Rates convert to BTC
+        if currency_options.to_currency_code == "SAT":
+            to_currency_rate = 1 * 10**8
+        else:
+            to_currency_rate = conversion_rates.get(currency_options.to_currency_code)
 
-    if currency_options.from_currency_code == "SAT":
-        from_currency_rate = 1 * 10**8
-    else:
-        from_currency_rate = conversion_rates.get(currency_options.from_currency_code)
+        if currency_options.from_currency_code == "SAT":
+            from_currency_rate = 1 * 10**8
+        else:
+            from_currency_rate = conversion_rates.get(
+                currency_options.from_currency_code
+            )
 
-    # Convert "from" currency to "to" currency
-    if to_currency_rate and from_currency_rate:
-        return float(to_currency_rate) / float(from_currency_rate)
-    else:
-        raise ValueError("Invalid currency code provided.")
+        # Convert "from" currency to "to" currency
+        if to_currency_rate and from_currency_rate:
+            return float(to_currency_rate) / float(from_currency_rate)
+        else:
+            raise ValueError("Invalid currency code provided.")

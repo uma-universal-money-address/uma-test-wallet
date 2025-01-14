@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Optional
 from dataclasses import dataclass
 from uma import Currency
 
@@ -14,7 +13,7 @@ class ICurrencyService(ABC):
     @abstractmethod
     def get_conversion_rates(
         self,
-    ) -> Optional[dict[str, str]]:
+    ) -> dict[str, str]:
         pass
 
     @abstractmethod
@@ -23,4 +22,8 @@ class ICurrencyService(ABC):
 
     @abstractmethod
     def get_uma_currencies_for_uma(self, username: str) -> list[Currency]:
+        pass
+
+    @abstractmethod
+    def get_currency_multiplier(self, currency_options: CurrencyOptions) -> float:
         pass

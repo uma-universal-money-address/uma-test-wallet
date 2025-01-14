@@ -23,7 +23,10 @@ from vasp.uma_vasp.interfaces.request_storage import IRequestStorage
 from vasp.uma_vasp.interfaces.sending_vasp_request_cache import (
     ISendingVaspRequestCache,
 )
-from vasp.uma_vasp.interfaces.currency_service import ICurrencyService
+from vasp.uma_vasp.interfaces.currency_service import (
+    ICurrencyService,
+    CurrencyOptions,
+)
 from vasp.uma_vasp.interfaces.user_service import IUserService
 from vasp.uma_vasp.lightspark_helpers import get_node
 from vasp.uma_vasp.sending_vasp import SendingVasp, get_sending_vasp
@@ -47,6 +50,7 @@ from uma_auth.models.pay_invoice_response import PayInvoiceResponse
 from uma_auth.models.pay_to_address_request import PayToAddressRequest
 from uma_auth.models.pay_to_address_response import PayToAddressResponse
 from uma_auth.models.get_info_response import GetInfoResponse
+from uma_auth.models.budget_estimate_response import BudgetEstimateResponse
 from uma_auth.models.quote import Quote as UmaQuote
 from uma_auth.models.transaction_type import TransactionType
 
@@ -296,6 +300,39 @@ class UmaNwcBridge:
             lud16=uma,
             currencies=currencies,
         ).to_dict()
+
+    def handle_budget_estimate(self) -> dict[str, Any]:
+        uma = session["uma"]
+        if uma is None:
+            abort_with_error(404, "Uma not found in session.")
+
+        sending_currency_code = request.args.get("sending_currency_code")
+        sending_currency_amount = request.args.get("sending_currency_amount")
+        budget_currency_code = request.args.get("budget_currency_code")
+
+        if (
+            not sending_currency_code
+            or not sending_currency_amount
+            or not budget_currency_code
+        ):
+            abort_with_error(400, "Missing required parameters")
+        if not sending_currency_amount.isnumeric():
+            abort_with_error(400, "Invalid sending currency amount")
+
+        try:
+            currency_multiplier = self.currency_service.get_currency_multiplier(
+                CurrencyOptions(
+                    from_currency_code=sending_currency_code,
+                    to_currency_code=budget_currency_code,
+                )
+            )
+            return BudgetEstimateResponse(
+                estimated_budget_currency_amount=(
+                    round(currency_multiplier * int(sending_currency_amount))
+                )
+            ).to_dict()
+        except Exception as e:
+            abort_with_error(400, f"Error getting currency multiplier: {e}")
 
     def handle_lookup_user(self, receiver_uma: str) -> dict[str, Any]:
         lookup_response = self.sending_vasp.handle_uma_lookup(
@@ -670,6 +707,10 @@ def construct_blueprint(
     @bp.route("/info")
     def handle_info() -> dict[str, Any]:
         return get_nwc_bridge().handle_get_info()
+
+    @bp.route("/budget_estimate")
+    def handle_budget_estimate() -> dict[str, Any]:
+        return get_nwc_bridge().handle_budget_estimate()
 
     @bp.post("/token")
     def handle_token_exchange() -> Response:
