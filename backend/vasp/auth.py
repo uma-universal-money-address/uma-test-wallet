@@ -92,8 +92,13 @@ def construct_blueprint(
 
         with Session(db.engine) as db_session:
             wallet = db_session.scalars(
-                select(Wallet).join(Uma).where(Uma.username == username)
+                select(Wallet)
+                .join(Uma)
+                .where(Uma.user_id == current_user.id)
+                .where(Uma.username == username)
             ).first()
+            if not wallet:
+                abort_with_error(400, f"Wallet not found for user {username}")
             currency = db_session.scalars(
                 select(Currency).where(Currency.wallet_id == wallet.id)
             ).first()
