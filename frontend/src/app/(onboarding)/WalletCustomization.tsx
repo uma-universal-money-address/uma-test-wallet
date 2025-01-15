@@ -23,6 +23,17 @@ import { useEffect, useState } from "react";
 import { useOnboardingStepContext } from "./OnboardingStepContextProvider";
 import { StepButtonProps } from "./Steps";
 
+const AVAILABLE_CURRENCIES = new Set([
+  "USD",
+  "BRL",
+  "MXN",
+  "GBP",
+  "NGN",
+  "EUR",
+  "PHP",
+  "SAT",
+]);
+
 const OtherCurrencies = ({
   handleClose,
   handleUpdateCurrency,
@@ -50,9 +61,11 @@ const OtherCurrencies = ({
   };
 
   const filteredCurrencies =
-    currencies?.filter((currency) =>
-      currency.code.toLowerCase().includes(search.toLowerCase()),
-    ) || [];
+    currencies
+      ?.filter((currency) => AVAILABLE_CURRENCIES.has(currency.code))
+      .filter((currency) =>
+        currency.code.toLowerCase().includes(search.toLowerCase()),
+      ) || [];
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -75,7 +88,7 @@ const OtherCurrencies = ({
         <DialogTitle>Select preferred currency</DialogTitle>
         <DialogDescription>
           Cross-currency payments sent to your UMA will arrive in your preferred
-          currency. You can always change this later in Settings.
+          currency.
         </DialogDescription>
       </VisuallyHidden.Root>
       <DialogContent className="min-w-[400px] max-sm:h-full max-h-[916px] overflow-scroll justify-start">
@@ -85,7 +98,7 @@ const OtherCurrencies = ({
           </h1>
           <p className="text-secondary text-[15px] font-normal leading-[20px] tracking-[-0.187px]">
             Cross-currency payments sent to your UMA will arrive in your
-            preferred currency. You can always change this later in Settings.
+            preferred currency.
           </p>
         </div>
         <div className="flex flex-col w-full gap-3 px-8">
@@ -100,19 +113,43 @@ const OtherCurrencies = ({
             <div className="flex flex-col gap-2 pb-6 animate-[fadeInAndSlideDown_0.5s_ease-in-out_forwards]">
               {filteredCurrencies.map((currency) => {
                 return (
-                  <Button
+                  <div
                     key={currency.code}
-                    variant={
-                      wallet?.currency.code === currency.code
-                        ? "default"
-                        : "outline"
-                    }
-                    size="sm"
-                    className="w-full rounded-lg"
+                    className="w-full flex flex-row gap-4 py-5"
                     onClick={handleChooseCurrency(currency.code)}
                   >
-                    {currency.code}
-                  </Button>
+                    <Image
+                      src={`/icons/currency_flags/${currency.code.toUpperCase()}.svg`}
+                      alt={currency.code}
+                      width={32}
+                      height={32}
+                      className="rounded-full w-8 h-8"
+                    />
+                    <div className="flex flex-row gap-1 align-center grow justify-between">
+                      <div className="flex flex-col gap-[2px]">
+                        <span className="text-primary text-[16px] font-semibold leading-[21px] tracking-[-0.2px]">
+                          {currency.code}
+                        </span>
+                        <span className="text-secondary text-[12px] font-normal leading-[16px] tracking-[-0.15px]">
+                          {currency.name}
+                        </span>
+                      </div>
+                      <div>
+                        {wallet?.currency.code === currency.code ? (
+                          <div className="w-6 h-6">
+                            <Image
+                              src="/icons/checkmark.svg"
+                              alt="selected"
+                              width={20}
+                              height={20}
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-6 h-6"></div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 );
               })}
             </div>

@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    unoptimized: false,
+    unoptimized: true,
   },
   trailingSlash: true,
   env: {
