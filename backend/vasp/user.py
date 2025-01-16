@@ -366,6 +366,8 @@ def construct_blueprint(
                 .join(Uma)
                 .where(Transaction.user_id == current_user.id)
                 .where(Uma.username == get_username_from_uma(uma))
+                .order_by(Transaction.created_at.desc())
+                .limit(20)
             ).all()
 
             if not transactions:
