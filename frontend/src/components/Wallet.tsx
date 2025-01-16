@@ -187,7 +187,7 @@ export const Wallet = ({
             )}
           </div>
           {estimate !== null && (
-            <div className="flex flex-row text-secondary text-[13px] leading-[18px] tracking-[-0.162px] gap-2 animate-[slideLeftSmall_0.4s_ease-in-out_forwards]">
+            <div className="flex flex-row text-secondary mix-blend-screen text-[13px] leading-[18px] tracking-[-0.162px] gap-2 animate-[slideLeftSmall_0.4s_ease-in-out_forwards]">
               About {estimate}
             </div>
           )}

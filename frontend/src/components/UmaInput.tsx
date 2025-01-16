@@ -38,7 +38,7 @@ export const UmaInput = ({
     );
   } else if (message) {
     bottomText = (
-      <span className="block text-sm font-normal text-secondary mb-1 text-[14px] tracking-[-0.162px] leading-[18px]">
+      <span className="block break-words text-sm font-normal text-secondary mb-1 text-[14px] tracking-[-0.162px] leading-[18px]">
         {message}
       </span>
     );
@@ -54,6 +54,7 @@ export const UmaInput = ({
         <Input
           type="text"
           id="uma-input"
+          style={{ paddingRight: after ? after.length * 9 + 16 : undefined }}
           className={`px-4 py-[14px] w-full ${before ? "pl-[36px]" : ""} ${
             error ? "focus-visible:ring-red-500" : ""
           }`}
