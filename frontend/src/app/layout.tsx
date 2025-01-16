@@ -1,13 +1,43 @@
 import { Toaster } from "@/components/ui/toaster";
 import type { Metadata, Viewport } from "next";
-import { Inter, Roboto_Mono } from "next/font/google";
+import { Roboto_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { PushNotificationManager } from "./PushNotificationManager";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
+const inter = localFont({
+  src: [
+    {
+      path: "./fonts/Inter-ExtraLight.woff2",
+      weight: "200",
+    },
+    {
+      path: "./fonts/Inter-Light.woff2",
+      weight: "300",
+    },
+    {
+      path: "./fonts/Inter-Regular.woff2",
+      weight: "400",
+    },
+    {
+      path: "./fonts/Inter-Medium.woff2",
+      weight: "500",
+    },
+    {
+      path: "./fonts/Inter-SemiBold.woff2",
+      weight: "600",
+    },
+    {
+      path: "./fonts/Inter-Bold.woff2",
+      weight: "700",
+    },
+    {
+      path: "./fonts/Inter-ExtraBold.woff2",
+      weight: "800",
+    },
+  ],
   display: "swap",
+  variable: "--font-inter",
 });
 
 const roboto_mono = Roboto_Mono({

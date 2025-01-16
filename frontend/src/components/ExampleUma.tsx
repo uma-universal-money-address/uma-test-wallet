@@ -37,7 +37,7 @@ export const ExampleUma = ({
     >
       <SandboxAvatar size="lg" country={exampleContact} />
       <div className="flex flex-col justify-center h-full gap-1">
-        <span className="text-primary text-[15px] font-normal leading-[20px] tracking-[-0.187px]">
+        <span className="text-primary text-[15px] font-medium leading-[20px] tracking-[-0.187px]">
           {uma}
         </span>
         <span className="text-secondary text-[13px] font-normal leading-[18px] tracking-[-0.162px]">

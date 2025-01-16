@@ -38,7 +38,7 @@ export const Contact = (props: Props) => {
         uma={props.contactInfo.uma}
       />
       <div className="flex flex-col gap-1 overflow-hidden self-center">
-        <span className="text-primary text-[15px] font-normal leading-[20px] tracking-[-0.187px] truncate">
+        <span className="text-primary text-[15px] font-medium leading-[20px] tracking-[-0.187px] truncate">
           {props.contactInfo.uma}
         </span>
       </div>

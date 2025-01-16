@@ -131,19 +131,21 @@ export const Wallet = ({
           {options?.showUma ? (
             umaSection
           ) : (
-            <div className="flex flex-row grow items-center text-white opacity-50 justify-between pl-8 h-[26px] pr-[22px]">
+            <div className="flex flex-row grow items-center text-white justify-between pl-8 h-[26px] pr-[22px]">
               <span className="text-white">Balance</span>
               {options?.showAddBalance && (
-                <Button variant="ghost" onClick={handleFundWallet}>
-                  <Image
-                    alt="Plus"
-                    src="/icons/plus.svg"
-                    className="invert"
-                    width={24}
-                    height={24}
-                  />
-                  Add Funds
-                </Button>
+                <div className="opacity-50">
+                  <Button variant="ghost" onClick={handleFundWallet}>
+                    <Image
+                      alt="Plus"
+                      src="/icons/plus.svg"
+                      className="invert"
+                      width={24}
+                      height={24}
+                    />
+                    Add Funds
+                  </Button>
+                </div>
               )}
             </div>
           )}
@@ -157,7 +159,7 @@ export const Wallet = ({
         <div className="flex flex-col gap-2.5 px-8">
           <div className="flex flex-row items-end gap-1">
             {!isLoading && wallet ? (
-              <div className="text-5xl font-light leading-[48px] tracking-[-1.92px] animate-[slideUpSmall_0.4s_ease-in-out_forwards]">
+              <div className="text-5xl font-extralight leading-[48px] tracking-[-1.92px] animate-[slideUpSmall_0.4s_ease-in-out_forwards]">
                 {onboardingStep
                   ? Number(
                       convertToNormalDenomination(100000, wallet.currency),
@@ -185,7 +187,7 @@ export const Wallet = ({
             )}
           </div>
           {estimate !== null && (
-            <div className="flex flex-row opacity-50 text-[13px] leading-[18px] tracking-[-0.162px] gap-2 animate-[slideLeftSmall_0.4s_ease-in-out_forwards]">
+            <div className="flex flex-row text-secondary text-[13px] leading-[18px] tracking-[-0.162px] gap-2 animate-[slideLeftSmall_0.4s_ease-in-out_forwards]">
               About {estimate}
             </div>
           )}
