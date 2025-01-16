@@ -104,9 +104,9 @@ const TransactionRow = ({
             : undefined
         }
       />
-      <div className="flex flex-col gap-[2px] justify-center grow">
+      <div className="flex flex-col gap-[2px] justify-center grow overflow-hidden">
         <div className="flex flex-row justify-between gap-2">
-          <span className="text-primary text-[15px] font-medium leading-[20px] tracking-[-0.187px]">
+          <span className="text-primary text-[15px] font-medium leading-[20px] tracking-[-0.187px] truncate text-ellipsis">
             {transaction.otherUma}
           </span>
           {amount}
