@@ -4,6 +4,7 @@
 
 body {
   font-family: Inter, sans-serif;
+  font-feature-settings: "salt";
 }
 
 @layer base {

@@ -57,7 +57,7 @@ const WalletRows = ({
             className="flex flex-row justify-between py-5 px-6"
             onClick={() => handleChooseWallet(wallet)}
           >
-            <div className="flex flex-row items-center">
+            <div className="flex flex-row items-center overflow-hidden">
               <div className="pr-4">
                 <SandboxAvatar
                   ownContact={{
@@ -67,8 +67,8 @@ const WalletRows = ({
                   size="md"
                 />
               </div>
-              <div className="flex flex-col gap-[2px] items-start">
-                <span className="text-primary font-normal text-[15px] leading-[20px] tracking-[-0.187px]">
+              <div className="flex flex-col gap-[2px] items-start overflow-hidden">
+                <span className="text-primary font-normal text-[15px] leading-[20px] tracking-[-0.187px] truncate text-ellipsis">
                   {umaAddress}
                 </span>
                 <span className="text-secondary font-normal text-[13px] leading-[18px] tracking-[-0.162px]">
