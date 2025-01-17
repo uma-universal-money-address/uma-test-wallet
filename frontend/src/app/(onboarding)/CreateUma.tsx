@@ -21,23 +21,26 @@ export const CreateUma = () => {
     onNext,
   } = useOnboardingStepContext();
 
+  const umaDomain = `@${getBackendDomain()}`;
+
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = event.target.value;
-    setUma(newValue);
+    const newValue = event.target.value.slice(0, 62);
+    const newValueSanitized = newValue.replace(/[^a-z0-9-_.+]/g, "");
+    setUma(newValueSanitized);
     setUmaError(undefined);
 
-    if (newValue.length === 0) {
+    if (newValueSanitized.length === 0) {
       setUmaInputMessage(undefined);
       setUmaError(undefined);
       return;
     }
 
     try {
-      const succeeded = await checkUmaAvailability(newValue);
+      const succeeded = await checkUmaAvailability(newValueSanitized);
       if (!succeeded) {
-        setUmaError("UMA username is not available.");
+        setUmaError(`$${newValueSanitized}${umaDomain} is not available.`);
       }
-      setUmaInputMessage("UMA username is available.");
+      setUmaInputMessage(`$${newValueSanitized}${umaDomain} is available.`);
     } catch (error) {
       console.error(error);
       setUmaError("Failed to check UMA username availability.");
@@ -49,13 +52,13 @@ export const CreateUma = () => {
     try {
       const wallet = await createUma(uma);
       if (!wallet) {
-        setUmaError("Failed to create UMA username.");
+        setUmaError("Failed to create UMA.");
       }
       setWallet(wallet);
       onNext();
     } catch (error) {
       console.error(error);
-      setUmaError("Failed to create UMA username.");
+      setUmaError("Failed to create UMA.");
     }
   };
 
@@ -78,7 +81,7 @@ export const CreateUma = () => {
         }}
         onEnter={handleSubmit}
         before="$"
-        after={`@${getBackendDomain()}`}
+        after={umaDomain}
       />
     </div>
   );
