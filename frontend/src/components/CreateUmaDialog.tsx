@@ -5,8 +5,8 @@ import { deleteWallet } from "@/lib/deleteWallet";
 import OnboardingStepContextProvider, {
   OnboardingStep,
   useOnboardingStepContext,
-} from "../(onboarding)/OnboardingStepContextProvider";
-import { Steps } from "../(onboarding)/Steps";
+} from "../app/(onboarding)/OnboardingStepContextProvider";
+import { Steps } from "../app/(onboarding)/Steps";
 
 interface Props {
   refreshWallets: () => Promise<void>;

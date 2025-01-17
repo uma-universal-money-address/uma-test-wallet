@@ -1,5 +1,6 @@
 "use client";
 
+import { CreateUmaDialog } from "@/components/CreateUmaDialog";
 import { useAppState } from "@/hooks/useAppState";
 import UmaContextProvider from "@/hooks/useUmaContext";
 import WalletContextProvider, { useWallets } from "@/hooks/useWalletContext";
@@ -19,19 +20,30 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 }
 
 const LayoutContent = ({ children }: { children: React.ReactNode }) => {
-  const { isLoading: isLoadingWallet, error: walletError } = useWallets();
+  const {
+    isLoading: isLoadingWallets,
+    error: walletError,
+    fetchWallets,
+  } = useWallets();
   const { currentWallet } = useAppState();
   return (
     <div className="flex flex-col items-center h-full">
-      {isLoadingWallet || !currentWallet || walletError ? (
+      {isLoadingWallets || !currentWallet || walletError ? (
         <div className="flex flex-col gap-4 items-center justify-center h-full"></div>
       ) : (
-        <SendPaymentContextProvider
-          senderUma={getUmaFromUsername(currentWallet!.uma.username)}
-        >
-          <Header />
-          {children}
-        </SendPaymentContextProvider>
+        <>
+          <SendPaymentContextProvider
+            senderUma={getUmaFromUsername(currentWallet!.uma.username)}
+          >
+            <Header />
+            {children}
+          </SendPaymentContextProvider>
+          <CreateUmaDialog
+            refreshWallets={async () => {
+              fetchWallets();
+            }}
+          />
+        </>
       )}
     </div>
   );

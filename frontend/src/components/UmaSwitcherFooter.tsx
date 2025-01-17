@@ -47,12 +47,11 @@ export const UmaSwitcherFooter = ({ wallets }: Props) => {
   }
 
   return (
-    <div className="flex flex-row py-4 max-w-full items-center gap-4">
+    <div className="flex flex-row py-4 max-w-full items-center gap-4 overflow-x-scroll no-scrollbar">
       {walletButtons}
       <Button
-        className="p-2 bg-[#EBEEF2] hover:bg-gray-300 h-8 w-8 rounded-lg"
+        className="p-2 bg-[#EBEEF2] hover:bg-gray-300 max-h-[32px] max-w-[32px] rounded-lg"
         onClick={() => setIsCreateUmaDialogOpen(true)}
-        size="icon"
         variant="icon"
       >
         <Image
