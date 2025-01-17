@@ -90,6 +90,7 @@ export const SandboxAvatar = (props: Props) => {
     return (
       <div
         style={{
+          transition: "background-color 0.4s",
           backgroundColor: props.ownContact.wallet.color,
           boxShadow: props.shadow ? "0px 1px 1px rgba(0, 0, 0, 0.25)" : "",
           width: `${getWidthHeight(size)}px`,
