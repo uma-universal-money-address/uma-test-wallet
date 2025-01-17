@@ -6,36 +6,7 @@ import "./globals.css";
 import { PushNotificationManager } from "./PushNotificationManager";
 
 const inter = localFont({
-  src: [
-    {
-      path: "./fonts/Inter-ExtraLight.woff2",
-      weight: "200",
-    },
-    {
-      path: "./fonts/Inter-Light.woff2",
-      weight: "300",
-    },
-    {
-      path: "./fonts/Inter-Regular.woff2",
-      weight: "400",
-    },
-    {
-      path: "./fonts/Inter-Medium.woff2",
-      weight: "500",
-    },
-    {
-      path: "./fonts/Inter-SemiBold.woff2",
-      weight: "600",
-    },
-    {
-      path: "./fonts/Inter-Bold.woff2",
-      weight: "700",
-    },
-    {
-      path: "./fonts/Inter-ExtraBold.woff2",
-      weight: "800",
-    },
-  ],
+  src: "./fonts/Inter.var.woff2",
   display: "swap",
   variable: "--font-inter",
 });
