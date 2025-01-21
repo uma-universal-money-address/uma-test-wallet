@@ -47,21 +47,23 @@ export const UmaSwitcherFooter = ({ wallets }: Props) => {
   }
 
   return (
-    <div className="flex flex-row py-4 max-w-full items-center gap-4 overflow-x-scroll no-scrollbar">
+    <div className="flex flex-row py-4 max-w-full items-center gap-4">
       {walletButtons}
-      <Button
-        className="p-2 bg-[#EBEEF2] hover:bg-gray-300 max-h-[32px] max-w-[32px] rounded-lg"
-        onClick={() => setIsCreateUmaDialogOpen(true)}
-        variant="icon"
-      >
-        <Image
-          src="/icons/plus.svg"
-          alt="Add UMA"
-          width={24}
-          height={24}
-          className="max-w-6"
-        />
-      </Button>
+      <div className="pr-4">
+        <Button
+          className="p-2 bg-[#EBEEF2] hover:bg-gray-300 max-h-[32px] max-w-[32px] rounded-lg"
+          onClick={() => setIsCreateUmaDialogOpen(true)}
+          variant="icon"
+        >
+          <Image
+            src="/icons/plus.svg"
+            alt="Add UMA"
+            width={24}
+            height={24}
+            className="max-w-6"
+          />
+        </Button>
+      </div>
     </div>
   );
 };

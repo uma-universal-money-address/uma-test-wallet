@@ -124,14 +124,14 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
           </Button>
         </div>
       </div>
-      <main className="flex-1 overflow-y-auto overflow-x-hidden">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
         {children}
       </main>
       {!isLoadingWallets && (
         <>
           <CreateUmaDialog refreshWallets={handleRefreshWallets} />
           <UmaSelectorDialog wallets={wallets || []} />
-          <div className="pt-2 px-4 pb-3 border-[#EBEEF2] border-t flex justify-center">
+          <div className="pt-2 px-4 pb-3 border-[#EBEEF2] border-t overflow-x-scroll no-scrollbar flex justify-center">
             <UmaSwitcherFooter wallets={wallets || []} />
           </div>
         </>
