@@ -1,5 +1,6 @@
 "use client";
 
+import { CreateUmaDialog } from "@/components/CreateUmaDialog";
 import { PwaInstallBanner } from "@/components/PwaInstallBanner";
 import { SandboxAvatar } from "@/components/SandboxAvatar";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,6 @@ import { getUmaFromUsername } from "@/lib/uma";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { CreateUmaDialog } from "./CreateUmaDialog";
 import { UmaSelectorDialog } from "./UmaSelectorDialog";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -131,7 +131,7 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
         <>
           <CreateUmaDialog refreshWallets={handleRefreshWallets} />
           <UmaSelectorDialog wallets={wallets || []} />
-          <div className="pt-2 px-4 pb-3 border-[#EBEEF2] border-t overflow-x-scroll no-scrollbar flex justify-center">
+          <div className="pt-2 px-4 pb-3 border-[#EBEEF2] border-t flex justify-center">
             <UmaSwitcherFooter wallets={wallets || []} />
           </div>
         </>

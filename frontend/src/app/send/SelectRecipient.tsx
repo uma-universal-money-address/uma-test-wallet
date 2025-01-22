@@ -1,8 +1,10 @@
 "use client";
 import { ExampleUma } from "@/components/ExampleUma";
 import { ExternalUma } from "@/components/ExternalUma";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UmaInput } from "@/components/UmaInput";
+import { useAppState } from "@/hooks/useAppState";
 import {
   EXAMPLE_UMA_CONTACTS,
   useContacts,
@@ -12,6 +14,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useWallets } from "@/hooks/useWalletContext";
 import { getUmaFromUsername } from "@/lib/uma";
 import { type UmaLookupResponse } from "@/types/UmaLookupResponse";
+import Image from "next/image";
 import React, { useCallback, useEffect, useMemo } from "react";
 import { Contact } from "./Contact";
 import { useSendPaymentContext } from "./SendPaymentContextProvider";
@@ -31,6 +34,7 @@ export const SelectRecipient = () => {
     setError,
     setIsLoading,
   } = useSendPaymentContext();
+  const { setIsCreateUmaDialogOpen } = useAppState();
   const {
     recentContacts,
     ownUmaContacts,
@@ -297,9 +301,24 @@ export const SelectRecipient = () => {
   return (
     <div className="flex flex-col align-start py-4 px-8 h-full">
       <div className="flex flex-col w-full grow">
-        <span className="text-[26px] text-[#18181b] font-bold leading-[34px] tracking-[-0.325px]">
-          Send to
-        </span>
+        <div className="flex flex-row justify-between align-center">
+          <span className="text-[26px] text-[#18181b] font-bold leading-[34px] tracking-[-0.325px]">
+            Send to
+          </span>
+          <Button
+            className="p-2 bg-[#EBEEF2] hover:bg-gray-300 h-[34px] w-[34px] rounded-full"
+            onClick={() => setIsCreateUmaDialogOpen(true)}
+            variant="icon"
+          >
+            <Image
+              src="/icons/plus.svg"
+              alt="Add UMA"
+              width={18}
+              height={18}
+              className="max-w-[18px"
+            />
+          </Button>
+        </div>
         <div className="flex justify-between gap-4 w-full mt-4 mb-6">
           <UmaInput
             inputProps={{
