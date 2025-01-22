@@ -1,9 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { cva } from "class-variance-authority";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
 import { Button, ButtonProps } from "./ui/button";
 import {
   Tooltip,
@@ -22,33 +20,12 @@ interface Props {
 }
 
 export const SandboxButton = (props: Props) => {
-  const [isPressed, setIsPressed] = useState(false);
-
-  const handlePress = () => {
-    setIsPressed(true);
-  };
-
-  const handleUnpress = () => {
-    setIsPressed(false);
-  };
-
   const button = (
     <Button
       {...props.buttonProps}
       disabled={props.disabled || props.loading}
-      onMouseDown={handlePress}
-      onTouchStart={handlePress}
-      onMouseUp={handleUnpress}
-      onTouchEnd={handleUnpress}
-      onMouseLeave={handleUnpress}
       className={cn(
-        cva(
-          `${
-            isPressed
-              ? "scale-[0.975] transition-transform duration-100 ease-in-out"
-              : ""
-          } select-none tap-highlight-transparent`,
-        ),
+        "active:scale-[0.975] transition-transform duration-100 ease-in-out",
         props.className,
       )}
     >

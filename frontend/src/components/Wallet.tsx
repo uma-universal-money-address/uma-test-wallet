@@ -7,6 +7,7 @@ import { convertToNormalDenomination } from "@/lib/convertToNormalDenomination";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { SandboxAvatar } from "./SandboxAvatar";
+import { SandboxButton } from "./SandboxButton";
 import { Button } from "./ui/button";
 
 interface Props {
@@ -186,10 +187,12 @@ export const Wallet = ({
               <div className="w-[28px] h-[20px]" />
             )}
           </div>
-          {estimate !== null && (
+          {estimate !== null ? (
             <div className="flex flex-row text-secondary mix-blend-screen text-[13px] leading-[18px] tracking-[-0.162px] gap-2 animate-[slideLeftSmall_0.4s_ease-in-out_forwards]">
               About {estimate}
             </div>
+          ) : (
+            <div className="h-[18px]" />
           )}
         </div>
       ) : (
@@ -197,13 +200,15 @@ export const Wallet = ({
       )}
       {options?.showSend && (
         <div className="flex flex-row items-center justify-between px-6">
-          <Button
+          <SandboxButton
             className="w-full text-white bg-white/[0.12] hover:bg-white/[0.2]"
-            onClick={handleSend}
-            size="sm"
+            buttonProps={{
+              onClick: handleSend,
+              size: "sm",
+            }}
           >
             Send
-          </Button>
+          </SandboxButton>
         </div>
       )}
     </div>
