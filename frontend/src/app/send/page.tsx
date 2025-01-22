@@ -119,7 +119,7 @@ function PageContent() {
   return (
     <>
       {isLoading && <LoadingOverlay />}
-      <div className="flex flex-col h-full w-full overflow-y-scroll">
+      <div className="flex flex-col h-full w-full overflow-y-scroll no-scrollbar">
         {content}
       </div>
     </>

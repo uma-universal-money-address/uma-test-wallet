@@ -10,6 +10,10 @@ export const convertCurrency = (
   },
   currencyCode: string,
 ) => {
+  if (originalAmount.currency.code === currencyCode) {
+    return originalAmount.amount;
+  }
+
   const exchangeRateOriginalCurrency =
     exchangeRates[originalAmount.currency.code];
   const exchangeRateNewCurrency = exchangeRates[currencyCode];

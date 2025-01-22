@@ -81,6 +81,7 @@ export const Confirm = () => {
 
     toast({
       title: `You paid ${receiverUma}`,
+      variant: "default",
     });
 
     // Navigate back to the wallet page
