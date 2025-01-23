@@ -8,7 +8,7 @@ from flask_login import UserMixin
 import json
 from pywebpush import webpush, WebPushException
 
-from vasp.utils import get_uma_from_username
+from vasp.utils import get_uma_from_username, is_dev
 from vasp.db import db
 from vasp.models.Uma import Uma as UmaModel
 from vasp.models.User import User as UserModel
@@ -17,7 +17,6 @@ from vasp.models.Wallet import Wallet
 from vasp.models.WebAuthnCredential import WebAuthnCredential
 from vasp.uma_vasp.uma_exception import UmaException
 from vasp.uma_vasp.config import Config
-
 
 log: logging.Logger = logging.getLogger(__name__)
 
@@ -56,7 +55,13 @@ class User(UserMixin):
         default_uma = self.get_default_uma()
         return get_uma_from_username(default_uma.username)
 
-    def send_push_notification(self, config: Config, title: str, body: str) -> None:
+    def send_push_notification(
+        self,
+        config: Config,
+        title: str,
+        body: str,
+        url: Optional[str] = None,
+    ) -> None:
         with Session(db.engine) as db_session:
             push_subscriptions = (
                 db_session.query(PushSubscription)
@@ -64,12 +69,19 @@ class User(UserMixin):
                 .all()
             )
 
+            if not url:
+                url = (
+                    "http://localhost:3000/wallet"
+                    if is_dev
+                    else "https://sandbox.uma.me/wallet"
+                )
+
             for push_subscription in push_subscriptions:
                 try:
                     subscription_info = json.loads(push_subscription.subscription_json)
                     webpush(
                         subscription_info=subscription_info,
-                        data=json.dumps({"title": title, "body": body}),
+                        data=json.dumps({"title": title, "body": body, "url": url}),
                         vapid_private_key=config.vapid_private_key,
                         vapid_claims={
                             "sub": "mailto:{}".format(config.vapid_claim_email)

@@ -9,6 +9,7 @@ const inter = localFont({
   src: "./fonts/Inter.var.woff2",
   display: "swap",
   variable: "--font-inter",
+  weight: "100 900", // Fixes font weights above 500 on safari: https://github.com/rsms/inter/issues/686
 });
 
 const roboto_mono = Roboto_Mono({
