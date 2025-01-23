@@ -69,7 +69,7 @@ export const CreateUma = () => {
   });
 
   return (
-    <div className="flex flex-col h-full w-full items-center px-8 pb-3">
+    <div className="flex flex-col h-full w-full items-center px-8">
       <UmaInput
         message={umaInputMessage}
         error={umaError}
