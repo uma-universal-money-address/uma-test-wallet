@@ -83,7 +83,7 @@ const UmaSelectorDialogContent = ({
   return (
     <>
       <div className="flex flex-row w-full justify-between items-center px-6 py-2 min-w-[400px]">
-        <span className="text-[26px] font-normal leading-[34px] tracking-[-0.325px]">
+        <span className="text-xl font-semibold leading-[25px] tracking-[-0.25px]">
           Account
         </span>
         <div className="flex flex-row gap-2">
@@ -97,12 +97,21 @@ const UmaSelectorDialogContent = ({
           </Button>
         </div>
       </div>
-      {wallets && currentWallet && (
+      {wallets && currentWallet ? (
         <WalletRows
           currentWallet={currentWallet}
           wallets={wallets}
           handleChooseWallet={handleChooseWallet}
         />
+      ) : (
+        <div className="flex flex-col items-center text-center w-full py-8 px-6 gap-2">
+          <span className="text-[17px] font-normal leading-[22px] tracking-[-.212px]">
+            Nothing here yet
+          </span>
+          <span className="text-secondary text-[15px] font-normal leading-[20px] tracking-[-.187px] w-[250px]">
+            {`When you create test UMAs, they'll appear here.`}
+          </span>
+        </div>
       )}
       <div className="flex flex-col px-6 pt-3 pb-4 gap-[10px]">
         <SandboxButton

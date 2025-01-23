@@ -45,7 +45,7 @@ export const UmaInput = ({
   }
 
   return (
-    <div className="w-full mx-0 gap-8 flex flex-col">
+    <div className="w-full mx-0 gap-4 flex flex-col">
       <div className="relative flex items-center">
         {before ? (
           <span className="absolute text-primary pl-4">{before}</span>

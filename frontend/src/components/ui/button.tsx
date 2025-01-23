@@ -17,6 +17,8 @@ const buttonVariants = cva(
         delete: "bg-lightRed text-error hover:bg-lightRed/90 px-5",
         outline:
           "border border-input bg-background hover:bg-accent hover:text-accent-foreground px-5",
+        currency:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground px-5 text-secondary items-center justify-center",
         secondary:
           "bg-[#EBEEF2] text-secondary-foreground hover:bg-secondary/80 px-5",
         transparent: "hover:bg-accent hover:text-accent-foreground px-5",
@@ -28,6 +30,7 @@ const buttonVariants = cva(
       size: {
         default: "h-[50px] py-[14.5px]",
         sm: "h-[46px] py-[12.5px]",
+        flat: "h-[40px] py-[12px] px-6",
         tiny: "h-[26px] py-0 px-[10px]",
         lg: "h-[50px] py-[14.5px]",
         icon: "min-h-10 min-w-10 p-2",

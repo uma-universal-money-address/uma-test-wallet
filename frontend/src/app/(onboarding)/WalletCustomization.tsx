@@ -207,24 +207,24 @@ const CurrencyOptions = () => {
       )}
       <div className="flex flex-row w-full max-w-[340px] h-10 justify-between px-2 pb-5 gap-2">
         <Button
-          variant={isSat ? "default" : "outline"}
-          size="sm"
+          variant={isSat ? "default" : "currency"}
+          size="flat"
           className="w-full rounded-lg"
           onClick={() => handleUpdateCurrency("SAT")}
         >
           SAT
         </Button>
         <Button
-          variant={isUsd ? "default" : "outline"}
-          size="sm"
+          variant={isUsd ? "default" : "currency"}
+          size="flat"
           className="w-full rounded-lg"
           onClick={() => handleUpdateCurrency("USD")}
         >
           USD
         </Button>
         <Button
-          variant={isOtherSelected ? "default" : "outline"}
-          size="sm"
+          variant={isOtherSelected ? "default" : "currency"}
+          size="flat"
           className="w-full rounded-lg gap-0 flex flex-row justify-end"
           onClick={handleOtherCurrency}
         >
