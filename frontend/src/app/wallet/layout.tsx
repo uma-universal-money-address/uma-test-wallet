@@ -75,7 +75,7 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="flex flex-col h-full">
-      <PwaInstallBanner />
+      <PwaInstallBanner dismissable />
       <div className="flex items-center justify-between w-full px-4 py-[3px]">
         {isLoadingWallets || !currentWallet ? (
           <>
