@@ -85,7 +85,11 @@ def construct_blueprint(config: Config) -> Blueprint:
         title = data["title"]
         body = data["body"]
 
-        current_user.send_push_notification(config=config, title=title, body=body)
+        current_user.send_push_notification(
+            config=config,
+            title=title,
+            body=body,
+        )
         return jsonify({"success": True})
 
     return bp
