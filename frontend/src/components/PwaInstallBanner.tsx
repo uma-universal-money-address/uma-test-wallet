@@ -3,7 +3,7 @@
 import { usePwaInstallStatus } from "@/hooks/usePwaInstallStatus";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SandboxButton } from "./SandboxButton";
 import { Button } from "./ui/button";
 import {
@@ -15,28 +15,67 @@ import {
 
 export const BANNER_HEIGHT = 44;
 
-export const PwaInstallBanner = () => {
+interface Props {
+  dismissable?: boolean;
+}
+
+export const PwaInstallBanner = ({ dismissable }: Props) => {
   const { isInstalled, deviceType } = usePwaInstallStatus();
   const [isInstallScreenOpen, setIsInstallScreenOpen] = useState(false);
+  const [isBannerVisible, setIsBannerVisible] = useState(true);
+
+  useEffect(() => {
+    if (dismissable && localStorage.getItem("pwa-install-banner-dismissed")) {
+      setIsBannerVisible(false);
+    }
+  }, [dismissable]);
+
+  const handleDismissBanner = () => {
+    if (dismissable) {
+      localStorage.setItem("pwa-install-banner-dismissed", "true");
+      setIsBannerVisible(false);
+    }
+  };
+
+  if (dismissable && !isBannerVisible) {
+    return null;
+  }
 
   return (
     <>
       <div
-        className={`p-4 bg-white border-b border-gray-200 flex flex-row items-center justify-between gap-3 mb-[10px] ${
+        className={`p-4 mobile:px-0 mobile:pt-0 bg-white border-b border-gray-200 flex flex-row items-center justify-between gap-3 mb-[10px] ${
           isInstalled || deviceType === "other" ? "hidden" : ""
         }`}
       >
-        <div className="flex flex-row gap-3">
-          <Image
-            src="/uma-sandbox-app.svg"
-            alt="UMA sandbox"
-            width={36}
-            height={36}
-          />
-          <div className="flex flex-col items-start justify-center">
-            <div className="text-gray-800 text-sm">Install the app</div>
-            <div className="text-gray-500 text-xs">
-              Get easy access and notifications
+        <div className="flex flex-row items-center gap-2">
+          {dismissable && (
+            <Button
+              variant="ghost"
+              className="p-0 h-6"
+              onClick={handleDismissBanner}
+            >
+              <Image
+                src="/icons/close-small.svg"
+                alt="close"
+                width={24}
+                height={24}
+                className="opacity-50"
+              />
+            </Button>
+          )}
+          <div className="flex flex-row gap-3">
+            <Image
+              src="/uma-sandbox-app.svg"
+              alt="UMA sandbox"
+              width={36}
+              height={36}
+            />
+            <div className="flex flex-col items-start justify-center">
+              <div className="text-gray-800 text-sm font-semibold">{`It's better on the app`}</div>
+              <div className="text-gray-500 text-xs">
+                Get easy access and notifications
+              </div>
             </div>
           </div>
         </div>
