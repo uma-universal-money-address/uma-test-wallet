@@ -37,7 +37,6 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
   const { currentWallet, setCurrentWallet, setIsUmaSelectorDialogOpen } =
     useAppState();
 
-  const hasMultipleWallets = wallets && wallets.length > 1;
   const currentWalletIndex =
     wallets?.findIndex((wallet) => wallet.id === currentWallet?.id) || 0;
 
@@ -79,50 +78,81 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
       <PwaInstallBanner />
       <div className="flex items-center justify-between w-full px-4 py-[3px]">
         {isLoadingWallets || !currentWallet ? (
-          <div></div>
-        ) : (
-          <div
-            className="flex items-center overflow-hidden cursor-pointer animate-[fadeIn_0.5s_ease-in-out_forwards]"
-            onClick={() => setIsUmaSelectorDialogOpen(true)}
-          >
-            <SandboxAvatar
-              ownContact={{
-                wallet: currentWallet,
-                number: currentWalletIndex + 1,
-              }}
-              size="md"
-            />
-            <span className="min-w-0 pl-[6px] truncate">
-              {getUmaFromUsername(currentWallet.uma.username)}
-            </span>
-            {hasMultipleWallets && (
+          <>
+            <div
+              className="flex items-center overflow-hidden cursor-pointer animate-[fadeIn_0.5s_ease-in-out_forwards]"
+              onClick={() => setIsUmaSelectorDialogOpen(true)}
+            >
+              <span className="min-w-0 pl-[6px]">UMA Sandbox</span>
               <Image
                 src="/icons/chevron-down-small.svg"
                 alt="Chevron down"
                 width={24}
                 height={24}
               />
-            )}
-          </div>
+            </div>
+            <div className="flex items-center opacity-20 pointer-events-none">
+              <Button variant="icon" size="icon">
+                <Image
+                  src="/icons/square-behind-square-6.svg"
+                  alt="Copy"
+                  width={24}
+                  height={24}
+                />
+              </Button>
+              <Button variant="icon" size="icon">
+                <Image
+                  src="/icons/settings-gear-2.svg"
+                  alt="Settings"
+                  width={24}
+                  height={24}
+                />
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div
+              className="flex items-center overflow-hidden cursor-pointer animate-[fadeIn_0.5s_ease-in-out_forwards]"
+              onClick={() => setIsUmaSelectorDialogOpen(true)}
+            >
+              <SandboxAvatar
+                ownContact={{
+                  wallet: currentWallet,
+                  number: currentWalletIndex + 1,
+                }}
+                size="md"
+              />
+              <span className="min-w-0 pl-[6px] truncate">
+                {getUmaFromUsername(currentWallet.uma.username)}
+              </span>
+              <Image
+                src="/icons/chevron-down-small.svg"
+                alt="Chevron down"
+                width={24}
+                height={24}
+              />
+            </div>
+            <div className="flex items-center">
+              <Button variant="icon" size="icon" onClick={handleCopy}>
+                <Image
+                  src="/icons/square-behind-square-6.svg"
+                  alt="Copy"
+                  width={24}
+                  height={24}
+                />
+              </Button>
+              <Button variant="icon" size="icon" onClick={handleUmaSettings}>
+                <Image
+                  src="/icons/settings-gear-2.svg"
+                  alt="Settings"
+                  width={24}
+                  height={24}
+                />
+              </Button>
+            </div>
+          </>
         )}
-        <div className="flex items-center">
-          <Button variant="icon" size="icon" onClick={handleCopy}>
-            <Image
-              src="/icons/square-behind-square-6.svg"
-              alt="Copy"
-              width={24}
-              height={24}
-            />
-          </Button>
-          <Button variant="icon" size="icon" onClick={handleUmaSettings}>
-            <Image
-              src="/icons/settings-gear-2.svg"
-              alt="Settings"
-              width={24}
-              height={24}
-            />
-          </Button>
-        </div>
       </div>
       <main className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
         {children}

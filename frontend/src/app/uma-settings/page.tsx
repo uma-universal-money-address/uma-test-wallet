@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
 import { useWallets } from "@/hooks/useWalletContext";
 import { getBackendDomain } from "@/lib/backendDomain";
-import { getBackendUrl } from "@/lib/backendUrl";
+import { deleteWallet } from "@/lib/deleteWallet";
 import isDevelopment from "@/lib/isDevelopment";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -27,11 +27,12 @@ export default function Page() {
   const handleDeleteUma = async () => {
     if (currentWallet) {
       try {
-        await fetch(`${getBackendUrl()}/user/wallet/${currentWallet.id}`, {
-          method: "DELETE",
-          credentials: "include",
-        });
-        setCurrentWallet(wallets ? wallets[0] : undefined);
+        await deleteWallet(currentWallet.id);
+        setCurrentWallet(
+          wallets && wallets.length > 1
+            ? wallets.filter((wallet) => wallet.id !== currentWallet.id)[0]
+            : undefined,
+        );
         router.push("/");
       } catch (e) {
         toast({
