@@ -35,7 +35,7 @@ export const ExampleUma = ({
       onTouchEnd={handleUnpress}
       onMouseLeave={handleUnpress}
     >
-      <SandboxAvatar size="lg" country={exampleContact} />
+      <SandboxAvatar size="lg" currencyCode={exampleContact.currency.code} />
       <div className="flex flex-col justify-center h-full gap-1">
         <span className="text-primary text-[15px] font-medium leading-[20px] tracking-[-0.187px]">
           {uma}

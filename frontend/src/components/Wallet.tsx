@@ -160,7 +160,7 @@ export const Wallet = ({
         <div className="flex flex-col gap-2.5 px-8">
           <div className="flex flex-row items-end gap-1">
             {!isLoading && wallet ? (
-              <div className="text-5xl font-extralight leading-[48px] tracking-[-1.92px] animate-[slideUpSmall_0.4s_ease-in-out_forwards]">
+              <div className="text-5xl font-light leading-[48px] tracking-[-1.92px] animate-[slideUpSmall_0.4s_ease-in-out_forwards]">
                 {onboardingStep
                   ? Number(
                       convertToNormalDenomination(100000, wallet.currency),

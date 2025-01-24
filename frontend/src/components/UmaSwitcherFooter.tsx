@@ -29,7 +29,7 @@ export const UmaSwitcherFooter = ({ wallets }: Props) => {
             transition-transform active:scale-95 duration-100 cursor-pointer
             ${
               wallet.id === currentWallet.id
-                ? "ring-1 ring-offset-8 ring-[#C0C9D6] rounded-xl"
+                ? "ring-1 ring-offset-8 ring-[#C0C9D6] rounded-md"
                 : ""
             }`}
           onClick={() => handleChooseWallet(wallet)}
@@ -47,7 +47,7 @@ export const UmaSwitcherFooter = ({ wallets }: Props) => {
   }
 
   return (
-    <div className="flex flex-row py-4 max-w-full items-center gap-4">
+    <div className="flex flex-row py-4 max-w-full items-center gap-[18px]">
       {walletButtons}
       <div className="pr-4">
         <Button
