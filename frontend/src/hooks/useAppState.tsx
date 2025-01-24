@@ -15,7 +15,12 @@ export const useAppState = create<AppState>((set) => ({
   isUmaSelectorDialogOpen: false,
   isCreateUmaDialogOpen: false,
   setCurrentWallet: (wallet) => set({ currentWallet: wallet }),
-  resetAppState: () => set({ currentWallet: undefined }),
+  resetAppState: () =>
+    set({
+      currentWallet: undefined,
+      isUmaSelectorDialogOpen: false,
+      isCreateUmaDialogOpen: false,
+    }),
   setIsUmaSelectorDialogOpen: (isOpen) =>
     set({ isUmaSelectorDialogOpen: isOpen }),
   setIsCreateUmaDialogOpen: (isOpen) => set({ isCreateUmaDialogOpen: isOpen }),
