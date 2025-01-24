@@ -121,7 +121,7 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
                   wallet: currentWallet,
                   number: currentWalletIndex + 1,
                 }}
-                size="md"
+                size="sm"
               />
               <span className="min-w-0 pl-[6px] truncate">
                 {getUmaFromUsername(currentWallet.uma.username)}

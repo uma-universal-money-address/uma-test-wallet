@@ -36,6 +36,7 @@ export const Contact = (props: Props) => {
         size="lg"
         ownContact={props.ownContact}
         uma={props.contactInfo.uma}
+        currencyCode={props.ownContact?.wallet.currency.code}
       />
       <div className="flex flex-col gap-1 overflow-hidden self-center">
         <span className="text-primary text-[15px] font-medium leading-[20px] tracking-[-0.187px] truncate">

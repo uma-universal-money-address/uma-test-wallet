@@ -7,6 +7,7 @@ import { useWallets, Wallet } from "@/hooks/useWalletContext";
 import { convertCurrency } from "@/lib/convertCurrency";
 import { convertToNormalDenomination } from "@/lib/convertToNormalDenomination";
 import { getUmaFromUsername } from "@/lib/uma";
+import Image from "next/image";
 import { useEffect } from "react";
 
 const TransactionRow = ({
@@ -87,27 +88,44 @@ const TransactionRow = ({
     (wallet) =>
       getUmaFromUsername(wallet.uma.username) === transaction.otherUma,
   );
+  const isOwnContact = walletIndex >= 0;
+  const isFundingTransaction =
+    transaction.otherUma.startsWith("$demo-funding-tx@");
 
   return (
     <div
       onClick={handleClick}
       className="flex flex-row gap-2 cursor-pointer select-none transition-transform active:scale-95 duration-100"
     >
-      <SandboxAvatar
-        size="lg"
-        ownContact={
-          walletIndex >= 0
-            ? {
-                wallet: wallets[walletIndex],
-                number: walletIndex + 1,
-              }
-            : undefined
-        }
-      />
+      {isFundingTransaction ? (
+        <div className="min-w-[48px] min-h-[48px] flex items-center justify-center rounded-full bg-[#C7E7C8]">
+          <Image
+            src="/icons/green-plus.svg"
+            alt="demo funding"
+            width={24}
+            height={24}
+          />
+        </div>
+      ) : (
+        <SandboxAvatar
+          size="lg"
+          ownContact={
+            isOwnContact
+              ? {
+                  wallet: wallets[walletIndex],
+                  number: walletIndex + 1,
+                }
+              : undefined
+          }
+          currencyCode={
+            isOwnContact ? wallets[walletIndex].currency.code : undefined
+          }
+        />
+      )}
       <div className="flex flex-col gap-[2px] justify-center grow overflow-hidden">
         <div className="flex flex-row justify-between gap-2">
           <span className="text-primary text-[15px] font-medium leading-[20px] tracking-[-0.187px] truncate text-ellipsis">
-            {transaction.otherUma}
+            {isFundingTransaction ? "Added test funds" : transaction.otherUma}
           </span>
           {amount}
         </div>

@@ -7,7 +7,6 @@ import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { useWallets } from "@/hooks/useWalletContext";
 import { convertCurrency } from "@/lib/convertCurrency";
 import { convertToNormalDenomination } from "@/lib/convertToNormalDenomination";
-import { flagExists, getCurrencyFlagFromCode } from "@/lib/currencyFlagMapping";
 import { smartRound } from "@/lib/smartRound";
 import { getUmaFromUsername } from "@/lib/uma";
 import assert from "assert";
@@ -118,27 +117,19 @@ export const Confirm = () => {
 
   return (
     <div className="flex flex-col h-full px-8 justify-between">
-      <section className="py-8 px-2">
+      <section className="">
         <div className="flex flex-col bg-[#f9f9f9] w-full rounded-3xl border-[0.33px] border-[#C0C9D6] p-6">
           <div className="flex items-center gap-3">
             <SandboxAvatar
               size="lg"
               ownContact={senderWallet}
-              country={
-                balance?.currency && flagExists(balance.currency.code)
-                  ? {
-                      umaUserName: senderUma,
-                      image: getCurrencyFlagFromCode(balance.currency.code),
-                      currency: balance.currency,
-                    }
-                  : undefined
-              }
+              currencyCode={senderWallet?.wallet.currency.code}
             />
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 overflow-hidden">
               <span className="text-secondary text-[15px] font-normal leading-[20px] tracking-[-0.187px]">
                 From
               </span>
-              <span className="text-primary text-[15px] font-semibold leading-[20px] tracking-[-0.187px]">
+              <span className="text-primary text-[15px] font-semibold leading-[20px] tracking-[-0.187px] truncate">
                 {senderUma}
               </span>
             </div>
@@ -157,21 +148,13 @@ export const Confirm = () => {
               size="lg"
               ownContact={receiverWallet}
               uma={receiverUma}
-              country={
-                flagExists(receivingCurrency.code)
-                  ? {
-                      umaUserName: receiverUma,
-                      image: getCurrencyFlagFromCode(receivingCurrency.code),
-                      currency: receivingCurrency,
-                    }
-                  : undefined
-              }
+              currencyCode={receiverWallet?.wallet.currency.code}
             />
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 overflow-hidden">
               <span className="text-secondary text-[15px] font-normal leading-[20px] tracking-[-0.187px]">
                 To
               </span>
-              <span className="text-primary text-[15px] font-semibold leading-[20px] tracking-[-0.187px]">
+              <span className="text-primary text-[15px] font-semibold leading-[20px] tracking-[-0.187px] truncate">
                 {receiverUma}
               </span>
             </div>

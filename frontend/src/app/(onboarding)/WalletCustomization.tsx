@@ -17,22 +17,12 @@ import { fetchWallets, Wallet as WalletType } from "@/hooks/useWalletContext";
 import { fundWallet } from "@/lib/fundWallet";
 import { updateWallet } from "@/lib/updateWallet";
 import { WalletColor } from "@/lib/walletColorMapping";
+import { AVAILABLE_CURRENCIES } from "@/types/Currency";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useOnboardingStepContext } from "./OnboardingStepContextProvider";
 import { StepButtonProps } from "./Steps";
-
-const AVAILABLE_CURRENCIES = new Set([
-  "USD",
-  "BRL",
-  "MXN",
-  "GBP",
-  "NGN",
-  "EUR",
-  "PHP",
-  "SAT",
-]);
 
 const OtherCurrencies = ({
   handleClose,
