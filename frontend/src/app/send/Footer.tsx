@@ -15,7 +15,7 @@ export const Footer = (props: Props) => {
       <SandboxButton
         className="w-full"
         loading={props.isLoading}
-        disabled={props.disabled}
+        disabled={props.disabled || props.isLoading}
         buttonProps={{
           onClick: props.onSubmit,
         }}

@@ -13,7 +13,7 @@ import { getUmaFromUsername } from "@/lib/uma";
 import assert from "assert";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Footer } from "./Footer";
 import { useSendPaymentContext } from "./SendPaymentContextProvider";
 import { sendPayment } from "./umaRequests";
@@ -45,10 +45,9 @@ export const Confirm = () => {
     umaPayreqResponse,
     senderUma,
     receiverUma,
-    isLoading,
     setError,
-    setIsLoading,
   } = useSendPaymentContext();
+  const [isLoading, setIsLoading] = useState(false);
   const { balance, isLoading: isLoadingBalance } = useBalance({
     uma: senderUma,
   });

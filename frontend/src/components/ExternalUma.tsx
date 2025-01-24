@@ -34,8 +34,8 @@ export const ExternalUma = ({
       onMouseLeave={handleUnpress}
     >
       <SandboxAvatar uma={uma} size="lg" />
-      <div className="flex flex-row items-center justify-center h-full gap-[6px]">
-        <span className="text-primary text-[15px] font-normal leading-[20px] tracking-[-0.187px]">
+      <div className="flex flex-row items-center justify-center h-full gap-[6px] overflow-hidden">
+        <span className="text-primary text-[15px] font-normal leading-[20px] tracking-[-0.187px] truncate">
           {uma}
         </span>
         <Image alt="uma" src="/uma.svg" width={28} height={12} />
