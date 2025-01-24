@@ -28,11 +28,10 @@ export const EnterAmount = () => {
     amount,
     setAmount,
     umaLookupResponse,
-    isLoading,
     setUmaPayreqResponse,
-    setIsLoading,
     setError,
   } = useSendPaymentContext();
+  const [isLoading, setIsLoading] = useState(false);
   const [convertedToUsd, setConvertedToUsd] = useState<number>(0);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(
     umaLookupResponse!.receiverCurrencies[0],

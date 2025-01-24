@@ -22,18 +22,12 @@ import { lnurlpLookup } from "./umaRequests";
 
 // Check if search has format of an uma with any amount of subdomains (e.g. $test@vasp.com)
 const isUmaFormat = (uma: string) => {
-  return /^\$?[a-zA-Z0-9\-_.+]+@([a-zA-Z0-9-_.+:]+\.)+[a-zA-Z0-9:]+$/.test(uma);
+  return /^\$?[a-zA-Z0-9\-_.+]+@[a-zA-Z0-9-_.+:]+$/.test(uma);
 };
 
 export const SelectRecipient = () => {
-  const {
-    senderUma,
-    onNext,
-    setReceiverUma,
-    setUmaLookupResponse,
-    setError,
-    setIsLoading,
-  } = useSendPaymentContext();
+  const { senderUma, onNext, setReceiverUma, setUmaLookupResponse, setError } =
+    useSendPaymentContext();
   const { setIsCreateUmaDialogOpen } = useAppState();
   const {
     recentContacts,
@@ -82,8 +76,13 @@ export const SelectRecipient = () => {
   }, [errorLoadingContacts, walletsError, setError]);
 
   const searchUma = useCallback(() => {
-    if (
-      isUmaFormat(customReceiverUma) &&
+    const isValid = isUmaFormat(customReceiverUma);
+    if (!isValid && customReceiverUma.length > 0) {
+      setCustomReceiverUmaError(
+        "Invalid UMA format. It should start with a $ sign, followed by alphanumeric characters and a domain. For example: $abc123@domain.com",
+      );
+    } else if (
+      isValid &&
       !allContacts?.find((contact) => contact.uma === customReceiverUma)
     ) {
       setIsLoadingSearchResults(true);
@@ -107,9 +106,7 @@ export const SelectRecipient = () => {
 
   useDebounce(searchUma, [customReceiverUma], 1000);
 
-  const handleSearchUma = (uma: string) => {
-    setIsLoadingSearchResults(true);
-
+  const handleSearchContacts = (uma: string) => {
     // First check if any contacts start with the uma
     let matchingContacts: ContactInfo[] = [];
     if (uma.startsWith("$")) {
@@ -126,8 +123,6 @@ export const SelectRecipient = () => {
 
     // Show any matching contacts
     setContactSearchResults(matchingContacts);
-
-    setIsLoadingSearchResults(false);
   };
 
   const handleChooseUma = async (uma: string) => {
@@ -136,15 +131,12 @@ export const SelectRecipient = () => {
     }
 
     setError(null);
-    setIsLoading(true);
     try {
       const umaLookupResponse = await lnurlpLookup(senderUma, uma);
       setUmaLookupResponse(umaLookupResponse);
-      setIsLoading(false);
     } catch (e: unknown) {
       const error = e as Error;
       setError(error);
-      setIsLoading(false);
       return;
     }
     setReceiverUma(uma);
@@ -156,19 +148,8 @@ export const SelectRecipient = () => {
     setCustomReceiverUma(newValue);
     setReceiverUma(newValue);
     setSearchLookupResult(undefined);
-
-    const isValid = new RegExp(
-      "^\\$?[a-zA-Z0-9-_.+]*(@[a-zA-Z0-9-_.+\\:]*)?$",
-    ).test(newValue);
-    if (!isValid) {
-      setCustomReceiverUmaError(
-        "Invalid UMA format. It should start with a $ sign, followed by alphanumeric characters and a domain. For example: $abc123@domain.com",
-      );
-    } else {
-      setCustomReceiverUmaError(null);
-    }
-
-    handleSearchUma(newValue);
+    setCustomReceiverUmaError(null);
+    handleSearchContacts(newValue);
   };
 
   let searchedContactsSection: React.ReactNode;
