@@ -1,22 +1,6 @@
-import { Toaster } from "@/components/ui/toaster";
 import type { Metadata, Viewport } from "next";
-import { Roboto_Mono } from "next/font/google";
-import localFont from "next/font/local";
 import "./globals.css";
-import { PushNotificationManager } from "./PushNotificationManager";
-
-const inter = localFont({
-  src: "./fonts/Inter.var.woff2",
-  display: "swap",
-  variable: "--font-inter",
-  weight: "100 900", // Fixes font weights above 500 on safari: https://github.com/rsms/inter/issues/686
-});
-
-const roboto_mono = Roboto_Mono({
-  subsets: ["latin"],
-  variable: "--font-roboto-mono",
-  display: "swap",
-});
+import { LayoutContent } from "./LayoutContent";
 
 export const metadata: Metadata = {
   title: "UMA Sandbox",
@@ -64,15 +48,7 @@ export default function RootLayout({
           crossOrigin="use-credentials"
         />
       </head>
-      <body
-        className={`${inter.variable} ${roboto_mono.variable} h-dvh flex items-center justify-center mobile:bg-[#F9F9F9]`}
-      >
-        <PushNotificationManager />
-        <div className="max-w-[432px] mobile:min-w-[400px] w-full h-dvh max-h-[916px] mobile:border-[0.5px] border-[#EBEEF2] mobile:rounded-[32px] mobile:px-4 mobile:pt-6 bg-white">
-          {children}
-          <Toaster />
-        </div>
-      </body>
+      <LayoutContent>{children}</LayoutContent>
     </html>
   );
 }

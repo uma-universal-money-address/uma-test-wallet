@@ -12,7 +12,7 @@ import { getUmaFromUsername } from "@/lib/uma";
 import assert from "assert";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Footer } from "./Footer";
 import { useSendPaymentContext } from "./SendPaymentContextProvider";
 import { sendPayment } from "./umaRequests";
@@ -63,7 +63,7 @@ export const Confirm = () => {
   );
   assert(receivingCurrency);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     setError(null);
     setIsLoading(true);
     try {
@@ -84,7 +84,19 @@ export const Confirm = () => {
 
     // Navigate back to the wallet page
     router.push("/wallet");
-  };
+  }, [router, umaPayreqResponse, receiverUma, toast, setError]);
+
+  useEffect(() => {
+    const handleKeyDown = () => {
+      handleSubmit();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleSubmit]);
 
   const senderWallet: OwnContact | undefined = useMemo(() => {
     if (!wallets) return undefined;

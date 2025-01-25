@@ -5,6 +5,7 @@ import { PwaInstallBanner } from "@/components/PwaInstallBanner";
 import { SandboxAvatar } from "@/components/SandboxAvatar";
 import { Button } from "@/components/ui/button";
 import { UmaSwitcherFooter } from "@/components/UmaSwitcherFooter";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
 import UmaContextProvider from "@/hooks/useUmaContext";
@@ -26,6 +27,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 }
 
 const LayoutContent = ({ children }: { children: React.ReactNode }) => {
+  const isDesktop = useMediaQuery("(min-width: 800px)");
   const { toast } = useToast();
   const router = useRouter();
   const {
@@ -161,9 +163,11 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
         <>
           <CreateUmaDialog refreshWallets={handleRefreshWallets} />
           <UmaSelectorDialog wallets={wallets || []} />
-          <div className="pt-2 px-4 pb-3 border-[#EBEEF2] border-t overflow-x-scroll no-scrollbar flex justify-center">
-            <UmaSwitcherFooter wallets={wallets || []} />
-          </div>
+          {!isDesktop && (
+            <div className="pt-2 px-4 pb-3 border-[#EBEEF2] border-t overflow-x-scroll no-scrollbar flex justify-center">
+              <UmaSwitcherFooter wallets={wallets || []} />
+            </div>
+          )}
         </>
       )}
     </div>
