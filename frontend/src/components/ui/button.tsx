@@ -22,6 +22,7 @@ const buttonVariants = cva(
         secondary:
           "bg-[#EBEEF2] text-secondary-foreground hover:bg-secondary/80 px-5",
         transparent: "hover:bg-accent hover:text-accent-foreground px-5",
+        sidebar: "hover:bg-[#F2F3F5] active:text-accent-foreground rounded-md",
         ghost: "",
         link: "text-primary underline-offset-4 hover:underline",
         icon: "hover:bg-accent",
@@ -29,6 +30,7 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-[50px] py-[14.5px]",
+        sidebar: "h-[48px] w-full px-4",
         sm: "h-[46px] py-[12.5px]",
         flat: "h-[40px] py-[12px] px-6",
         tiny: "h-[26px] py-0 px-[10px]",

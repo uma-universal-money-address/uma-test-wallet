@@ -25,7 +25,7 @@ export const SandboxButton = (props: Props) => {
       {...props.buttonProps}
       disabled={props.disabled || props.loading}
       className={cn(
-        "active:scale-[0.975] transition-transform duration-100 ease-in-out",
+        "active:scale-[0.975] transition duration-100 ease-in-out",
         props.className,
       )}
     >
