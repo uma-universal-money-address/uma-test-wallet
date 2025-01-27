@@ -2,7 +2,9 @@
 
 import { SandboxButton } from "@/components/SandboxButton";
 import { useToast } from "@/hooks/use-toast";
+import { useAppState } from "@/hooks/useAppState";
 import { useLoggedIn } from "@/hooks/useLoggedIn";
+import { useWallets } from "@/hooks/useWalletContext";
 import { getBackendUrl } from "@/lib/backendUrl";
 import { convertArrayBuffersToBase64 } from "@/lib/convertArrayBuffersToBase64";
 import Image from "next/image";
@@ -11,9 +13,11 @@ import { useEffect, useState } from "react";
 
 export default function Page() {
   const router = useRouter();
+  const { fetchWallets } = useWallets();
   const { toast } = useToast();
   const [isLoadingLogin, setIsLoadingLogin] = useState(false);
   const { isLoggedIn } = useLoggedIn();
+  const { setIsLoggedIn } = useAppState();
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -80,6 +84,8 @@ export default function Page() {
         const [path, redirectUri] = next?.split("?redirect_uri=") || [];
 
         if (!path || !redirectUri) {
+          fetchWallets();
+          setIsLoggedIn(true);
           // Redirect to wallet page if no next query param
           router.push("/wallet");
         } else {

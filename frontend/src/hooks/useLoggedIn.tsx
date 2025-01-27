@@ -1,5 +1,6 @@
 import { getBackendUrl } from "@/lib/backendUrl";
 import { useEffect, useState } from "react";
+import { useAppState } from "./useAppState";
 
 export interface RawLoggedIn {
   logged_in: boolean;
@@ -10,6 +11,7 @@ export interface LoggedIn {
 }
 
 export const useLoggedIn = () => {
+  const { setIsLoggedIn: setAppStateIsLoggedIn } = useAppState();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>();
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -30,6 +32,7 @@ export const useLoggedIn = () => {
         });
         if (!ignore) {
           setIsLoggedIn(response.logged_in);
+          setAppStateIsLoggedIn(response.logged_in);
           setIsLoading(false);
         }
       } catch (e: unknown) {
@@ -44,7 +47,7 @@ export const useLoggedIn = () => {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [setAppStateIsLoggedIn]);
 
   return {
     isLoggedIn,

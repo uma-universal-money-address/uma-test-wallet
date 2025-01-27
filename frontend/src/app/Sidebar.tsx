@@ -69,13 +69,17 @@ export const Sidebar = () => {
   const { toast } = useToast();
   const router = useRouter();
   const { wallets, error: walletsError } = useWallets();
-  const { currentWallet, setCurrentWallet, setIsCreateUmaDialogOpen } =
-    useAppState();
+  const {
+    currentWallet,
+    setCurrentWallet,
+    setIsCreateUmaDialogOpen,
+    isLoggedIn,
+  } = useAppState();
 
   useEffect(() => {
     if (walletsError) {
       toast({
-        title: `Failed to load wallet layout: ${walletsError}`,
+        title: `Failed to load sidebar: ${walletsError}`,
         variant: "error",
       });
     }
@@ -131,32 +135,34 @@ export const Sidebar = () => {
           </span>
         </div>
         <section className="flex flex-col gap-10">
-          <SidebarSection title="Your test UMAs">
-            {walletButtons}
-            <SandboxButton
-              buttonProps={{
-                variant: "ghost",
-                size: "sidebar",
-                onClick: () => setIsCreateUmaDialogOpen(true),
-              }}
-              className="px-[16px] text-left"
-            >
-              <div className="flex flex-row items-center w-full gap-2">
-                <div className="flex items-center justify-center bg-[#EBEEF2] rounded">
-                  <Image
-                    src="/icons/plus.svg"
-                    alt="Add UMA"
-                    width={24}
-                    height={24}
-                    className="opacity-50"
-                  />
+          {isLoggedIn && (
+            <SidebarSection title="Your test UMAs">
+              {walletButtons}
+              <SandboxButton
+                buttonProps={{
+                  variant: "ghost",
+                  size: "sidebar",
+                  onClick: () => setIsCreateUmaDialogOpen(true),
+                }}
+                className="px-[16px] text-left"
+              >
+                <div className="flex flex-row items-center w-full gap-2">
+                  <div className="flex items-center justify-center bg-[#EBEEF2] rounded">
+                    <Image
+                      src="/icons/plus.svg"
+                      alt="Add UMA"
+                      width={24}
+                      height={24}
+                      className="opacity-50"
+                    />
+                  </div>
+                  <span className="text-[15px] font-semibold leading-[20px] tracking-[-0.187px] text-secondary">
+                    New test UMA
+                  </span>
                 </div>
-                <span className="text-[15px] font-semibold leading-[20px] tracking-[-0.187px] text-secondary">
-                  New test UMA
-                </span>
-              </div>
-            </SandboxButton>
-          </SidebarSection>
+              </SandboxButton>
+            </SidebarSection>
+          )}
           <SidebarSection title="Resources">
             <div className="flex flex-col">
               <ResourceButton
@@ -181,26 +187,28 @@ export const Sidebar = () => {
           </SidebarSection>
         </section>
       </section>
-      <SandboxButton
-        buttonProps={{
-          variant: "ghost",
-          size: "sidebar",
-          onClick: () => router.push("/settings"),
-        }}
-      >
-        <div className="flex flex-row items-center w-full gap-2">
-          <Image
-            src="/icons/settings-gear-2.svg"
-            alt="Settings"
-            width={24}
-            height={24}
-            className="opacity-50"
-          />
-          <span className="text-[15px] font-semibold leading-[20px] tracking-[-0.187px] text-secondary">
-            Account settings
-          </span>
-        </div>
-      </SandboxButton>
+      {isLoggedIn && (
+        <SandboxButton
+          buttonProps={{
+            variant: "ghost",
+            size: "sidebar",
+            onClick: () => router.push("/settings"),
+          }}
+        >
+          <div className="flex flex-row items-center w-full gap-2">
+            <Image
+              src="/icons/settings-gear-2.svg"
+              alt="Settings"
+              width={24}
+              height={24}
+              className="opacity-50"
+            />
+            <span className="text-[15px] font-semibold leading-[20px] tracking-[-0.187px] text-secondary">
+              Account settings
+            </span>
+          </div>
+        </SandboxButton>
+      )}
     </div>
   );
 };

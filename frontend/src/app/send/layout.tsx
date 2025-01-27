@@ -2,24 +2,13 @@
 
 import { CreateUmaDialog } from "@/components/CreateUmaDialog";
 import { useAppState } from "@/hooks/useAppState";
-import UmaContextProvider from "@/hooks/useUmaContext";
-import WalletContextProvider, { useWallets } from "@/hooks/useWalletContext";
+import { useWallets } from "@/hooks/useWalletContext";
 import { getUmaFromUsername } from "@/lib/uma";
 import React from "react";
 import { Header } from "./Header";
 import SendPaymentContextProvider from "./SendPaymentContextProvider";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <UmaContextProvider>
-      <WalletContextProvider>
-        <LayoutContent>{children}</LayoutContent>
-      </WalletContextProvider>
-    </UmaContextProvider>
-  );
-}
-
-const LayoutContent = ({ children }: { children: React.ReactNode }) => {
   const {
     isLoading: isLoadingWallets,
     error: walletError,
@@ -47,4 +36,4 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
       )}
     </div>
   );
-};
+}
