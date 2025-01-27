@@ -8,8 +8,7 @@ import { UmaSwitcherFooter } from "@/components/UmaSwitcherFooter";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
-import UmaContextProvider from "@/hooks/useUmaContext";
-import WalletContextProvider, { useWallets } from "@/hooks/useWalletContext";
+import { useWallets } from "@/hooks/useWalletContext";
 import { getUmaFromUsername } from "@/lib/uma";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -17,16 +16,6 @@ import { useEffect } from "react";
 import { UmaSelectorDialog } from "./UmaSelectorDialog";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <UmaContextProvider>
-      <WalletContextProvider>
-        <LayoutContent>{children}</LayoutContent>
-      </WalletContextProvider>
-    </UmaContextProvider>
-  );
-}
-
-const LayoutContent = ({ children }: { children: React.ReactNode }) => {
   const isDesktop = useMediaQuery("(min-width: 800px)");
   const { toast } = useToast();
   const router = useRouter();
@@ -172,4 +161,4 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
       )}
     </div>
   );
-};
+}

@@ -107,7 +107,7 @@ function OnboardingStepContextProvider({
   children,
 }: {
   stepOrder: OnboardingStep[];
-  onFinish: () => void;
+  onFinish?: () => void;
   children: React.ReactNode;
 }) {
   const { toast } = useToast();
@@ -136,7 +136,7 @@ function OnboardingStepContextProvider({
             stepNumber: nextStepNumber,
             stepProps: nextStepProps,
           };
-        } else {
+        } else if (onFinish) {
           onFinish();
         }
         return prevData;

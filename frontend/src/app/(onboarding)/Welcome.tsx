@@ -2,6 +2,8 @@
 
 import { SandboxButton } from "@/components/SandboxButton";
 import { useToast } from "@/hooks/use-toast";
+import { useAppState } from "@/hooks/useAppState";
+import { useWallets } from "@/hooks/useWalletContext";
 import { getBackendUrl } from "@/lib/backendUrl";
 import { convertArrayBuffersToBase64 } from "@/lib/convertArrayBuffersToBase64";
 import Image from "next/image";
@@ -37,8 +39,10 @@ export const Welcome = () => {
 
 export const WelcomeButtons = ({ onNext }: StepButtonProps) => {
   const router = useRouter();
+  const { fetchWallets } = useWallets();
   const { toast } = useToast();
   const [isLoadingLogin, setIsLoadingLogin] = useState(false);
+  const { setIsLoggedIn } = useAppState();
 
   const handleLogin = async () => {
     setIsLoadingLogin(true);
@@ -94,6 +98,8 @@ export const WelcomeButtons = ({ onNext }: StepButtonProps) => {
       });
       const loginData = await loginRes.json();
       if (loginData.success) {
+        fetchWallets();
+        setIsLoggedIn(true);
         router.push("/wallet");
       } else {
         toast({

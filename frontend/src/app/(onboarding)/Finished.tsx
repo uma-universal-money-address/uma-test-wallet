@@ -1,7 +1,10 @@
 "use client";
 
 import { SandboxButton } from "@/components/SandboxButton";
+import { useAppState } from "@/hooks/useAppState";
+import { useWallets } from "@/hooks/useWalletContext";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { StepButtonProps } from "./Steps";
 
 export const Finished = () => {
@@ -30,12 +33,20 @@ export const Finished = () => {
 };
 
 export const FinishedButtons = ({ onNext }: StepButtonProps) => {
+  const router = useRouter();
+  const { fetchWallets } = useWallets();
+  const { setIsLoggedIn } = useAppState();
   return (
     <div className="flex flex-col gap-[10px]">
       <SandboxButton
         buttonProps={{
           size: "lg",
-          onClick: onNext,
+          onClick: () => {
+            fetchWallets();
+            setIsLoggedIn(true);
+            router.push("/wallet");
+            onNext();
+          },
         }}
         className="w-full"
       >

@@ -1,9 +1,12 @@
 "use client";
 import { Toaster } from "@/components/ui/toaster";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useLoggedIn } from "@/hooks/useLoggedIn";
 import WalletContextProvider from "@/hooks/useWalletContext";
 import { Roboto_Mono } from "next/font/google";
 import localFont from "next/font/local";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { PushNotificationManager } from "./PushNotificationManager";
 import { Sidebar } from "./Sidebar";
 
@@ -22,6 +25,14 @@ const roboto_mono = Roboto_Mono({
 
 export const LayoutContent = ({ children }: { children: React.ReactNode }) => {
   const isDesktop = useMediaQuery("(min-width: 800px)");
+  const router = useRouter();
+  const { isLoggedIn } = useLoggedIn();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      router.push("/wallet");
+    }
+  }, [router, isLoggedIn]);
 
   return (
     <body

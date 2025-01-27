@@ -33,7 +33,7 @@ export default function Page() {
             ? wallets.filter((wallet) => wallet.id !== currentWallet.id)[0]
             : undefined,
         );
-        router.push("/");
+        router.push("/wallet");
       } catch (e) {
         toast({
           title: `Failed to delete uma: ${e}`,
