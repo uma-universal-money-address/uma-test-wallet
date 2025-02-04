@@ -40,7 +40,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       getUmaFromUsername(currentWallet.uma.username),
     );
     toast({
-      title: "Copied to clipboard",
+      description: "Copied to clipboard",
     });
   };
 
@@ -51,7 +51,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (walletsError) {
       toast({
-        title: `Failed to load wallet layout: ${walletsError}`,
+        description: `Failed to load wallet layout: ${walletsError}`,
         variant: "error",
       });
     }

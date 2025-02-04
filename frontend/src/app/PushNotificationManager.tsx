@@ -23,8 +23,7 @@ export function PushNotificationManager() {
           const e = error as Error;
           console.error("Failed to subscribe to push notifications", e);
           toast({
-            title: "Failed to subscribe to push notifications",
-            description: e.message,
+            description: "Failed to subscribe to push notifications",
             variant: "error",
           });
         }

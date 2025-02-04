@@ -11,9 +11,6 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   trailingSlash: true,
-  env: {
-    BACKEND_DOMAIN: process.env.BACKEND_DOMAIN || "",
-  },
 };
 
 export default nextConfig;

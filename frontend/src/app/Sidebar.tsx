@@ -2,7 +2,6 @@
 
 import { SandboxAvatar } from "@/components/SandboxAvatar";
 import { SandboxButton } from "@/components/SandboxButton";
-import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
 import { useWallets, Wallet } from "@/hooks/useWalletContext";
 import { getUmaFromUsername } from "@/lib/uma";
@@ -66,7 +65,6 @@ const ResourceButton = ({
 };
 
 export const Sidebar = () => {
-  const { toast } = useToast();
   const router = useRouter();
   const { wallets, error: walletsError } = useWallets();
   const {
@@ -78,12 +76,9 @@ export const Sidebar = () => {
 
   useEffect(() => {
     if (walletsError) {
-      toast({
-        title: `Failed to load sidebar: ${walletsError}`,
-        variant: "error",
-      });
+      console.error(`Failed to load sidebar: ${walletsError}`);
     }
-  }, [walletsError, toast]);
+  }, [walletsError]);
 
   const handleChooseWallet = (wallet: Wallet) => {
     setCurrentWallet(wallet);

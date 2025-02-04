@@ -181,13 +181,14 @@ export const EnableNotificationsButtons = ({ onNext }: StepButtonProps) => {
         onNext();
       } catch (e) {
         toast({
-          title: `Failed to subscribe to push notifications: ${e}`,
+          description: `Failed to subscribe to push notifications: ${e}`,
           variant: "error",
         });
       }
     } else {
       toast({
-        title: "You must allow browser notifications to enable this feature",
+        description:
+          "You must allow browser notifications to enable this feature",
         variant: "error",
       });
     }

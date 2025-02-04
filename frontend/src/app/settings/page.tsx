@@ -30,13 +30,14 @@ export default function Page() {
           setNotificationsEnabled(true);
         } catch (e) {
           toast({
-            title: `Failed to subscribe to push notifications: ${e}`,
+            description: `Failed to subscribe to push notifications: ${e}`,
             variant: "error",
           });
         }
       } else {
         toast({
-          title: "You must allow browser notifications to enable this feature",
+          description:
+            "You must allow browser notifications to enable this feature",
           variant: "error",
         });
       }
@@ -46,7 +47,7 @@ export default function Page() {
         setNotificationsEnabled(false);
       } catch (e) {
         toast({
-          title: `Failed to unsubscribe from push notifications: ${e}`,
+          description: `Failed to unsubscribe from push notifications: ${e}`,
           variant: "error",
         });
       }
@@ -63,7 +64,7 @@ export default function Page() {
       router.push("/");
     } catch (e) {
       toast({
-        title: `Failed to log out: ${e}`,
+        description: `Failed to log out: ${e}`,
         variant: "error",
       });
     }

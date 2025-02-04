@@ -84,7 +84,7 @@ export default function Page() {
   useEffect(() => {
     if (error || exchangeRatesError) {
       toast({
-        title: `Failed to load wallet: ${error || exchangeRatesError}`,
+        description: `Failed to load wallet: ${error || exchangeRatesError}`,
         variant: "error",
       });
     }

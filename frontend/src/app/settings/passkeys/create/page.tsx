@@ -44,7 +44,7 @@ export default function Page() {
       if (verification.success) {
         router.back();
         toast({
-          title: "Passkey created",
+          description: "Passkey created",
         });
       } else {
         throw new Error("Failed to register passkey.");

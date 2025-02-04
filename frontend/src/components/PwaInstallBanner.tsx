@@ -154,7 +154,7 @@ const PwaInstallScreenIos = ({
         <DialogTitle>Install the app</DialogTitle>
         <DialogDescription>Get easy access and notifications</DialogDescription>
       </VisuallyHidden>
-      <DialogContent className="max-w-[432px] min-w-[400px] h-full max-h-[916px]">
+      <DialogContent className="max-w-[432px] min-w-[300px] h-full max-h-[916px]">
         <div className="w-full h-full flex flex-col bg-white">
           <div className="flex flex-col h-full items-center justify-center">
             <div className="flex flex-col items-center justify-center h-1/2 w-full gap-[18px] bg-[#EBEEF2]">
@@ -272,7 +272,7 @@ const PwaInstallScreenAndroid = ({
         <DialogTitle>Install the app</DialogTitle>
         <DialogDescription>Get easy access and notifications</DialogDescription>
       </VisuallyHidden>
-      <DialogContent className="max-w-[432px] min-w-[400px] h-full max-h-[916px]">
+      <DialogContent className="max-w-[432px] min-w-[300px] h-full max-h-[916px]">
         <div className="w-full h-full flex flex-col bg-white">
           <div className="flex flex-col h-full items-center justify-center">
             <div className="flex flex-col items-center justify-center h-1/2 w-full gap-[18px] bg-[#EBEEF2] relative">

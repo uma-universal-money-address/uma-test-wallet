@@ -11,7 +11,7 @@ interface Props {
 
 export const Footer = (props: Props) => {
   return (
-    <div className="flex flex-col py-6 w-full max-w-[400px] self-center">
+    <div className="flex flex-col py-6 w-full self-center">
       <SandboxButton
         className="w-full"
         loading={props.isLoading}
