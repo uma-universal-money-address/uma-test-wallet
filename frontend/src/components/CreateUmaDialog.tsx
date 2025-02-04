@@ -27,7 +27,7 @@ export const CreateUmaDialog = ({ refreshWallets }: Props) => {
         setIsCreateUmaDialogOpen(false);
         refreshWallets();
         toast({
-          title: "New test UMA created",
+          description: "New test UMA created",
         });
       }}
     >

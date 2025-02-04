@@ -201,7 +201,7 @@ function OnboardingStepContextProvider({
     setError: (error) => {
       if (error) {
         toast({
-          title: `OnboardingError: ${error.message}`,
+          description: `OnboardingError: ${error.message}`,
           variant: "error",
         });
       }

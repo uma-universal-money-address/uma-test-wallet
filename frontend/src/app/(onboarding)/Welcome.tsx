@@ -74,7 +74,7 @@ export const WelcomeButtons = ({ onNext }: StepButtonProps) => {
       });
       if (!credential) {
         toast({
-          title: "Login method not provided.",
+          description: "Login method not provided.",
           variant: "error",
         });
         setIsLoadingLogin(false);
@@ -103,7 +103,7 @@ export const WelcomeButtons = ({ onNext }: StepButtonProps) => {
         router.push("/wallet");
       } else {
         toast({
-          title: "Failed to login.",
+          description: "Failed to login.",
           variant: "error",
         });
       }

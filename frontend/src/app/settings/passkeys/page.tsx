@@ -30,13 +30,13 @@ const PasskeyRow = ({
       setShowEditModal(false);
       setShowConfirmRevoke(false);
       toast({
-        title: "Passkey revoked",
+        description: "Passkey revoked",
       });
       onDelete();
     } catch (e) {
       const error = e as unknown as Error;
       toast({
-        title: `Failed to revoke passkey: ${error.message}`,
+        description: `Failed to revoke passkey: ${error.message}`,
         variant: "error",
       });
     }
@@ -169,7 +169,7 @@ export default function Page() {
 
   if (error) {
     toast({
-      title: "Failed to load passkeys",
+      description: "Failed to load passkeys",
       variant: "error",
     });
   }

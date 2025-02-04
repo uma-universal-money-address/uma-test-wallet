@@ -36,7 +36,7 @@ export default function Page() {
         router.push("/wallet");
       } catch (e) {
         toast({
-          title: `Failed to delete uma: ${e}`,
+          description: `Failed to delete uma: ${e}`,
           variant: "error",
         });
       }

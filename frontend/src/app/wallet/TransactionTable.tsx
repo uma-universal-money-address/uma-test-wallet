@@ -156,7 +156,7 @@ export const TransactionTable = () => {
     const anyError = error || exchangeRatesError || walletsError;
     if (anyError) {
       toast({
-        title: `Failed to load transactions table: ${anyError}`,
+        description: `Failed to load transactions table: ${anyError}`,
         variant: "error",
       });
     }

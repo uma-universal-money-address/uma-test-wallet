@@ -66,7 +66,7 @@ const OtherCurrencies = ({
   useEffect(() => {
     if (currenciesError) {
       toast({
-        title: `Failed to load currencies: ${currenciesError}`,
+        description: `Failed to load currencies: ${currenciesError}`,
         variant: "error",
       });
     }
@@ -81,7 +81,7 @@ const OtherCurrencies = ({
           currency.
         </DialogDescription>
       </VisuallyHidden.Root>
-      <DialogContent className="min-w-[400px] max-sm:h-full max-h-[916px] overflow-scroll justify-start">
+      <DialogContent className="min-w-[300px] max-sm:h-full max-h-[916px] overflow-scroll justify-start">
         <div className="flex flex-col gap-2 px-8 pb-3 pt-[68px]">
           <h1 className="text-primary text-[26px] font-normal leading-[34px] tracking-[-0.325px]">
             Select preferred currency
@@ -257,7 +257,7 @@ export const WalletCustomization = () => {
       } catch (error) {
         console.error(error);
         toast({
-          title: `Failed to load wallets: ${error}`,
+          description: `Failed to load wallets: ${error}`,
           variant: "error",
         });
         setIsLoadingWallets(false);
@@ -273,7 +273,7 @@ export const WalletCustomization = () => {
     const error = walletsError || exchangeRatesError;
     if (error) {
       toast({
-        title: `Failed to load wallet customization: ${error}`,
+        description: `Failed to load wallet customization: ${error}`,
         variant: "error",
       });
     }

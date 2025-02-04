@@ -9,8 +9,7 @@ import { convertToNormalDenomination } from "@/lib/convertToNormalDenomination";
 import { getUmaFromUsername } from "@/lib/uma";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-
-const MAX_WALLETS = 10;
+import { MAX_WALLETS } from "../(onboarding)/CreateUma";
 
 interface Props {
   wallets: Wallet[];
@@ -30,8 +29,9 @@ export const UmaSelectorDialog = ({ wallets }: Props) => {
     const hasMaxWallets = wallets.length >= MAX_WALLETS;
     if (hasMaxWallets) {
       toast({
-        title:
+        description:
           "You have reached the maximum number of test UMAs for this account",
+        variant: "error",
       });
     } else {
       setIsUmaSelectorDialogOpen(false);
@@ -82,7 +82,7 @@ const UmaSelectorDialogContent = ({
 
   return (
     <>
-      <div className="flex flex-row w-full justify-between items-center px-6 py-2 min-w-[400px]">
+      <div className="flex flex-row w-full justify-between items-center px-6 py-2 min-w-[300px]">
         <span className="text-xl font-semibold leading-[25px] tracking-[-0.25px]">
           Account
         </span>
@@ -154,7 +154,7 @@ const WalletRows = ({
     navigator.clipboard.writeText(umaAddress);
 
     toast({
-      title: "Copied to clipboard",
+      description: "Copied to clipboard",
     });
   };
 

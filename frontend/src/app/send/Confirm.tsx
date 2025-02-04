@@ -78,7 +78,7 @@ export const Confirm = () => {
     }
 
     toast({
-      title: `You paid ${receiverUma}`,
+      description: `You paid ${receiverUma}`,
       variant: "default",
     });
 

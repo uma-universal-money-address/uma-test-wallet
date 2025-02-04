@@ -2,11 +2,15 @@
 
 import { SandboxButton } from "@/components/SandboxButton";
 import { UmaInput } from "@/components/UmaInput";
+import { toast } from "@/hooks/use-toast";
+import { useWallets } from "@/hooks/useWalletContext";
 import { getBackendDomain } from "@/lib/backendDomain";
 import { checkUmaAvailability, createUma, pickRandomUma } from "@/lib/uma";
 import { useEffect, useRef, useState } from "react";
 import { useOnboardingStepContext } from "./OnboardingStepContextProvider";
 import { StepButtonProps } from "./Steps";
+
+export const MAX_WALLETS = 10;
 
 export const CreateUma = () => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -88,6 +92,7 @@ export const CreateUma = () => {
 };
 
 export const CreateUmaButtons = ({ onNext }: StepButtonProps) => {
+  const { wallets } = useWallets();
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
   const { uma, setUma, setWallet, setUmaError, setUmaInputMessage } =
     useOnboardingStepContext();
@@ -109,6 +114,15 @@ export const CreateUmaButtons = ({ onNext }: StepButtonProps) => {
 
   const handleSubmit = async () => {
     setUmaError(undefined);
+
+    const hasMaxWallets = wallets && wallets.length >= MAX_WALLETS;
+    if (hasMaxWallets) {
+      toast({
+        description:
+          "You have reached the maximum number of test UMAs for this account",
+        variant: "error",
+      });
+    }
 
     if (uma.length === 0) {
       setUmaInputMessage(undefined);

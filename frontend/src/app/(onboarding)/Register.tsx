@@ -40,7 +40,7 @@ export const Register = () => {
       } catch (error) {
         console.error(error);
         toast({
-          title: `Failed to load wallets: ${error}`,
+          description: `Failed to load wallets: ${error}`,
           variant: "error",
         });
         setIsLoadingWallets(false);
@@ -56,7 +56,7 @@ export const Register = () => {
     const error = walletsError || exchangeRatesError;
     if (error) {
       toast({
-        title: `Failed to load wallet customization: ${error}`,
+        description: `Failed to load wallet customization: ${error}`,
         variant: "error",
       });
     }

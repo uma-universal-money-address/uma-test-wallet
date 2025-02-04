@@ -104,7 +104,7 @@ function SendPaymentContextProvider({
     setError: (error) => {
       if (error) {
         toast({
-          title: `SendError: ${error.message}`,
+          description: `SendError: ${error.message}`,
           variant: "error",
         });
       }

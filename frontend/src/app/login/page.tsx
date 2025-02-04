@@ -55,7 +55,7 @@ export default function Page() {
       });
       if (!credential) {
         toast({
-          title: "Login method not provided.",
+          description: "Login method not provided.",
           variant: "error",
         });
         setIsLoadingLogin(false);
@@ -97,7 +97,7 @@ export default function Page() {
         }
       } else {
         toast({
-          title: "Failed to login.",
+          description: "Failed to login.",
           variant: "error",
         });
       }

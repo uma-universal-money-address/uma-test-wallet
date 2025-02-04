@@ -65,7 +65,7 @@ function PageContent() {
         } catch (e: unknown) {
           const error = e as Error;
           toast({
-            title: `Failed lnurlp lookup: ${error.message}`,
+            description: `Failed lnurlp lookup: ${error.message}`,
             variant: "error",
           });
           setIsLoading(false);

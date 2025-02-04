@@ -70,7 +70,7 @@ export const Step = ({
           )}
         </div>
       )}
-      <div className="flex flex-col h-full gap-8 pt-6 min-w-[400px] max-w-[425px]">
+      <div className="flex flex-col h-full gap-8 pt-6 min-w-[300px] max-w-[425px]">
         {(stepProps.title || stepProps.description) && (
           <div className="flex flex-col gap-2 px-8">
             {stepProps.title && (
