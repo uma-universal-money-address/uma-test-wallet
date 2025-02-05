@@ -104,7 +104,7 @@ def construct_blueprint(
                     )
                 )
                 .distinct(Uma.id)
-                .order_by(Transaction.created_at.desc())
+                .order_by(Uma.id, Transaction.created_at.desc())
                 .limit(5)
             ).all()
             return jsonify(
