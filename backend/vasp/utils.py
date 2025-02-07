@@ -62,11 +62,21 @@ def get_username_from_uma(uma: str) -> str:
     return uma
 
 
-FRONTEND_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:3001",
-    "http://sandbox.localhost:3000",
-    "https://sandbox.uma.me",
-]
+def get_cookie_domain() -> str:
+    return current_app.config.get("COOKIE_DOMAIN", ".localhost:3000")
+
+
+def get_frontend_domain() -> str:
+    return current_app.config.get("FRONTEND_DOMAIN", "localhost:3000")
+
+
+def get_frontend_allowed_origins(frontend_domain: str) -> list[str]:
+    return [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://sandbox.localhost:3000",
+        f"https://{frontend_domain}",
+    ]
+
 
 is_dev: bool = os.environ.get("FLASK_ENV") == "development"

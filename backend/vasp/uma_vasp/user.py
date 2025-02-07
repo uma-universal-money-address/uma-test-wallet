@@ -8,7 +8,7 @@ from flask_login import UserMixin
 import json
 from pywebpush import webpush, WebPushException
 
-from vasp.utils import get_uma_from_username, is_dev
+from vasp.utils import get_uma_from_username, is_dev, get_frontend_domain
 from vasp.db import db
 from vasp.models.Uma import Uma as UmaModel
 from vasp.models.User import User as UserModel
@@ -73,7 +73,7 @@ class User(UserMixin):
                 url = (
                     "http://localhost:3000/wallet"
                     if is_dev
-                    else "https://sandbox.uma.me/wallet"
+                    else f"https://{get_frontend_domain()}/wallet"
                 )
 
             for push_subscription in push_subscriptions:

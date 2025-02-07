@@ -10,12 +10,14 @@ from typing import Optional, TypedDict, Union, Dict, Any
 from flask import Blueprint, current_app, request, redirect, jsonify, session
 from flask_login import login_user, login_required, logout_user, current_user
 from vasp.redirect import redirect_frontend
+from vasp.uma_vasp.config import Config
 
 from enum import Enum
 from vasp.utils import (
     get_vasp_domain,
     get_uma_from_username,
-    FRONTEND_ALLOWED_ORIGINS,
+    get_frontend_allowed_origins,
+    get_frontend_domain,
     is_dev,
 )
 from vasp.db import db
@@ -53,11 +55,12 @@ class WebauthnLoginData(TypedDict):
 
 
 def get_webauthn_expected_rp_id() -> str:
-    return "localhost" if is_dev else "https://sandbox.uma.me"
+    return "localhost" if is_dev else f"https://{get_frontend_domain()}"
 
 
 def construct_blueprint(
     challenge_cache: IWebauthnChallengeCache,
+    config: Config,
 ) -> Blueprint:
     bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -227,7 +230,7 @@ def construct_blueprint(
         auth_verification = webauthn.verify_registration_response(
             credential=request.get_json(),
             expected_challenge=webauthn.base64url_to_bytes(challenge_data.data),
-            expected_origin=FRONTEND_ALLOWED_ORIGINS,
+            expected_origin=get_frontend_allowed_origins(get_frontend_domain()),
             expected_rp_id=get_webauthn_expected_rp_id(),
         )
 
@@ -306,7 +309,7 @@ def construct_blueprint(
                 webauthn.verify_authentication_response(
                     credential=credential,
                     expected_challenge=challenge_data.data.encode(),
-                    expected_origin=FRONTEND_ALLOWED_ORIGINS,
+                    expected_origin=get_frontend_allowed_origins(get_frontend_domain()),
                     expected_rp_id=get_webauthn_expected_rp_id(),
                     credential_public_key=credential_model.credential_public_key,
                     credential_current_sign_count=0,  # Not used

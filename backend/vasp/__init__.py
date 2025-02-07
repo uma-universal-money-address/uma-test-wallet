@@ -48,7 +48,7 @@ from vasp.db import db, setup_rds_iam_auth
 from vasp.uma_vasp.interfaces.request_storage import IRequestStorage
 from werkzeug.wrappers.response import Response as WerkzeugResponse
 from lightspark import LightsparkSyncClient as LightsparkClient
-from vasp.utils import FRONTEND_ALLOWED_ORIGINS
+from vasp.utils import get_frontend_allowed_origins
 
 log: logging.Logger = logging.getLogger(__name__)
 
@@ -72,8 +72,8 @@ def create_app() -> Flask:
 
     config = Config.get()
 
-    app.config["SESSION_COOKIE_DOMAIN"] = config.cookie_domain
-    app.config["REMEMBER_COOKIE_DOMAIN"] = config.cookie_domain
+    app.config["SESSION_COOKIE_DOMAIN"] = app.config["COOKIE_DOMAIN"]
+    app.config["REMEMBER_COOKIE_DOMAIN"] = app.config["COOKIE_DOMAIN"]
 
     login_manager = LoginManager()
     login_manager.init_app(app)
@@ -94,7 +94,7 @@ def create_app() -> Flask:
 
     CORS(
         app,
-        origins=FRONTEND_ALLOWED_ORIGINS,
+        origins=get_frontend_allowed_origins(app.config["FRONTEND_DOMAIN"]),
         allow_headers=["Access-Control-Allow-Origin", "Content-Type"],
         supports_credentials=True,
     )
@@ -134,7 +134,9 @@ def create_app() -> Flask:
     from . import auth, user, currencies, uma
 
     app.register_blueprint(
-        auth.construct_blueprint(challenge_cache=WebauthnChallengeCache(cache=cache))
+        auth.construct_blueprint(
+            challenge_cache=WebauthnChallengeCache(cache=cache), config=config
+        )
     )
     app.register_blueprint(uma.bp)
 

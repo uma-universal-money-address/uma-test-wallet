@@ -18,7 +18,7 @@ export default function Page() {
   const router = useRouter();
   const { currentWallet, setCurrentWallet } = useAppState();
   const [isDeleteUmaOpen, setIsDeleteUmaOpen] = useState(false);
-  const { wallets, isLoading: isLoadingWallets } = useWallets();
+  const { wallets, isLoading: isLoadingWallets, fetchWallets } = useWallets();
 
   const currWalletIndex = wallets?.findIndex(
     (wallet) => wallet.id === currentWallet?.id,
@@ -28,6 +28,7 @@ export default function Page() {
     if (currentWallet) {
       try {
         await deleteWallet(currentWallet.id);
+        await fetchWallets();
         setCurrentWallet(
           wallets && wallets.length > 1
             ? wallets.filter((wallet) => wallet.id !== currentWallet.id)[0]

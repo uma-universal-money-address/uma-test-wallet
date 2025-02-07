@@ -137,7 +137,10 @@ export const Sidebar = () => {
                 buttonProps={{
                   variant: "ghost",
                   size: "sidebar",
-                  onClick: () => setIsCreateUmaDialogOpen(true),
+                  onClick: () => {
+                    setIsCreateUmaDialogOpen(true);
+                    router.push("/wallet");
+                  },
                 }}
                 className="px-[16px] text-left"
               >

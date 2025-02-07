@@ -31,7 +31,6 @@ class Config:
             vapid_public_key=require_env("VAPID_PUBLIC_KEY"),
             vapid_private_key=require_env("VAPID_PRIVATE_KEY"),
             vapid_claim_email=require_env("VAPID_CLAIM_EMAIL"),
-            cookie_domain=require_env("COOKIE_DOMAIN"),
         )
 
     def __init__(
@@ -50,7 +49,6 @@ class Config:
         vapid_public_key: str,
         vapid_private_key: str,
         vapid_claim_email: str,
-        cookie_domain: str,
         base_url: Optional[str] = None,
         osk_node_signing_key_password: Optional[str] = None,
         remote_signing_node_master_seed: Optional[str] = None,
@@ -72,7 +70,6 @@ class Config:
         self.vapid_public_key = vapid_public_key
         self.vapid_private_key = vapid_private_key
         self.vapid_claim_email = vapid_claim_email
-        self.cookie_domain = cookie_domain
         self.remote_signing_node_master_seed = remote_signing_node_master_seed
         self.compliance_provider = compliance_provider
 
