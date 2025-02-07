@@ -20,7 +20,7 @@ from vasp.uma_vasp.interfaces.currency_service import ICurrencyService
 from vasp.uma_vasp.interfaces.ledger_service import ILedgerService
 from vasp.uma_vasp.uma_exception import abort_with_error
 from vasp.uma_vasp.user import User
-from vasp.utils import get_uma_from_username, get_username_from_uma
+from vasp.utils import get_uma_from_username, get_username_from_uma, get_vasp_domain
 
 from . import notifications
 
@@ -332,7 +332,7 @@ def construct_blueprint(
                 transaction_hash="demo_funding_transaction_hash",
                 amount_in_lowest_denom=amount_in_lowest_denom,
                 currency_code=wallet.currency.code,
-                sender_uma="$demo-funding-tx@uma.me",
+                sender_uma=f"$demo-funding-tx@{get_vasp_domain()}",
                 receiver_uma=wallet.uma.username,
             )
             db_session.add(transaction)
