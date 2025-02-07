@@ -34,6 +34,7 @@ def register_uma(
     uma_user_name: str,
     currencies: List[str],
     kyc_status: KycStatus,
+    initial_amount: int = 0,
 ) -> tuple[User, WalletModel]:
     with Session(db.engine) as db_session:
         try:
@@ -70,7 +71,7 @@ def register_uma(
                 new_wallet = WalletModel(
                     id=str(uuid4()),
                     user_id=user.id,
-                    amount_in_lowest_denom=0,
+                    amount_in_lowest_denom=initial_amount,
                     color=Color.ONE,
                 )
                 new_uma = UmaModel(
@@ -109,6 +110,9 @@ def create_uma() -> Response:
     uma_user_name = data["uma_user_name"]
     if not uma_user_name:
         abort_with_error(400, "UMA user name is required.")
+
+    initial_amount = data.get("initial_amount", 0)
+
     if current_user.is_authenticated:
         with Session(db.engine) as db_session:
             count_uma_current_user = db_session.scalar(
@@ -126,6 +130,7 @@ def create_uma() -> Response:
         uma_user_name=uma_user_name,
         currencies=currencies,
         kyc_status=kyc_status,
+        initial_amount=initial_amount,
     )
     login_user(user, remember=True)
 
