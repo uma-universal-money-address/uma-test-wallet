@@ -55,7 +55,7 @@ class WebauthnLoginData(TypedDict):
 
 
 def get_webauthn_expected_rp_id() -> str:
-    return "localhost" if is_dev else f"https://{get_frontend_domain()}"
+    return "localhost" if is_dev else get_frontend_domain()
 
 
 def construct_blueprint(
