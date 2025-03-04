@@ -4,7 +4,7 @@ DATABASE_URI: str = "sqlite+pysqlite:///" + os.path.join(
     os.getcwd(), "instance", "vasp.sqlite"
 )
 
-VASP_DOMAIN: str = "localhost:5000"
+VASP_DOMAIN: str = "localhost:4000"
 FRONTEND_DOMAIN: str = "localhost:3000"
 COOKIE_DOMAIN: str = ".localhost:3000"
 
