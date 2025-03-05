@@ -5,6 +5,8 @@ from datetime import datetime, timedelta, timezone
 from flask_login import LoginManager
 from typing import Optional
 
+from vasp import websocket
+
 from flask import (
     Flask,
     Response,
@@ -257,4 +259,7 @@ def create_app() -> Flask:
         """
         return redirect_to_nwc()
 
+    # Initialize WebSocket
+    websocket.init_app(app)
+    
     return app

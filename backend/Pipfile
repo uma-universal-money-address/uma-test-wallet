@@ -29,6 +29,7 @@ flask-caching = "*"
 flask-login = "*"
 webauthn = "*"
 pywebpush = "*"
+flask-socketio = "*"
 
 [dev-packages]
 black = "*"

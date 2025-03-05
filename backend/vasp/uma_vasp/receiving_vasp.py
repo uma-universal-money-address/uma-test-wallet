@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 import logging
 import requests
+from vasp.websocket import emit_balance_update
 from flask import Flask, Response, current_app, request as flask_request
 from flask_login import current_user, login_required
 from lightspark import (
@@ -34,6 +35,7 @@ from vasp.uma_vasp.user import User
 from vasp.models.PayReqResponse import PayReqResponse as PayReqResponseModel
 from vasp.models.Transaction import Transaction
 from vasp.models.Uma import Uma
+from vasp.models.Wallet import Wallet
 from uma import (
     INonceCache,
     InvoiceCurrency,
@@ -690,7 +692,24 @@ def register_routes(
                         )
                         return Response(status=200)
 
-                    ledger_service.add_wallet_balance(
+                    # Add balance to wallet - get the wallet ID first
+                    with Session(db.engine) as wallet_session:
+                        wallet = wallet_session.scalars(
+                            select(Wallet)
+                            .join(Uma)
+                            .where(Uma.id == receiver_uma_model.id)
+                        ).first()
+                        
+                        if not wallet:
+                            abort_with_error(
+                                500,
+                                f"Cannot find wallet for UMA: {receiver_uma_model.id}",
+                            )
+                        
+                        wallet_id = wallet.id
+                    
+                    # Now update the wallet balance
+                    new_balance = ledger_service.add_wallet_balance(
                         transaction_hash=transaction_hash,
                         amount=payreq_response.amount_in_lowest_denom,
                         currency_code=payreq_response.currency_code,
@@ -701,10 +720,29 @@ def register_routes(
                     amount_normal_denom = payreq_response.amount_in_lowest_denom / (
                         10 ** CURRENCIES[payreq_response.currency_code].decimals
                     )
+                    
+                    # Send push notification
                     user.send_push_notification(
                         config=config,
                         title="UMA Sandbox",
                         body=f"{payreq_response.sender_uma} sent {amount_normal_denom} {payreq_response.currency_code}",
+                    )
+                    
+                    # Emit WebSocket event with balance update
+                    transaction_data = {
+                        "id": transaction_hash,
+                        "amount": payreq_response.amount_in_lowest_denom,
+                        "senderUma": payreq_response.sender_uma,
+                        "receiverUma": get_uma_from_username(receiver_uma_model.username),
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    }
+                    
+                    emit_balance_update(
+                        user_id=user.id,
+                        wallet_id=wallet_id,
+                        new_balance=new_balance,
+                        currency_code=payreq_response.currency_code,
+                        transaction=transaction_data
                     )
 
                     logging.info(

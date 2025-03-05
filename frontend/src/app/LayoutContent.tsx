@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useLoggedIn } from "@/hooks/useLoggedIn";
 import WalletContextProvider from "@/hooks/useWalletContext";
+import { WebSocketProvider } from "@/hooks/useWebSocketContext";
 import { Roboto_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import { useRouter } from "next/navigation";
@@ -40,7 +41,8 @@ export const LayoutContent = ({ children }: { children: React.ReactNode }) => {
     >
       <PushNotificationManager />
       <WalletContextProvider>
-        <div className="w-full h-dvh flex flex-row">
+        <WebSocketProvider>
+          <div className="w-full h-dvh flex flex-row">
           {isDesktop && <Sidebar />}
           <section className="w-full flex grow items-center justify-center">
             <div className="max-w-[432px] min-w-[300px] w-full h-dvh mobile:max-h-[916px] mobile:border-[0.5px] border-[#EBEEF2] mobile:rounded-[32px] mobile:px-4 mobile:pt-6 bg-white">
@@ -48,7 +50,8 @@ export const LayoutContent = ({ children }: { children: React.ReactNode }) => {
               <Toaster />
             </div>
           </section>
-        </div>
+          </div>
+        </WebSocketProvider>
       </WalletContextProvider>
     </body>
   );

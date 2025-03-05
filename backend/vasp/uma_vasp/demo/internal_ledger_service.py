@@ -53,6 +53,7 @@ class InternalLedgerService(ILedgerService):
             db_session.add(transaction)
             db_session.commit()
 
+            # Return the new balance
             return wallet.amount_in_lowest_denom
 
     # This method is used to subtract balance from the wallet of the sender_uma

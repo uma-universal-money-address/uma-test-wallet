@@ -56,6 +56,11 @@ sh run_backend.sh
 
 Alternatively you could just run the `run_backend.sh` script which sets all the needed env variables for you
 
+## Configure webhooks
+If you're running locally you can use a tunnel like [ngrok](https://ngrok.com/docs/agent/) to expose the backend to receive webhooks.
+
+Then in the Lightspark [webhook configuration dashboard](https://app.lightspark.com/webhooks), provide your the forwarding domain appended with webhooks/transaction eg `https://d11c-23-119-122-20.ngrok-free.app/webhooks/transaction`
+
 ## Run black
 
 We use `black` to format python files.
