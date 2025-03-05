@@ -5,4 +5,4 @@ export FLASK_ENV=development
 export FLASK_DEBUG=True
 export FLASK_RUN_PORT=4000
 
-pipenv run flask run --host=0.0.0.0
+pipenv run flask run
