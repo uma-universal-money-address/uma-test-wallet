@@ -84,7 +84,7 @@ export const Wallet = ({
               size="md"
               ownContact={{
                 wallet,
-                number: walletIndex + 1,
+                number: walletIndex,
               }}
             />
             <div>
