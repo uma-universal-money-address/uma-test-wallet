@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NEXT_PUBLIC_BACKEND_DOMAIN=\"localhost:5000\" next dev --turbopack",
+    "dev": "NEXT_PUBLIC_BACKEND_DOMAIN=\"localhost:4000\" next dev --turbopack",
     "build": "next build",
     "clean": "rm -rf .next dist",
     "format:fix": "prettier src --write",
