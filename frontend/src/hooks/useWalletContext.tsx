@@ -5,6 +5,7 @@ import {
 } from "@/lib/walletColorMapping";
 import { Currency } from "@/types/Currency";
 import React, { useCallback, useEffect, useState } from "react";
+import { useInterval } from "./useInterval";
 import { useAppState } from "./useAppState";
 import { RawUma, Uma } from "./useUmaContext";
 
@@ -45,6 +46,10 @@ export interface WalletContextData {
   fetchWallets: () => Promise<Wallet[] | undefined>;
   error?: string;
   isLoading: boolean;
+  pollingEnabled: boolean;
+  setPollingEnabled: (enabled: boolean) => void;
+  pollingInterval: number;
+  setPollingInterval: (interval: number) => void;
 }
 
 const Context = React.createContext<WalletContextData>(null!);
@@ -90,9 +95,14 @@ export const WalletContextProvider = ({
   const { currentWallet, setCurrentWallet } = useAppState();
   const hasCurrentWallet = !!currentWallet;
 
+  const [pollingEnabled, setPollingEnabled] = useState<boolean>(true);
+  const [pollingInterval, setPollingInterval] = useState<number>(3000);
   const fetchWalletsAndUpdateState = useCallback(
-    async (ignore?: boolean) => {
-      setIsLoading(true);
+    async (ignore?: boolean, isPolling?: boolean) => {
+      // Only show loading state on initial load, not during polling
+      if (!isPolling) {
+        setIsLoading(true);
+      }
       try {
         const wallets = await fetchWallets();
         if (!ignore) {
@@ -108,7 +118,9 @@ export const WalletContextProvider = ({
         const error = e as Error;
         setError(error.message);
       } finally {
-        setIsLoading(false);
+        if (!isPolling) {
+          setIsLoading(false);
+        }
       }
     },
     [hasCurrentWallet, setCurrentWallet],
@@ -126,6 +138,34 @@ export const WalletContextProvider = ({
     };
   }, [fetchWalletsAndUpdateState]);
 
+  // Set up polling
+  useInterval(() => {
+    if (pollingEnabled) {
+      fetchWalletsAndUpdateState(false, true); // Pass isPolling=true
+    }
+  }, pollingInterval);
+
+  // Optimize polling - only poll when the app is in focus
+  useEffect(() => {
+    function handleFocus() {
+      setPollingEnabled(true);
+      // Fetch immediately when gaining focus
+      fetchWalletsAndUpdateState(false, true);
+    }
+    
+    function handleBlur() {
+      setPollingEnabled(false);
+    }
+    
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('blur', handleBlur);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, [fetchWalletsAndUpdateState]);
+
   return (
     <Context.Provider
       value={{
@@ -133,6 +173,10 @@ export const WalletContextProvider = ({
         fetchWallets: fetchWalletsAndUpdateState,
         error,
         isLoading,
+        pollingEnabled,
+        setPollingEnabled,
+        pollingInterval,
+        setPollingInterval,
       }}
     >
       {children}
