@@ -91,7 +91,7 @@ export const Sidebar = () => {
       return (
         <SandboxButton
           key={wallet.id}
-          className={`overflow-hidden ${
+          className={`overflow-hidden justify-start ${
             wallet.id === currentWallet.id ? "bg-[#F2F3F5]" : ""
           }`}
           buttonProps={{
