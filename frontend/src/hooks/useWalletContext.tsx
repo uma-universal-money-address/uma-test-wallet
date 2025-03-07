@@ -5,8 +5,8 @@ import {
 } from "@/lib/walletColorMapping";
 import { Currency } from "@/types/Currency";
 import React, { useCallback, useEffect, useState } from "react";
-import { useInterval } from "./useInterval";
 import { useAppState } from "./useAppState";
+import { useInterval } from "./useInterval";
 import { RawUma, Uma } from "./useUmaContext";
 
 export type RawWalletColor =
@@ -152,17 +152,17 @@ export const WalletContextProvider = ({
       // Fetch immediately when gaining focus
       fetchWalletsAndUpdateState(false, true);
     }
-    
+
     function handleBlur() {
       setPollingEnabled(false);
     }
-    
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('blur', handleBlur);
-    
+
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+
     return () => {
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
     };
   }, [fetchWalletsAndUpdateState]);
 
