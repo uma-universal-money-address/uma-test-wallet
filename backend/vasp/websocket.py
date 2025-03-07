@@ -13,8 +13,9 @@ log: logging.Logger = logging.getLogger(__name__)
 # Initialize SocketIO instance
 socketio = SocketIO()
 
-# We'll use a simpler approach - broadcast to all clients
-# and let the client filter based on the wallet ID
+# This demo uses a simple websocket approach - broadcast to all clients
+# and let the client filter based on the wallet ID.  In a production app
+# you would only broadcast to the appropriate clients.
 
 
 def init_app(app: Flask) -> None:
@@ -22,8 +23,7 @@ def init_app(app: Flask) -> None:
     socketio.init_app(
         app,
         cors_allowed_origins="*",  # In production, this should be restricted
-        async_mode="eventlet",  # Using eventlet for better compatibility
-    )
+        async_mode="eventlet", 
     register_handlers()
 
 
