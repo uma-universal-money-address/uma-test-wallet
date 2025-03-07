@@ -24,6 +24,7 @@ def init_app(app: Flask) -> None:
         app,
         cors_allowed_origins="*",  # In production, this should be restricted
         async_mode="eventlet", 
+    )
     register_handlers()
 
 
