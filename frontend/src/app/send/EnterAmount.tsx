@@ -46,7 +46,13 @@ export const EnterAmount = () => {
   const hasAmount = amount > 0;
 
   const { currentWallet } = useAppState();
-  const walletCurrency = currentWallet?.currency || { code: "USD" };
+  const walletCurrency = currentWallet?.currency || {
+    code: "USD",
+    name: "US Dollar",
+    symbol: "$",
+    decimals: 2,
+  };
+  const walletBalance = currentWallet?.amountInLowestDenom || 0;
 
   const {
     exchangeRates,
@@ -237,6 +243,18 @@ export const EnterAmount = () => {
         </div>
         <div className="flex justify-center items-center gap-1 px-4 py-1.5 text-primary text-[15px] font-normal leading-[20px] tracking-[-0.187px] rounded-full bg-[#ebeef2]">
           {conversionString}
+        </div>
+      </div>
+      <div className="w-full">
+        <div className="text-center text-primary text-[15px] font-normal leading-[20px]">
+          Balance:{" "}
+          {(
+            walletBalance / Math.pow(10, walletCurrency.decimals || 0)
+          ).toLocaleString("en", {
+            style: "decimal",
+            maximumFractionDigits: walletCurrency.decimals || 2,
+          })}{" "}
+          {walletCurrency.code}
         </div>
       </div>
       <Footer
