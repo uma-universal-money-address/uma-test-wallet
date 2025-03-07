@@ -43,13 +43,13 @@ export const LayoutContent = ({ children }: { children: React.ReactNode }) => {
       <WalletContextProvider>
         <WebSocketProvider>
           <div className="w-full h-dvh flex flex-row">
-          {isDesktop && <Sidebar />}
-          <section className="w-full flex grow items-center justify-center">
-            <div className="max-w-[432px] min-w-[300px] w-full h-dvh mobile:max-h-[916px] mobile:border-[0.5px] border-[#EBEEF2] mobile:rounded-[32px] mobile:px-4 mobile:pt-6 bg-white">
-              {children}
-              <Toaster />
-            </div>
-          </section>
+            {isDesktop && <Sidebar />}
+            <section className="w-full flex grow items-center justify-center">
+              <div className="max-w-[432px] min-w-[300px] w-full h-dvh mobile:max-h-[916px] mobile:border-[0.5px] border-[#EBEEF2] mobile:rounded-[32px] mobile:px-4 mobile:pt-6 bg-white">
+                {children}
+                <Toaster />
+              </div>
+            </section>
           </div>
         </WebSocketProvider>
       </WalletContextProvider>

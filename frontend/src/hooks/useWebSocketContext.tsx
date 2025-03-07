@@ -3,9 +3,8 @@
 import { getBackendUrl } from "@/lib/backendUrl";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
-import { useWallets } from "./useWalletContext";
-import { useTransactions } from "./useTransactions";
 import { useAppState } from "./useAppState";
+import { useWallets } from "./useWalletContext";
 
 interface WebSocketContextType {
   isConnected: boolean;
@@ -59,11 +58,14 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     // Listen for wallet events
     socketInstance.on("wallet_event", async (data) => {
       console.log("Received wallet event:", data);
-      
+
       if (data.event === "balance_update") {
         // Check if this event is for the current user's wallet
         if (currentWallet && data.data.walletId === currentWallet.id) {
-          console.log("Updating wallet data for current wallet:", currentWallet.id);
+          console.log(
+            "Updating wallet data for current wallet:",
+            currentWallet.id,
+          );
           // Refresh wallet data to get the latest balance
           await fetchWallets();
         } else {
