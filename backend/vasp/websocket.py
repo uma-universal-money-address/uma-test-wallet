@@ -22,7 +22,7 @@ def init_app(app: Flask) -> None:
     socketio.init_app(
         app,
         cors_allowed_origins="*",  # In production, this should be restricted
-        async_mode="threading",
+        async_mode="eventlet",  # Using eventlet for better compatibility
     )
     register_handlers()
 

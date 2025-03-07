@@ -30,6 +30,7 @@ flask-login = "*"
 webauthn = "*"
 pywebpush = "*"
 flask-socketio = "*"
+eventlet = "*"
 
 [dev-packages]
 black = "*"
