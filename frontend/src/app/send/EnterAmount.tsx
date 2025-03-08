@@ -219,7 +219,7 @@ export const EnterAmount = () => {
   } else {
     const currencyCode = receiverCurrencies[0].code.toUpperCase();
     if (currencyCode === "SAT") {
-      currencyChooser = "sats";
+      currencyChooser = "SATS";
     } else {
       currencyChooser = currencyCode;
     }

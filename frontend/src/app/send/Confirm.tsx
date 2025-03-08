@@ -22,7 +22,7 @@ const satsToCurrency = (
   exchangeRate: number | undefined,
   currencyCode: string,
 ) => {
-  if (!exchangeRate) return `${Math.round(amount)} sats`;
+  if (!exchangeRate) return `${Math.round(amount)} SATS`;
   return `${smartRound(
     convertCurrency(
       { [currencyCode]: exchangeRate },
