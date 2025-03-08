@@ -86,7 +86,7 @@ export default function Page() {
         if (!path || !redirectUri) {
           fetchWallets();
           setIsLoggedIn(true);
-          setNotificationsStepCompleted(true);
+          localStorage.setItem("notifications-step-completed", "true");
           // Redirect to wallet page if no next query param
           router.push("/wallet");
         } else {
