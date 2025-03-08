@@ -16,10 +16,9 @@ export function PushNotificationManager() {
     );
 
     if (
-      (wallets &&
-        wallets.length > 0 &&
-        notificationsStepCompleted === "true") ||
-      (wallets && wallets.length > 0 && notificationsStepCompleted == undefined)
+      wallets &&
+      wallets.length > 0 &&
+      notificationsStepCompleted == undefined
     ) {
       (async () => {
         if ("serviceWorker" in navigator && "PushManager" in window) {
