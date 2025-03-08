@@ -38,8 +38,8 @@ export const LayoutContent = ({ children }: { children: React.ReactNode }) => {
     <body
       className={`${inter.variable} ${roboto_mono.variable} h-dvh flex items-center justify-center mobile:bg-[#F9F9F9]`}
     >
-      <PushNotificationManager />
       <WalletContextProvider>
+        <PushNotificationManager />
         <div className="w-full h-dvh flex flex-row">
           {isDesktop && <Sidebar />}
           <section className="w-full flex grow items-center justify-center">

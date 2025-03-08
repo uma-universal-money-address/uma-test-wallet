@@ -114,7 +114,7 @@ export const CreateUmaButtons = ({ onNext }: StepButtonProps) => {
 
   const handleSubmit = async () => {
     setUmaError(undefined);
-
+    localStorage.setItem("notifications-step-completed", "false");
     const hasMaxWallets = wallets && wallets.length >= MAX_WALLETS;
     if (hasMaxWallets) {
       toast({
