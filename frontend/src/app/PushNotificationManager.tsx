@@ -1,7 +1,6 @@
 "use client";
 
 import { useToast } from "@/hooks/use-toast";
-import { useAppState } from "@/hooks/useAppState";
 import { useWallets } from "@/hooks/useWalletContext";
 import { subscribeToPush } from "@/lib/notificationActions";
 import { useEffect, useRef } from "react";
@@ -9,28 +8,26 @@ import { useEffect, useRef } from "react";
 export function PushNotificationManager() {
   const { toast } = useToast();
   const { wallets } = useWallets();
-  const { notificationsStepCompleted } = useAppState();
   const hasAttemptedSubscription = useRef(false);
 
   useEffect(() => {
+    const notificationsStepCompleted = localStorage.getItem(
+      "notifications-step-completed",
+    );
+
     if (
-      wallets &&
-      wallets.length > 0 &&
-      (notificationsStepCompleted || notificationsStepCompleted === undefined)
+      (wallets &&
+        wallets.length > 0 &&
+        notificationsStepCompleted === "true") ||
+      (wallets && wallets.length > 0 && notificationsStepCompleted == undefined)
     ) {
       (async () => {
         if ("serviceWorker" in navigator && "PushManager" in window) {
-          if (typeof Notification === "undefined") {
-            console.log("Notifications are not supported on this browser");
-            return;
-          }
-
           if (Notification.permission === "denied") {
             console.log("Permission for push notifications denied");
             return;
           } else if (Notification.permission === "default") {
             console.log("Has not requested permission for push notifications");
-            return;
           }
 
           try {
@@ -50,7 +47,7 @@ export function PushNotificationManager() {
         }
       })();
     }
-  }, [toast, wallets, notificationsStepCompleted]);
+  }, [toast, wallets]);
 
   return <></>;
 }

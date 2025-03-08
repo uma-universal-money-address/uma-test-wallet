@@ -37,7 +37,7 @@ export default function Page() {
       if (requestRes === "granted") {
         try {
           await subscribeToPush();
-          setNotificationsStepCompleted(true);
+          localStorage.setItem("notifications-step-completed", "true");
           setNotificationsEnabled(true);
         } catch (e) {
           toast({

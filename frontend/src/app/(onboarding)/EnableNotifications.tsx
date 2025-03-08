@@ -189,7 +189,7 @@ export const EnableNotificationsButtons = ({ onNext }: StepButtonProps) => {
     if (requestRes === "granted") {
       try {
         await subscribeToPush();
-        setNotificationsStepCompleted(true);
+        localStorage.setItem("notifications-step-completed", "true");
         onNext();
       } catch (e) {
         toast({
