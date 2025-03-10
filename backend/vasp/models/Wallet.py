@@ -1,6 +1,8 @@
+from datetime import datetime
 import enum
 from sqlalchemy.orm import Mapped, relationship, mapped_column
-from sqlalchemy import ForeignKey, Integer, String, Enum
+from sqlalchemy import ForeignKey, Integer, String, Enum, DateTime
+from sqlalchemy.sql import func
 from typing import Optional, Dict, Any
 from vasp.models.Base import Base
 from typing import TYPE_CHECKING
@@ -46,6 +48,10 @@ class Wallet(Base):
     )
     currency: Mapped["Currency"] = relationship(
         back_populates="wallet", cascade="all, delete-orphan"
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
     )
 
     def to_dict(self) -> Dict[str, Any]:
