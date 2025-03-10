@@ -59,7 +59,7 @@ export const Wallet = ({
         currencyToEstimate,
       ).toLocaleString("en", {
         maximumFractionDigits: 0,
-      })} sats`;
+      })} SATS`;
     } else {
       estimate = convertCurrency(
         exchangeRates,
