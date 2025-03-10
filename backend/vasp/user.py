@@ -224,7 +224,9 @@ def construct_blueprint(
     def wallets() -> Response:
         with Session(db.engine) as db_session:
             wallets = db_session.scalars(
-                select(Wallet).where(Wallet.user_id == current_user.id)
+                select(Wallet)
+                .where(Wallet.user_id == current_user.id)
+                .order_by(Wallet.created_at.asc())
             ).all()
 
             return jsonify(
