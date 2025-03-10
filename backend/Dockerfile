@@ -1,10 +1,5 @@
 FROM python:3.11-slim-bookworm
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
 RUN addgroup --system --gid 1000 web && \
     adduser --system --uid 1000 --ingroup web --home /home/web web
 
@@ -16,7 +11,9 @@ RUN pip install --upgrade pip wheel setuptools && \
     /root/.local/bin/pipenv install --system --deploy --ignore-pipfile --extra-pip-args=--ignore-installed && \
     rm -rf /root/.cache
 
-COPY . /app
+EXPOSE 8000
+ENTRYPOINT ["gunicorn"]
+CMD ["-b", "0.0.0.0:8000", "vasp.wsgi:app"]
 
 ENV FLASK_CONFIG="config/local-dev.py"
 ENV FLASK_SECRET_KEY=""
@@ -36,17 +33,7 @@ ENV VAPID_PUBLIC_KEY=
 ENV VAPID_PRIVATE_KEY=
 ENV VAPID_CLAIM_EMAIL=
 
-RUN alembic upgrade head
+COPY . /app
 
-RUN chmod -R 777 /tmp
-
-EXPOSE 8000
-USER web
-ENTRYPOINT ["gunicorn"]
-CMD ["-b", "0.0.0.0:8000", "vasp.wsgi:app"]
-
-# -----------------------
-# ENTRYPOINT ["flask"]
-# ENV FLASK_APP=vasp/app.py
-# CMD ["run", "--host=0.0.0.0", "--port=5000"]
-
+# Install security updates
+RUN apt-get update && apt-get -y upgrade && apt-get clean && rm -rf /var/lib/apt/lists
