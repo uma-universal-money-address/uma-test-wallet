@@ -10,6 +10,11 @@ export function PushNotificationManager() {
   useEffect(() => {
     (async () => {
       if ("serviceWorker" in navigator && "PushManager" in window) {
+        if (typeof Notification === "undefined") {
+          console.log("Notifications are not supported on this browser");
+          return;
+        }
+
         if (Notification.permission === "denied") {
           console.log("Permission for push notifications denied");
           return;

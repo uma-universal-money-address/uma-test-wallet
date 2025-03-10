@@ -48,7 +48,7 @@ from vasp.db import db, setup_rds_iam_auth
 from vasp.uma_vasp.interfaces.request_storage import IRequestStorage
 from werkzeug.wrappers.response import Response as WerkzeugResponse
 from lightspark import LightsparkSyncClient as LightsparkClient
-from vasp.utils import get_frontend_allowed_origins
+from vasp.utils import get_frontend_allowed_origins, is_dev
 
 log: logging.Logger = logging.getLogger(__name__)
 
@@ -64,8 +64,8 @@ def create_app() -> Flask:
     cache = Cache(app)
 
     app.secret_key = require_env("FLASK_SECRET_KEY")
-    app.config["REMEMBER_COOKIE_SECURE"] = True
-    app.config["SESSION_COOKIE_SECURE"] = True
+    app.config["REMEMBER_COOKIE_SECURE"] = False if is_dev else True
+    app.config["SESSION_COOKIE_SECURE"] = False if is_dev else True
     app.config["SESSION_COOKIE_SAMESITE"] = "None"
     app.config["REMEMBER_COOKIE_SAMESITE"] = "None"
     app.config["REMEMBER_COOKIE_NAME"] = "sandbox_remember_token"
