@@ -28,6 +28,7 @@ export function PushNotificationManager() {
             return;
           } else if (Notification.permission === "default") {
             console.log("Has not requested permission for push notifications");
+            return;
           }
 
           try {
