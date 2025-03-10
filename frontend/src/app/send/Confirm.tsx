@@ -22,13 +22,13 @@ const satsToCurrency = (
   exchangeRate: number | undefined,
   currencyCode: string,
 ) => {
-  if (!exchangeRate) return `${Math.round(amount)} sats`;
+  if (!exchangeRate) return `${Math.round(amount)} SATS`;
   return `${smartRound(
     convertCurrency(
       { [currencyCode]: exchangeRate },
       {
         amount,
-        currency: { code: "SAT", name: "Satoshi", symbol: "sats", decimals: 2 },
+        currency: { code: "SAT", name: "Satoshi", symbol: "SATS", decimals: 2 },
       },
       currencyCode,
     ),
@@ -124,7 +124,7 @@ export const Confirm = () => {
 
   const receivingCurrencyCode =
     umaPayreqResponse.receivingCurrencyCode === "SAT"
-      ? "sats"
+      ? "SATS"
       : umaPayreqResponse.receivingCurrencyCode;
 
   return (

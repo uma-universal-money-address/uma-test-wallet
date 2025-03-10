@@ -6,6 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAppState } from "@/hooks/useAppState";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { convertCurrency } from "@/lib/convertCurrency";
 import { convertToLowestDenomination } from "@/lib/convertToLowestDenomination";
@@ -32,7 +33,7 @@ export const EnterAmount = () => {
     setError,
   } = useSendPaymentContext();
   const [isLoading, setIsLoading] = useState(false);
-  const [convertedToUsd, setConvertedToUsd] = useState<number>(0);
+  const [convertedAmount, setConvertedAmount] = useState<number>(0);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>(
     umaLookupResponse!.receiverCurrencies[0],
   );
@@ -44,6 +45,15 @@ export const EnterAmount = () => {
   const walletId = searchParams.get("walletId");
   const hasAmount = amount > 0;
 
+  const { currentWallet } = useAppState();
+  const walletCurrency = currentWallet?.currency || {
+    code: "USD",
+    name: "US Dollar",
+    symbol: "$",
+    decimals: 2,
+  };
+  const walletBalance = currentWallet?.amountInLowestDenom || 0;
+
   const {
     exchangeRates,
     error: exchangeRatesError,
@@ -52,11 +62,11 @@ export const EnterAmount = () => {
 
   useEffect(() => {
     if (!isLoadingExchangeRates && !exchangeRatesError && exchangeRates) {
-      setConvertedToUsd(
+      setConvertedAmount(
         convertCurrency(
           exchangeRates,
           { amount, currency: selectedCurrency },
-          "USD",
+          walletCurrency.code,
         ),
       );
     }
@@ -66,6 +76,7 @@ export const EnterAmount = () => {
     exchangeRatesError,
     amount,
     selectedCurrency,
+    walletCurrency.code,
   ]);
 
   const handleCurrencyChange = (currency: Currency) => {
@@ -180,11 +191,10 @@ export const EnterAmount = () => {
     router.push(`/wallet`);
   };
 
-  const conversionString = `${convertedToUsd.toLocaleString("en", {
-    style: "currency",
-    currency: "USD",
+  const conversionString = `${convertedAmount.toLocaleString("en", {
+    style: "decimal",
     maximumFractionDigits: 8,
-  })} USD`;
+  })} ${walletCurrency.code}`;
 
   const receiverCurrencies = umaLookupResponse?.receiverCurrencies || [];
   let currencyChooser: React.ReactNode;
@@ -209,7 +219,7 @@ export const EnterAmount = () => {
   } else {
     const currencyCode = receiverCurrencies[0].code.toUpperCase();
     if (currencyCode === "SAT") {
-      currencyChooser = "sats";
+      currencyChooser = "SATS";
     } else {
       currencyChooser = currencyCode;
     }
@@ -233,6 +243,18 @@ export const EnterAmount = () => {
         </div>
         <div className="flex justify-center items-center gap-1 px-4 py-1.5 text-primary text-[15px] font-normal leading-[20px] tracking-[-0.187px] rounded-full bg-[#ebeef2]">
           {conversionString}
+        </div>
+      </div>
+      <div className="w-full">
+        <div className="text-center text-primary text-[15px] font-normal leading-[20px]">
+          Balance:{" "}
+          {(
+            walletBalance / Math.pow(10, walletCurrency.decimals || 0)
+          ).toLocaleString("en", {
+            style: "decimal",
+            maximumFractionDigits: walletCurrency.decimals || 2,
+          })}{" "}
+          {walletCurrency.code}
         </div>
       </div>
       <Footer

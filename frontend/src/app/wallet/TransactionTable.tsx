@@ -52,7 +52,7 @@ const TransactionRow = ({
     );
     estimateLocaleString = `${estimate.toLocaleString("en", {
       maximumFractionDigits: 0,
-    })} sats`;
+    })} SATS`;
   }
 
   const handleClick = () => {
