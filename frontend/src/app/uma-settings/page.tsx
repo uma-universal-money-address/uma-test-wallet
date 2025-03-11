@@ -20,9 +20,9 @@ export default function Page() {
   const [isDeleteUmaOpen, setIsDeleteUmaOpen] = useState(false);
   const { wallets, isLoading: isLoadingWallets, fetchWallets } = useWallets();
 
-  const currWalletIndex = wallets?.findIndex(
-    (wallet) => wallet.id === currentWallet?.id,
-  );
+  const currWalletIndex = wallets
+    ? wallets?.findIndex((wallet) => wallet.id === currentWallet?.id) + 1
+    : undefined;
 
   const handleDeleteUma = async () => {
     if (currentWallet) {
