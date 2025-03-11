@@ -2,8 +2,8 @@
 
 import { SandboxButton } from "@/components/SandboxButton";
 import { useToast } from "@/hooks/use-toast";
-import { usePwaInstallStatus } from "@/hooks/usePwaInstallStatus";
 import { useAppState } from "@/hooks/useAppState";
+import { usePwaInstallStatus } from "@/hooks/usePwaInstallStatus";
 import { subscribeToPush } from "@/lib/notificationActions";
 import Image from "next/image";
 import { StepButtonProps } from "./Steps";

@@ -33,5 +33,6 @@ export const useAppState = create<AppState>((set) => ({
   setIsUmaSelectorDialogOpen: (isOpen) =>
     set({ isUmaSelectorDialogOpen: isOpen }),
   setIsCreateUmaDialogOpen: (isOpen) => set({ isCreateUmaDialogOpen: isOpen }),
-  setNotificationsStepCompleted: (completed) => set({ notificationsStepCompleted: completed }),
+  setNotificationsStepCompleted: (completed) =>
+    set({ notificationsStepCompleted: completed }),
 }));

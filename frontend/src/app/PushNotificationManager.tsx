@@ -1,8 +1,8 @@
 "use client";
 
 import { useToast } from "@/hooks/use-toast";
-import { useWallets } from "@/hooks/useWalletContext";
 import { useAppState } from "@/hooks/useAppState";
+import { useWallets } from "@/hooks/useWalletContext";
 import { subscribeToPush } from "@/lib/notificationActions";
 import { useEffect, useRef } from "react";
 
@@ -13,14 +13,18 @@ export function PushNotificationManager() {
   const hasAttemptedSubscription = useRef(false);
 
   useEffect(() => {
-    if (wallets && wallets.length > 0 && (notificationsStepCompleted || notificationsStepCompleted === undefined)) {
+    if (
+      wallets &&
+      wallets.length > 0 &&
+      (notificationsStepCompleted || notificationsStepCompleted === undefined)
+    ) {
       (async () => {
         if ("serviceWorker" in navigator && "PushManager" in window) {
           if (typeof Notification === "undefined") {
             console.log("Notifications are not supported on this browser");
             return;
           }
-  
+
           if (Notification.permission === "denied") {
             console.log("Permission for push notifications denied");
             return;
@@ -46,7 +50,7 @@ export function PushNotificationManager() {
         }
       })();
     }
-  }, [toast, wallets]);
+  }, [toast, wallets, notificationsStepCompleted]);
 
   return <></>;
 }
