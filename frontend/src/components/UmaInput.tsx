@@ -54,7 +54,11 @@ export const UmaInput = ({
         <Input
           type="text"
           id="uma-input"
-          style={{ paddingRight: after ? after.length * 9 + 16 : undefined }}
+          style={{
+            paddingRight: after
+              ? Math.min(after.length * 9 + 16, 150)
+              : undefined,
+          }}
           className={`px-4 py-[14px] w-full ${before ? "pl-[36px]" : ""} ${
             error ? "focus-visible:ring-red-500" : ""
           }`}
@@ -72,7 +76,7 @@ export const UmaInput = ({
 
         {after ? (
           <span
-            className="absolute right-3 text-primary pointer-events-none"
+            className="absolute right-3 text-primary pointer-events-none max-w-[138px] truncate text-ellipsis"
             id="input-suffix"
           >
             {after}
