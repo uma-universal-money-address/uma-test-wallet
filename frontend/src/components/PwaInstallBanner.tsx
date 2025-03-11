@@ -41,11 +41,14 @@ export const PwaInstallBanner = ({ dismissable }: Props) => {
     return null;
   }
 
+  // TODO: session cookies are not being persisted in iOS PWAs, only show the banner on android for now
+  const shouldShowBanner = !isInstalled && deviceType === "android";
+
   return (
     <>
       <div
         className={`w-full p-4 mobile:px-0 mobile:pt-0 bg-white border-b border-gray-200 flex flex-row items-center justify-between gap-3 mb-[10px] ${
-          isInstalled || deviceType === "other" ? "hidden" : ""
+          shouldShowBanner ? "" : "hidden"
         }`}
       >
         <div className="flex flex-row items-center gap-2">
