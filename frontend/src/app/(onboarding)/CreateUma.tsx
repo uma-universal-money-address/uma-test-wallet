@@ -3,6 +3,7 @@
 import { SandboxButton } from "@/components/SandboxButton";
 import { UmaInput } from "@/components/UmaInput";
 import { toast } from "@/hooks/use-toast";
+import { useAppState } from "@/hooks/useAppState";
 import { useWallets } from "@/hooks/useWalletContext";
 import { getBackendDomain } from "@/lib/backendDomain";
 import { checkUmaAvailability, createUma, pickRandomUma } from "@/lib/uma";
@@ -93,6 +94,7 @@ export const CreateUma = () => {
 
 export const CreateUmaButtons = ({ onNext }: StepButtonProps) => {
   const { wallets } = useWallets();
+  const { setNotificationsStepCompleted } = useAppState();
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
   const { uma, setUma, setWallet, setUmaError, setUmaInputMessage } =
     useOnboardingStepContext();
@@ -114,7 +116,7 @@ export const CreateUmaButtons = ({ onNext }: StepButtonProps) => {
 
   const handleSubmit = async () => {
     setUmaError(undefined);
-    localStorage.setItem("notifications-step-completed", "false");
+    setNotificationsStepCompleted(false);
     const hasMaxWallets = wallets && wallets.length >= MAX_WALLETS;
     if (hasMaxWallets) {
       toast({

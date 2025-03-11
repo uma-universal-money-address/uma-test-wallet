@@ -3,6 +3,7 @@
 import { SandboxButton } from "@/components/SandboxButton";
 import { useToast } from "@/hooks/use-toast";
 import { usePwaInstallStatus } from "@/hooks/usePwaInstallStatus";
+import { useAppState } from "@/hooks/useAppState";
 import { subscribeToPush } from "@/lib/notificationActions";
 import Image from "next/image";
 import { StepButtonProps } from "./Steps";
@@ -173,6 +174,8 @@ export const EnableNotifications = () => {
 export const EnableNotificationsButtons = ({ onNext }: StepButtonProps) => {
   const { toast } = useToast();
 
+  const { setNotificationsStepCompleted } = useAppState();
+
   const handleEnableNotifications = async () => {
     if (typeof Notification === "undefined") {
       toast({
@@ -186,7 +189,7 @@ export const EnableNotificationsButtons = ({ onNext }: StepButtonProps) => {
     if (requestRes === "granted") {
       try {
         await subscribeToPush();
-        localStorage.setItem("notifications-step-completed", "true");
+        setNotificationsStepCompleted(true);
         onNext();
       } catch (e) {
         toast({

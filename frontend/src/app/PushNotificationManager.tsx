@@ -2,25 +2,18 @@
 
 import { useToast } from "@/hooks/use-toast";
 import { useWallets } from "@/hooks/useWalletContext";
+import { useAppState } from "@/hooks/useAppState";
 import { subscribeToPush } from "@/lib/notificationActions";
 import { useEffect, useRef } from "react";
 
 export function PushNotificationManager() {
   const { toast } = useToast();
   const { wallets } = useWallets();
+  const { notificationsStepCompleted } = useAppState();
   const hasAttemptedSubscription = useRef(false);
 
   useEffect(() => {
-    const notificationsStepCompleted = localStorage.getItem(
-      "notifications-step-completed",
-    );
-
-    if (
-      (wallets &&
-        wallets.length > 0 &&
-        notificationsStepCompleted === "true") ||
-      (wallets && wallets.length > 0 && notificationsStepCompleted == undefined)
-    ) {
+    if (wallets && wallets.length > 0 && (notificationsStepCompleted || notificationsStepCompleted === undefined)) {
       (async () => {
         if ("serviceWorker" in navigator && "PushManager" in window) {
           if (typeof Notification === "undefined") {
