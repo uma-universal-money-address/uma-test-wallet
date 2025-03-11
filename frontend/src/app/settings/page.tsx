@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 export default function Page() {
   const { toast } = useToast();
   const router = useRouter();
-  const { resetAppState } = useAppState();
+  const { resetAppState, setNotificationsStepCompleted } = useAppState();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
@@ -37,6 +37,7 @@ export default function Page() {
       if (requestRes === "granted") {
         try {
           await subscribeToPush();
+          setNotificationsStepCompleted(true);
           setNotificationsEnabled(true);
         } catch (e) {
           toast({

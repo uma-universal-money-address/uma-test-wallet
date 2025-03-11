@@ -17,7 +17,7 @@ export default function Page() {
   const { toast } = useToast();
   const [isLoadingLogin, setIsLoadingLogin] = useState(false);
   const { isLoggedIn } = useLoggedIn();
-  const { setIsLoggedIn } = useAppState();
+  const { setIsLoggedIn, setNotificationsStepCompleted } = useAppState();
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -86,6 +86,7 @@ export default function Page() {
         if (!path || !redirectUri) {
           fetchWallets();
           setIsLoggedIn(true);
+          setNotificationsStepCompleted(true);
           // Redirect to wallet page if no next query param
           router.push("/wallet");
         } else {
