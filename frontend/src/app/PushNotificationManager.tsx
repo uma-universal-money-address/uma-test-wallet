@@ -13,7 +13,8 @@ export function PushNotificationManager() {
   const hasAttemptedSubscription = useRef(false);
 
   useEffect(() => {
-    if ( !hasAttemptedSubscription.current &&
+    if (
+      !hasAttemptedSubscription.current &&
       wallets &&
       wallets.length > 0 &&
       (notificationsStepCompleted || notificationsStepCompleted === undefined)
