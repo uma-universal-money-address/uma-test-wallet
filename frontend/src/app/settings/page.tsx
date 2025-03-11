@@ -18,10 +18,20 @@ export default function Page() {
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
   useEffect(() => {
-    setNotificationsEnabled(Notification.permission === "granted");
+    if (typeof Notification !== "undefined") {
+      setNotificationsEnabled(Notification.permission === "granted");
+    }
   }, []);
 
   const handleToggleNotifications = async (value: boolean) => {
+    if (typeof Notification === "undefined") {
+      toast({
+        description: "Notifications are not supported on this browser",
+        variant: "error",
+      });
+      return;
+    }
+
     if (value) {
       const requestRes = await Notification.requestPermission();
       if (requestRes === "granted") {
