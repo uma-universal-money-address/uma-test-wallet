@@ -86,9 +86,10 @@ export default function Page() {
         if (!path || !redirectUri) {
           fetchWallets();
           setIsLoggedIn(true);
-          setNotificationsStepCompleted(true);
           // Redirect to wallet page if no next query param
           router.push("/wallet");
+          await Notification.requestPermission();
+          setNotificationsStepCompleted(true);
         } else {
           router.push(
             `${getBackendUrl()}${path}?redirect_uri=${encodeURIComponent(

@@ -14,6 +14,7 @@ export function PushNotificationManager() {
 
   useEffect(() => {
     if (
+      !hasAttemptedSubscription.current &&
       wallets &&
       wallets.length > 0 &&
       (notificationsStepCompleted || notificationsStepCompleted === undefined)

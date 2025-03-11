@@ -6,7 +6,7 @@ interface AppState {
   isCreateUmaDialogOpen: boolean;
   isLoggedIn: boolean;
   currentWallet?: Wallet | undefined;
-  notificationsStepCompleted: boolean;
+  notificationsStepCompleted: boolean | undefined;
   setIsLoggedIn: (isLoggedIn: boolean) => void;
   setCurrentWallet: (wallet: Wallet | undefined) => void;
   resetAppState: () => void;
@@ -19,7 +19,7 @@ export const useAppState = create<AppState>((set) => ({
   isLoggedIn: false,
   isUmaSelectorDialogOpen: false,
   isCreateUmaDialogOpen: false,
-  notificationsStepCompleted: false,
+  notificationsStepCompleted: undefined,
   setIsLoggedIn: (isLoggedIn) => set({ isLoggedIn }),
   setCurrentWallet: (wallet) => set({ currentWallet: wallet }),
   resetAppState: () =>
