@@ -174,6 +174,14 @@ export const EnableNotificationsButtons = ({ onNext }: StepButtonProps) => {
   const { toast } = useToast();
 
   const handleEnableNotifications = async () => {
+    if (typeof Notification === "undefined") {
+      toast({
+        description: "Notifications are not supported on this browser",
+        variant: "error",
+      });
+      return;
+    }
+
     const requestRes = await Notification.requestPermission();
     if (requestRes === "granted") {
       try {
