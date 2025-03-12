@@ -29,7 +29,7 @@ export const CreateUma = () => {
   const umaDomain = `@${getBackendDomain()}`;
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = event.target.value.slice(0, 62);
+    const newValue = event.target.value.slice(0, 62).toLowerCase();
     const newValueSanitized = newValue.replace(/[^a-z0-9-_.+]/g, "");
     setUma(newValueSanitized);
     setUmaError(undefined);
