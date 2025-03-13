@@ -1,7 +1,7 @@
 import { getBackendUrl } from "@/lib/backendUrl";
 import { getUmaFromUsername } from "@/lib/uma";
 import { Currency } from "@/types/Currency";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAppState } from "./useAppState";
 import { useContacts, type ContactInfo } from "./useContacts";
 import { CurrenciesInfo, useCurrencies } from "./useCurrencies";
@@ -82,41 +82,102 @@ export function useTransactions() {
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    async function fetchTransactions(
-      contacts: ContactInfo[],
-      uma: string,
-      currencies: CurrenciesInfo[],
+  // Create a function to fetch transactions that can be called externally
+  const refreshTransactions = useCallback(async () => {
+    if (
+      !recentContacts ||
+      !ownUmaContacts ||
+      isLoadingContacts ||
+      !currentWallet ||
+      isLoadingWallets ||
+      !currencies ||
+      isLoadingCurrencies
     ) {
-      setIsLoading(true);
-      try {
-        const response = await fetch(
-          `${getBackendUrl()}/user/transactions?uma=${uma}`,
-          {
-            method: "GET",
-            credentials: "include",
-          },
-        ).then((res) => {
-          if (res.ok) {
-            return res.json() as Promise<RawTransaction[]>;
-          } else {
-            throw new Error("Failed to fetch transactions.");
-          }
-        });
-        if (!ignore) {
-          setTransactions(
-            hydrateTransactions(response, contacts, uma, currencies),
-          );
-          setIsLoading(false);
-        }
-      } catch (e: unknown) {
-        const error = e as Error;
-        setError(error.message);
-        setIsLoading(false);
-      }
+      return;
     }
 
+    setIsLoading(true);
+    try {
+      const uma = getUmaFromUsername(currentWallet.uma.username);
+      const response = await fetch(
+        `${getBackendUrl()}/user/transactions?uma=${uma}`,
+        {
+          method: "GET",
+          credentials: "include",
+        },
+      ).then((res) => {
+        if (res.ok) {
+          return res.json() as Promise<RawTransaction[]>;
+        } else {
+          throw new Error("Failed to fetch transactions.");
+        }
+      });
+      
+      const newTransactions = hydrateTransactions(
+        response, 
+        [...recentContacts, ...ownUmaContacts], 
+        uma, 
+        currencies
+      );
+      
+      // Only update state if the transaction list has changed
+      // Compare transaction IDs and amounts to detect changes
+      const hasChanged = !transactions || 
+        transactions.length !== newTransactions.length ||
+        !areTransactionsEqual(transactions, newTransactions);
+      
+      if (hasChanged) {
+        setTransactions(newTransactions);
+      }
+      
+      setIsLoading(false);
+    } catch (e: unknown) {
+      const error = e as Error;
+      setError(error.message);
+      setIsLoading(false);
+    }
+  }, [
+    recentContacts,
+    ownUmaContacts,
+    currentWallet,
+    currencies,
+    isLoadingContacts,
+    isLoadingWallets,
+    isLoadingCurrencies,
+    transactions, // Add transactions to dependencies to access current state
+  ]);
+
+  // Helper function to compare transaction lists
+  const areTransactionsEqual = (
+    oldTransactions: Transaction[],
+    newTransactions: Transaction[]
+  ): boolean => {
+    // Quick check for length
+    if (oldTransactions.length !== newTransactions.length) {
+      return false;
+    }
+    
+    // Create a map of old transactions by ID for faster lookup
+    const oldTransactionMap = new Map<string, Transaction>();
+    oldTransactions.forEach(tx => {
+      oldTransactionMap.set(tx.id, tx);
+    });
+    
+    // Check if all new transactions exist in old transactions with same values
+    return newTransactions.every(newTx => {
+      const oldTx = oldTransactionMap.get(newTx.id);
+      if (!oldTx) return false;
+      
+      // Compare essential properties
+      return (
+        oldTx.amountInLowestDenom === newTx.amountInLowestDenom
+      );
+    });
+  };
+
+  useEffect(() => {
     let ignore = false;
+    
     if (
       recentContacts &&
       ownUmaContacts &&
@@ -126,12 +187,9 @@ export function useTransactions() {
       currencies &&
       !isLoadingCurrencies
     ) {
-      fetchTransactions(
-        [...recentContacts, ...ownUmaContacts],
-        getUmaFromUsername(currentWallet.uma.username),
-        currencies,
-      );
+      refreshTransactions();
     }
+    
     return () => {
       ignore = true;
     };
@@ -143,11 +201,13 @@ export function useTransactions() {
     isLoadingContacts,
     isLoadingWallets,
     isLoadingCurrencies,
+    refreshTransactions,
   ]);
 
   return {
     transactions,
     error,
     isLoading,
+    refreshTransactions, // Export the refresh function
   };
 }
