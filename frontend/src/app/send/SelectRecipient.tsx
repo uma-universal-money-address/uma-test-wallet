@@ -12,6 +12,7 @@ import {
 } from "@/hooks/useContacts";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useWallets } from "@/hooks/useWalletContext";
+import { getBackendDomain } from "@/lib/backendDomain";
 import { getUmaFromUsername } from "@/lib/uma";
 import { type UmaLookupResponse } from "@/types/UmaLookupResponse";
 import Image from "next/image";
@@ -23,6 +24,19 @@ import { lnurlpLookup } from "./umaRequests";
 // Check if search has format of an uma with any amount of subdomains (e.g. $test@vasp.com)
 const isUmaFormat = (uma: string) => {
   return /^\$?[a-zA-Z0-9\-_.+]+@[a-zA-Z0-9-_.+:]+$/.test(uma);
+};
+
+// Helper function to format UMA address with backend domain if needed
+const formatUmaAddress = (uma: string) => {
+  if (!uma) return uma;
+  
+  // If already contains @, return as is
+  if (uma.includes('@')) return uma;
+  
+  // Add $ prefix if needed and append backend domain
+  return uma.startsWith('$') 
+    ? `${uma}@${getBackendDomain()}`
+    : `$${uma}@${getBackendDomain()}`;
 };
 
 export const SelectRecipient = () => {
@@ -76,19 +90,22 @@ export const SelectRecipient = () => {
   }, [errorLoadingContacts, walletsError, setError]);
 
   const searchUma = useCallback(() => {
-    const isValid = isUmaFormat(customReceiverUma);
+    // Get the formatted UMA that includes the domain if needed
+    const formattedUma = formatUmaAddress(customReceiverUma);
+    
+    const isValid = isUmaFormat(formattedUma);
     if (!isValid && customReceiverUma.length > 0) {
       setCustomReceiverUmaError(
         "Invalid UMA format. It should start with a $ sign, followed by alphanumeric characters and a domain. For example: $abc123@domain.com",
       );
     } else if (
       isValid &&
-      !allContacts?.find((contact) => contact.uma === customReceiverUma)
+      !allContacts?.find((contact) => contact.uma === formattedUma)
     ) {
       setIsLoadingSearchResults(true);
       lnurlpLookup(
         senderUma,
-        `${customReceiverUma.startsWith("$") ? "" : "$"}${customReceiverUma}`,
+        `${formattedUma.startsWith("$") ? "" : "$"}${formattedUma}`,
       )
         .then((response) => {
           setSearchLookupResult(response);
@@ -146,7 +163,10 @@ export const SelectRecipient = () => {
   const handleUmaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
     setCustomReceiverUma(newValue);
-    setReceiverUma(newValue);
+    
+    // Format the UMA address if needed
+    setReceiverUma(formatUmaAddress(newValue));
+    
     setSearchLookupResult(undefined);
     setCustomReceiverUmaError(null);
     handleSearchContacts(newValue);
