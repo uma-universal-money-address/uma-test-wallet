@@ -201,7 +201,9 @@ export const SelectRecipient = () => {
       searchResultComponent = (
         <span>
           {`No one found for `}
-          <span style={{ color: "#18181b" }}>{formatUmaAddress(customReceiverUma)}</span>
+          <span style={{ color: "#18181b" }}>
+            {formatUmaAddress(customReceiverUma)}
+          </span>
         </span>
       );
     }
