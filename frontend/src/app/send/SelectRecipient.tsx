@@ -29,12 +29,12 @@ const isUmaFormat = (uma: string) => {
 // Helper function to format UMA address with backend domain if needed
 const formatUmaAddress = (uma: string) => {
   if (!uma) return uma;
-  
+
   // If already contains @, return as is
-  if (uma.includes('@')) return uma;
-  
+  if (uma.includes("@")) return uma;
+
   // Add $ prefix if needed and append backend domain
-  return uma.startsWith('$') 
+  return uma.startsWith("$")
     ? `${uma}@${getBackendDomain()}`
     : `$${uma}@${getBackendDomain()}`;
 };
@@ -92,7 +92,7 @@ export const SelectRecipient = () => {
   const searchUma = useCallback(() => {
     // Get the formatted UMA that includes the domain if needed
     const formattedUma = formatUmaAddress(customReceiverUma);
-    
+
     const isValid = isUmaFormat(formattedUma);
     if (!isValid && customReceiverUma.length > 0) {
       setCustomReceiverUmaError(
@@ -163,10 +163,10 @@ export const SelectRecipient = () => {
   const handleUmaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = event.target.value;
     setCustomReceiverUma(newValue);
-    
+
     // Format the UMA address if needed
     setReceiverUma(formatUmaAddress(newValue));
-    
+
     setSearchLookupResult(undefined);
     setCustomReceiverUmaError(null);
     handleSearchContacts(newValue);
