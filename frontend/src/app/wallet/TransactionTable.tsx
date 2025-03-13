@@ -275,30 +275,27 @@ export const TransactionTable = () => {
     />
   ));
 
-  // Check if we have all the data needed to render
-  const canRender =
-    !isLoading &&
-    !isLoadingWallets &&
-    !isLoadingExchangeRates &&
-    transactions &&
-    exchangeRates &&
-    wallets;
-
-  // Animation class based on shouldAnimate state
-  const animationClass = shouldAnimate
-    ? "animate-[fadeInAndSlideDown_0.5s_ease-in-out_forwards]"
-    : "";
-
-  if (!canRender) {
-    return null;
-  }
-
   return (
-    <div className={`flex flex-col grow gap-6 pt-2 ${animationClass}`}>
-      <span className="text-secondary text-[13px] font-semibold leading-[18px] tracking-[-0.162px]">
-        Completed
-      </span>
-      {transactionRows}
-    </div>
+    <>
+      {!isLoading &&
+        !isLoadingWallets &&
+        !isLoadingExchangeRates &&
+        transactions &&
+        exchangeRates &&
+        wallets && (
+          <div
+            className={`flex flex-col grow gap-6 pt-2 ${
+              shouldAnimate
+                ? "animate-[fadeInAndSlideDown_0.5s_ease-in-out_forwards]"
+                : ""
+            }`}
+          >
+            <span className="text-secondary text-[13px] font-semibold leading-[18px] tracking-[-0.162px]">
+              Completed
+            </span>
+            {transactionRows}
+          </div>
+        )}
+    </>
   );
 };
