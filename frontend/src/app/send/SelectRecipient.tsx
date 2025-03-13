@@ -26,7 +26,7 @@ const isUmaFormat = (uma: string) => {
   return /^\$?[a-zA-Z0-9\-_.+]+@[a-zA-Z0-9-_.+:]+$/.test(uma);
 };
 
-// Helper function to format UMA address with backend domain if needed
+// Helper function to format UMA address with backend domain, this could be helpful if you're also using UMA as identifiers on your own domain but typically isn't needed.
 const formatUmaAddress = (uma: string) => {
   if (!uma) return uma;
 
