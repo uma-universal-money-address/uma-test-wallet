@@ -1,6 +1,7 @@
 "use client";
 import { SandboxAvatar } from "@/components/SandboxAvatar";
 import { useToast } from "@/hooks/use-toast";
+import { useAppState } from "@/hooks/useAppState";
 import { ExchangeRates, useExchangeRates } from "@/hooks/useExchangeRates";
 import { type Transaction, useTransactions } from "@/hooks/useTransactions";
 import { useWallets, Wallet } from "@/hooks/useWalletContext";
@@ -8,8 +9,7 @@ import { convertCurrency } from "@/lib/convertCurrency";
 import { convertToNormalDenomination } from "@/lib/convertToNormalDenomination";
 import { getUmaFromUsername } from "@/lib/uma";
 import Image from "next/image";
-import { useEffect, useState, useRef } from "react";
-import { useAppState } from "@/hooks/useAppState";
+import { useEffect, useRef, useState } from "react";
 
 const TransactionRow = ({
   transaction,
@@ -141,12 +141,8 @@ const TransactionRow = ({
 
 export const TransactionTable = () => {
   const { toast } = useToast();
-  const { 
-    transactions, 
-    isLoading, 
-    error, 
-    refreshTransactions 
-  } = useTransactions();
+  const { transactions, isLoading, error, refreshTransactions } =
+    useTransactions();
   const {
     exchangeRates,
     error: exchangeRatesError,
@@ -181,8 +177,6 @@ export const TransactionTable = () => {
   // Check if wallet has changed and set animation accordingly
   useEffect(() => {
     if (currentWallet) {
-      const currentWalletId = currentWallet.id;
-      
       // If the wallet ID has changed, we should animate
       if (prevTransactionsRef.current === null || !transactions) {
         // Initial load or no transactions yet
@@ -203,9 +197,10 @@ export const TransactionTable = () => {
 
     // Check if transactions have changed
     const prevTransactions = prevTransactionsRef.current;
-    const hasTransactionsChanged = 
-      prevTransactions.length !== transactions.length || 
-      JSON.stringify(prevTransactions.map(t => t.id)) !== JSON.stringify(transactions.map(t => t.id));
+    const hasTransactionsChanged =
+      prevTransactions.length !== transactions.length ||
+      JSON.stringify(prevTransactions.map((t) => t.id)) !==
+        JSON.stringify(transactions.map((t) => t.id));
 
     if (hasTransactionsChanged) {
       setShouldAnimate(true);
@@ -223,7 +218,7 @@ export const TransactionTable = () => {
     const currentBalances: Record<string, number> = {};
     let hasBalanceChanged = false;
 
-    wallets.forEach(wallet => {
+    wallets.forEach((wallet) => {
       const walletId = wallet.id;
       const balance = wallet.amountInLowestDenom;
       currentBalances[walletId] = balance;
@@ -235,7 +230,10 @@ export const TransactionTable = () => {
     });
 
     // Also check if wallets were added or removed
-    if (Object.keys(prevWalletBalancesRef.current).length !== Object.keys(currentBalances).length) {
+    if (
+      Object.keys(prevWalletBalancesRef.current).length !==
+      Object.keys(currentBalances).length
+    ) {
       hasBalanceChanged = true;
     }
 
@@ -263,7 +261,7 @@ export const TransactionTable = () => {
       const timer = setTimeout(() => {
         setShouldAnimate(false);
       }, 500);
-      
+
       return () => clearTimeout(timer);
     }
   }, [shouldAnimate, transactions, isLoading]);
@@ -277,21 +275,30 @@ export const TransactionTable = () => {
     />
   ));
 
+  // Check if we have all the data needed to render
+  const canRender =
+    !isLoading &&
+    !isLoadingWallets &&
+    !isLoadingExchangeRates &&
+    transactions &&
+    exchangeRates &&
+    wallets;
+
+  // Animation class based on shouldAnimate state
+  const animationClass = shouldAnimate
+    ? "animate-[fadeInAndSlideDown_0.5s_ease-in-out_forwards]"
+    : "";
+
+  if (!canRender) {
+    return null;
+  }
+
   return (
-    <>
-      {!isLoading &&
-        !isLoadingWallets &&
-        !isLoadingExchangeRates &&
-        transactions &&
-        exchangeRates &&
-        wallets && (
-          <div className={`flex flex-col grow gap-6 pt-2 ${shouldAnimate ? 'animate-[fadeInAndSlideDown_0.5s_ease-in-out_forwards]' : ''}`}>
-            <span className="text-secondary text-[13px] font-semibold leading-[18px] tracking-[-0.162px]">
-              Completed
-            </span>
-            {transactionRows}
-          </div>
-        )}
-    </>
+    <div className={`flex flex-col grow gap-6 pt-2 ${animationClass}`}>
+      <span className="text-secondary text-[13px] font-semibold leading-[18px] tracking-[-0.162px]">
+        Completed
+      </span>
+      {transactionRows}
+    </div>
   );
 };

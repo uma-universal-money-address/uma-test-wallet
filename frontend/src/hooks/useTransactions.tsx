@@ -1,7 +1,7 @@
 import { getBackendUrl } from "@/lib/backendUrl";
 import { getUmaFromUsername } from "@/lib/uma";
 import { Currency } from "@/types/Currency";
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAppState } from "./useAppState";
 import { useContacts, type ContactInfo } from "./useContacts";
 import { CurrenciesInfo, useCurrencies } from "./useCurrencies";
@@ -112,24 +112,25 @@ export function useTransactions() {
           throw new Error("Failed to fetch transactions.");
         }
       });
-      
+
       const newTransactions = hydrateTransactions(
-        response, 
-        [...recentContacts, ...ownUmaContacts], 
-        uma, 
-        currencies
+        response,
+        [...recentContacts, ...ownUmaContacts],
+        uma,
+        currencies,
       );
-      
+
       // Only update state if the transaction list has changed
       // Compare transaction IDs and amounts to detect changes
-      const hasChanged = !transactions || 
+      const hasChanged =
+        !transactions ||
         transactions.length !== newTransactions.length ||
         !areTransactionsEqual(transactions, newTransactions);
-      
+
       if (hasChanged) {
         setTransactions(newTransactions);
       }
-      
+
       setIsLoading(false);
     } catch (e: unknown) {
       const error = e as Error;
@@ -150,34 +151,30 @@ export function useTransactions() {
   // Helper function to compare transaction lists
   const areTransactionsEqual = (
     oldTransactions: Transaction[],
-    newTransactions: Transaction[]
+    newTransactions: Transaction[],
   ): boolean => {
     // Quick check for length
     if (oldTransactions.length !== newTransactions.length) {
       return false;
     }
-    
+
     // Create a map of old transactions by ID for faster lookup
     const oldTransactionMap = new Map<string, Transaction>();
-    oldTransactions.forEach(tx => {
+    oldTransactions.forEach((tx) => {
       oldTransactionMap.set(tx.id, tx);
     });
-    
+
     // Check if all new transactions exist in old transactions with same values
-    return newTransactions.every(newTx => {
+    return newTransactions.every((newTx) => {
       const oldTx = oldTransactionMap.get(newTx.id);
       if (!oldTx) return false;
-      
+
       // Compare essential properties
-      return (
-        oldTx.amountInLowestDenom === newTx.amountInLowestDenom
-      );
+      return oldTx.amountInLowestDenom === newTx.amountInLowestDenom;
     });
   };
 
   useEffect(() => {
-    let ignore = false;
-    
     if (
       recentContacts &&
       ownUmaContacts &&
@@ -189,10 +186,6 @@ export function useTransactions() {
     ) {
       refreshTransactions();
     }
-    
-    return () => {
-      ignore = true;
-    };
   }, [
     recentContacts,
     ownUmaContacts,
