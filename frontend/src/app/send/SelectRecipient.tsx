@@ -186,7 +186,7 @@ export const SelectRecipient = () => {
             Matched
           </span>
           <ExternalUma
-            uma={customReceiverUma}
+            uma={formatUmaAddress(customReceiverUma)}
             onClick={() => {
               setUmaLookupResponse(searchLookupResult);
               onNext();
@@ -201,7 +201,7 @@ export const SelectRecipient = () => {
       searchResultComponent = (
         <span>
           {`No one found for `}
-          <span style={{ color: "#18181b" }}>{customReceiverUma}</span>
+          <span style={{ color: "#18181b" }}>{formatUmaAddress(customReceiverUma)}</span>
         </span>
       );
     }
