@@ -164,6 +164,6 @@ export function useTransactions() {
     transactions,
     error,
     isLoading,
-    refreshTransactions, // Export the refresh function
+    refreshTransactions,
   };
 }
