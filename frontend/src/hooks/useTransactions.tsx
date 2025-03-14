@@ -121,7 +121,6 @@ export function useTransactions() {
       );
 
       setTransactions(newTransactions);
-
       setIsLoading(false);
     } catch (e: unknown) {
       const error = e as Error;

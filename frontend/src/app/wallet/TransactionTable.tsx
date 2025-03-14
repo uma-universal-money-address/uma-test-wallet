@@ -9,7 +9,7 @@ import { convertCurrency } from "@/lib/convertCurrency";
 import { convertToNormalDenomination } from "@/lib/convertToNormalDenomination";
 import { getUmaFromUsername } from "@/lib/uma";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 const TransactionRow = ({
   transaction,
@@ -155,14 +155,7 @@ export const TransactionTable = () => {
   } = useWallets();
   const { currentWallet } = useAppState();
 
-  // Track whether this is the initial load or a refresh
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-  // Track when to animate the transaction list
-  const [shouldAnimate, setShouldAnimate] = useState(true);
-  // Store previous transactions to compare
-  const prevTransactionsRef = useRef<Transaction[] | null>(null);
-  // Store previous wallet balances to compare
-  const prevWalletBalancesRef = useRef<Record<string, number>>({});
+  const prevWalletBalanceRef = useRef<number | null>(null);
 
   useEffect(() => {
     const anyError = error || exchangeRatesError || walletsError;
@@ -174,97 +167,40 @@ export const TransactionTable = () => {
     }
   }, [error, exchangeRatesError, walletsError, toast]);
 
-  // Check if wallet has changed and set animation accordingly
   useEffect(() => {
-    if (currentWallet) {
-      // If the wallet ID has changed, we should animate
-      if (prevTransactionsRef.current === null || !transactions) {
-        // Initial load or no transactions yet
-        setShouldAnimate(true);
-      }
-    }
-  }, [currentWallet, transactions]);
-
-  // Check if transactions have changed and animate if they have
-  useEffect(() => {
-    if (!transactions || isLoading) return;
-
-    // If this is the first load, we've already set shouldAnimate to true
-    if (!prevTransactionsRef.current) {
-      prevTransactionsRef.current = transactions;
-      return;
-    }
-
-    // Check if transactions have changed
-    const prevTransactions = prevTransactionsRef.current;
-    const hasTransactionsChanged =
-      prevTransactions.length !== transactions.length ||
-      JSON.stringify(prevTransactions.map((t) => t.id)) !==
-        JSON.stringify(transactions.map((t) => t.id));
-
-    if (hasTransactionsChanged) {
-      setShouldAnimate(true);
-      prevTransactionsRef.current = transactions;
-    }
-  }, [transactions, isLoading]);
-
-  // Optimize the useEffect to only refresh when wallet balances change
-  useEffect(() => {
-    if (!wallets || !refreshTransactions || isLoadingWallets) {
-      return;
-    }
-
-    // Check if wallet balances have changed
-    const currentBalances: Record<string, number> = {};
-    let hasBalanceChanged = false;
-
-    wallets.forEach((wallet) => {
-      const walletId = wallet.id;
-      const balance = wallet.amountInLowestDenom;
-      currentBalances[walletId] = balance;
-
-      // Check if this wallet's balance has changed
-      if (prevWalletBalancesRef.current[walletId] !== balance) {
-        hasBalanceChanged = true;
-      }
-    });
-
-    // Also check if wallets were added or removed
     if (
-      Object.keys(prevWalletBalancesRef.current).length !==
-      Object.keys(currentBalances).length
+      !wallets ||
+      !refreshTransactions ||
+      isLoadingWallets ||
+      !currentWallet
     ) {
-      hasBalanceChanged = true;
+      return;
     }
 
-    // Only refresh transactions if balances have changed
+    // Find the current wallet in the wallets array
+    const wallet = wallets.find((w) => w.id === currentWallet.id);
+
+    if (!wallet) {
+      refreshTransactions();
+      return;
+    }
+
+    // Only check if the current wallet's balance has changed
+    const currentBalance = wallet.amountInLowestDenom;
+
+    // Check if this is the first time we're seeing this wallet or if the balance changed
+    const hasBalanceChanged =
+      prevWalletBalanceRef.current === null ||
+      prevWalletBalanceRef.current !== currentBalance;
+
+    // Only refresh transactions if the current wallet's balance has changed
     if (hasBalanceChanged) {
       refreshTransactions();
     }
 
-    // Update the ref with current balances
-    prevWalletBalancesRef.current = currentBalances;
-  }, [wallets, refreshTransactions, isLoadingWallets]);
-
-  // Set animation state to false after the first successful load
-  useEffect(() => {
-    if (transactions && !isLoading && isInitialLoad) {
-      // After the first successful load, mark that we're no longer in initial load
-      setIsInitialLoad(false);
-    }
-  }, [transactions, isLoading, isInitialLoad]);
-
-  // Reset animation state after animation completes
-  useEffect(() => {
-    if (shouldAnimate && transactions && !isLoading) {
-      // Animation duration is 0.5s, so we reset after that
-      const timer = setTimeout(() => {
-        setShouldAnimate(false);
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [shouldAnimate, transactions, isLoading]);
+    // Update the ref with the current wallet's balance
+    prevWalletBalanceRef.current = currentBalance;
+  }, [wallets, refreshTransactions, isLoadingWallets, currentWallet]);
 
   const transactionRows = transactions?.map((transaction) => (
     <TransactionRow
@@ -284,11 +220,7 @@ export const TransactionTable = () => {
         exchangeRates &&
         wallets && (
           <div
-            className={`flex flex-col grow gap-6 pt-2 ${
-              shouldAnimate
-                ? "animate-[fadeInAndSlideDown_0.5s_ease-in-out_forwards]"
-                : ""
-            }`}
+            className={`flex flex-col grow gap-6 pt-2 animate-[fadeInAndSlideDown_0.5s_ease-in-out_forwards]`}
           >
             <span className="text-secondary text-[13px] font-semibold leading-[18px] tracking-[-0.162px]">
               Completed
