@@ -1,7 +1,7 @@
 import { getBackendUrl } from "@/lib/backendUrl";
 import { getUmaFromUsername } from "@/lib/uma";
 import { Currency } from "@/types/Currency";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAppState } from "./useAppState";
 import { useContacts, type ContactInfo } from "./useContacts";
 import { CurrenciesInfo, useCurrencies } from "./useCurrencies";
@@ -82,59 +82,51 @@ export function useTransactions() {
   const [error, setError] = useState<string>();
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    async function fetchTransactions(
-      contacts: ContactInfo[],
-      uma: string,
-      currencies: CurrenciesInfo[],
+  // Create a function to fetch transactions that can be called externally
+  const refreshTransactions = useCallback(async () => {
+    if (
+      !recentContacts ||
+      !ownUmaContacts ||
+      isLoadingContacts ||
+      !currentWallet ||
+      isLoadingWallets ||
+      !currencies ||
+      isLoadingCurrencies
     ) {
-      setIsLoading(true);
-      try {
-        const response = await fetch(
-          `${getBackendUrl()}/user/transactions?uma=${uma}`,
-          {
-            method: "GET",
-            credentials: "include",
-          },
-        ).then((res) => {
-          if (res.ok) {
-            return res.json() as Promise<RawTransaction[]>;
-          } else {
-            throw new Error("Failed to fetch transactions.");
-          }
-        });
-        if (!ignore) {
-          setTransactions(
-            hydrateTransactions(response, contacts, uma, currencies),
-          );
-          setIsLoading(false);
-        }
-      } catch (e: unknown) {
-        const error = e as Error;
-        setError(error.message);
-        setIsLoading(false);
-      }
+      return;
     }
 
-    let ignore = false;
-    if (
-      recentContacts &&
-      ownUmaContacts &&
-      !isLoadingContacts &&
-      currentWallet &&
-      !isLoadingWallets &&
-      currencies &&
-      !isLoadingCurrencies
-    ) {
-      fetchTransactions(
+    setIsLoading(true);
+    try {
+      const uma = getUmaFromUsername(currentWallet.uma.username);
+      const response = await fetch(
+        `${getBackendUrl()}/user/transactions?uma=${uma}`,
+        {
+          method: "GET",
+          credentials: "include",
+        },
+      ).then((res) => {
+        if (res.ok) {
+          return res.json() as Promise<RawTransaction[]>;
+        } else {
+          throw new Error("Failed to fetch transactions.");
+        }
+      });
+
+      const newTransactions = hydrateTransactions(
+        response,
         [...recentContacts, ...ownUmaContacts],
-        getUmaFromUsername(currentWallet.uma.username),
+        uma,
         currencies,
       );
+
+      setTransactions(newTransactions);
+      setIsLoading(false);
+    } catch (e: unknown) {
+      const error = e as Error;
+      setError(error.message);
+      setIsLoading(false);
     }
-    return () => {
-      ignore = true;
-    };
   }, [
     recentContacts,
     ownUmaContacts,
@@ -145,9 +137,33 @@ export function useTransactions() {
     isLoadingCurrencies,
   ]);
 
+  useEffect(() => {
+    if (
+      recentContacts &&
+      ownUmaContacts &&
+      !isLoadingContacts &&
+      currentWallet &&
+      !isLoadingWallets &&
+      currencies &&
+      !isLoadingCurrencies
+    ) {
+      refreshTransactions();
+    }
+  }, [
+    recentContacts,
+    ownUmaContacts,
+    currentWallet,
+    currencies,
+    isLoadingContacts,
+    isLoadingWallets,
+    isLoadingCurrencies,
+    refreshTransactions,
+  ]);
+
   return {
     transactions,
     error,
     isLoading,
+    refreshTransactions,
   };
 }

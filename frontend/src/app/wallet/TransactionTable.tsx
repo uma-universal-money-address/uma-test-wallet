@@ -1,6 +1,7 @@
 "use client";
 import { SandboxAvatar } from "@/components/SandboxAvatar";
 import { useToast } from "@/hooks/use-toast";
+import { useAppState } from "@/hooks/useAppState";
 import { ExchangeRates, useExchangeRates } from "@/hooks/useExchangeRates";
 import { type Transaction, useTransactions } from "@/hooks/useTransactions";
 import { useWallets, Wallet } from "@/hooks/useWalletContext";
@@ -8,7 +9,7 @@ import { convertCurrency } from "@/lib/convertCurrency";
 import { convertToNormalDenomination } from "@/lib/convertToNormalDenomination";
 import { getUmaFromUsername } from "@/lib/uma";
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 const TransactionRow = ({
   transaction,
@@ -140,7 +141,8 @@ const TransactionRow = ({
 
 export const TransactionTable = () => {
   const { toast } = useToast();
-  const { transactions, isLoading, error } = useTransactions();
+  const { transactions, isLoading, error, refreshTransactions } =
+    useTransactions();
   const {
     exchangeRates,
     error: exchangeRatesError,
@@ -151,6 +153,9 @@ export const TransactionTable = () => {
     isLoading: isLoadingWallets,
     error: walletsError,
   } = useWallets();
+  const { currentWallet } = useAppState();
+
+  const prevWalletBalanceRef = useRef<number | null>(null);
 
   useEffect(() => {
     const anyError = error || exchangeRatesError || walletsError;
@@ -161,6 +166,41 @@ export const TransactionTable = () => {
       });
     }
   }, [error, exchangeRatesError, walletsError, toast]);
+
+  useEffect(() => {
+    if (
+      !wallets ||
+      !refreshTransactions ||
+      isLoadingWallets ||
+      !currentWallet
+    ) {
+      return;
+    }
+
+    // Find the current wallet in the wallets array
+    const wallet = wallets.find((w) => w.id === currentWallet.id);
+
+    if (!wallet) {
+      refreshTransactions();
+      return;
+    }
+
+    // Only check if the current wallet's balance has changed
+    const currentBalance = wallet.amountInLowestDenom;
+
+    // Check if this is the first time we're seeing this wallet or if the balance changed
+    const hasBalanceChanged =
+      prevWalletBalanceRef.current === null ||
+      prevWalletBalanceRef.current !== currentBalance;
+
+    // Only refresh transactions if the current wallet's balance has changed
+    if (hasBalanceChanged) {
+      refreshTransactions();
+    }
+
+    // Update the ref with the current wallet's balance
+    prevWalletBalanceRef.current = currentBalance;
+  }, [wallets, refreshTransactions, isLoadingWallets, currentWallet]);
 
   const transactionRows = transactions?.map((transaction) => (
     <TransactionRow
@@ -179,7 +219,9 @@ export const TransactionTable = () => {
         transactions &&
         exchangeRates &&
         wallets && (
-          <div className="flex flex-col grow gap-6 pt-2 animate-[fadeInAndSlideDown_0.5s_ease-in-out_forwards]">
+          <div
+            className={`flex flex-col grow gap-6 pt-2 animate-[fadeInAndSlideDown_0.5s_ease-in-out_forwards]`}
+          >
             <span className="text-secondary text-[13px] font-semibold leading-[18px] tracking-[-0.162px]">
               Completed
             </span>
