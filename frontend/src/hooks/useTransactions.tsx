@@ -120,16 +120,7 @@ export function useTransactions() {
         currencies,
       );
 
-      // Only update state if the transaction list has changed
-      // Compare transaction IDs and amounts to detect changes
-      const hasChanged =
-        !transactions ||
-        transactions.length !== newTransactions.length ||
-        !areTransactionsEqual(transactions, newTransactions);
-
-      if (hasChanged) {
-        setTransactions(newTransactions);
-      }
+      setTransactions(newTransactions);
 
       setIsLoading(false);
     } catch (e: unknown) {
@@ -145,34 +136,7 @@ export function useTransactions() {
     isLoadingContacts,
     isLoadingWallets,
     isLoadingCurrencies,
-    transactions, // Add transactions to dependencies to access current state
   ]);
-
-  // Helper function to compare transaction lists
-  const areTransactionsEqual = (
-    oldTransactions: Transaction[],
-    newTransactions: Transaction[],
-  ): boolean => {
-    // Quick check for length
-    if (oldTransactions.length !== newTransactions.length) {
-      return false;
-    }
-
-    // Create a map of old transactions by ID for faster lookup
-    const oldTransactionMap = new Map<string, Transaction>();
-    oldTransactions.forEach((tx) => {
-      oldTransactionMap.set(tx.id, tx);
-    });
-
-    // Check if all new transactions exist in old transactions with same values
-    return newTransactions.every((newTx) => {
-      const oldTx = oldTransactionMap.get(newTx.id);
-      if (!oldTx) return false;
-
-      // Compare essential properties
-      return oldTx.amountInLowestDenom === newTx.amountInLowestDenom;
-    });
-  };
 
   useEffect(() => {
     if (
