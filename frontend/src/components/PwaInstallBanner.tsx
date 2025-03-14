@@ -41,8 +41,8 @@ export const PwaInstallBanner = ({ dismissable }: Props) => {
     return null;
   }
 
-  // TODO: session cookies are not being persisted in iOS PWAs, only show the banner on android for now
-  const shouldShowBanner = !isInstalled && deviceType === "android";
+  const shouldShowBanner =
+    !isInstalled && ["ios", "android"].includes(deviceType);
 
   return (
     <>

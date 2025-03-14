@@ -2,6 +2,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useLoggedIn } from "@/hooks/useLoggedIn";
+import { usePwaInstallStatus } from "@/hooks/usePwaInstallStatus";
 import WalletContextProvider from "@/hooks/useWalletContext";
 import { Roboto_Mono } from "next/font/google";
 import localFont from "next/font/local";
@@ -26,6 +27,7 @@ const roboto_mono = Roboto_Mono({
 export const LayoutContent = ({ children }: { children: React.ReactNode }) => {
   const isDesktop = useMediaQuery("(min-width: 800px)");
   const router = useRouter();
+  const { isInstalled, deviceType } = usePwaInstallStatus();
   const { isLoggedIn } = useLoggedIn();
 
   useEffect(() => {
@@ -43,7 +45,11 @@ export const LayoutContent = ({ children }: { children: React.ReactNode }) => {
         <div className="w-full h-dvh flex flex-row">
           {isDesktop && <Sidebar />}
           <section className="w-full flex grow items-center justify-center">
-            <div className="max-w-[432px] min-w-[300px] w-full h-dvh mobile:max-h-[916px] mobile:border-[0.5px] border-[#EBEEF2] mobile:rounded-[32px] mobile:px-4 mobile:pt-6 bg-white">
+            <div
+              className={`max-w-[432px] min-w-[300px] w-full h-dvh mobile:max-h-[916px] mobile:border-[0.5px] border-[#EBEEF2] mobile:rounded-[32px] mobile:px-4 mobile:pt-6 bg-white ${
+                isInstalled && deviceType === "ios" ? "pb-8" : ""
+              }`}
+            >
               {children}
               <Toaster />
             </div>
