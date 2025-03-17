@@ -22,7 +22,6 @@ from uma import (
     InMemoryNonceCache,
     InMemoryPublicKeyCache,
     UnsupportedVersionException,
-    is_domain_local,
 )
 
 from vasp.uma_vasp.user import User
