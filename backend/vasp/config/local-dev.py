@@ -8,7 +8,7 @@ VASP_DOMAIN: str = "localhost:4000"
 FRONTEND_DOMAIN: str = "localhost:3000"
 COOKIE_DOMAIN: str = ".localhost:3000"
 
-NWC_SERVER_DOMAIN: str = "localhost:8080"
+NWC_SERVER_BASE_PATH: str = "http://localhost:8080"
 NWC_JWT_PUBKEY: str = (
     "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEEVs/o5+uQbTjL3chynL4wXgUg2R9\nq9UU8I5mEovUf86QZ7kOBIjJwqnzD1omageEHWwHdBO6B+dFabmdT9POxg==\n-----END PUBLIC KEY-----"
 )
