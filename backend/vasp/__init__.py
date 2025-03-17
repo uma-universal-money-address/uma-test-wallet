@@ -22,7 +22,6 @@ from uma import (
     InMemoryNonceCache,
     InMemoryPublicKeyCache,
     UnsupportedVersionException,
-    is_domain_local,
 )
 
 from vasp.uma_vasp.user import User
@@ -222,13 +221,12 @@ def create_app() -> Flask:
         Redirect to the NWC app page.
         """
         vasp_domain = current_app.config.get("VASP_DOMAIN", "localhost")
-        nwc_domain = current_app.config.get(
-            "NWC_SERVER_DOMAIN", f"umanwc.{vasp_domain}"
+        nwc_base_path = current_app.config.get(
+            "NWC_SERVER_BASE_PATH", f"https://umanwc.{vasp_domain}"
         )
         query = request.query_string.decode("utf-8")
-        protocol = "http" if is_domain_local(nwc_domain) else "https"
         path = request.path
-        return redirect(f"{protocol}://{nwc_domain}{path}?{query}", code=302)
+        return redirect(f"{nwc_base_path}{path}?{query}", code=302)
 
     @app.route("/apps")
     def nwc_apps() -> WerkzeugResponse:

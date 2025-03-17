@@ -21,9 +21,10 @@ def handle_public_key_request() -> Response:
 @bp.route("/uma-configuration")
 def uma_config() -> Dict[str, Any]:
     vasp_domain = current_app.config.get("VASP_DOMAIN", "localhost")
-    nwc_domain = current_app.config.get("NWC_SERVER_DOMAIN", f"nwc.{vasp_domain}")
-    protocol = "http" if is_domain_local(nwc_domain) else "https"
-    nwc_base = f"{protocol}://{nwc_domain}"
+    nwc_base = current_app.config.get(
+        "NWC_SERVER_BASE_PATH", f"https://umanwc.{vasp_domain}"
+    )
+    protocol = "http" if is_domain_local(vasp_domain) else "https"
     request_uri = f"{protocol}://{vasp_domain}/api/uma/request_pay_invoice"
     supported_nwc_commands = current_app.config.get(
         "VASP_SUPPORTED_COMMANDS",

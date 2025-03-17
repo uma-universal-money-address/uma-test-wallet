@@ -72,9 +72,10 @@ def construct_blueprint(
             abort_with_error(400, "Redirect URL is required.")
         parsed_url = urlparse(unquote(redirect_url))
         vasp_domain = get_vasp_domain()
-        expected_domain = current_app.config.get(
-            "NWC_SERVER_DOMAIN", f"nwc.{vasp_domain}"
+        nwc_base_path = current_app.config.get(
+            "NWC_SERVER_BASE_PATH", f"https://umanwc.{vasp_domain}"
         )
+        expected_domain = urlparse(nwc_base_path).netloc
         if parsed_url.netloc != expected_domain:
             abort_with_error(
                 400,
