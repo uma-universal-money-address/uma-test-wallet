@@ -1,6 +1,7 @@
 "use client";
 
 import { SandboxButton } from "@/components/SandboxButton";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
 import { useWallets } from "@/hooks/useWalletContext";
@@ -12,19 +13,30 @@ import { useState } from "react";
 import { StepButtonProps } from "./Steps";
 
 export const Welcome = () => {
+  const isShortScreen = useMediaQuery("(max-height: 600px)");
   return (
     <div className="flex flex-col h-full w-full items-center justify-center">
-      <div className="p-5 border border-[#DDE3F3] rounded-[34px]">
+      <div
+        style={{
+          padding: isShortScreen ? "16px" : "20px",
+        }}
+        className="border border-[#DDE3F3] rounded-[34px]"
+      >
         <Image
           className="dark:invert"
           src="/uma-sandbox-icon.svg"
           alt="UMA logo"
-          width={180}
-          height={38}
+          width={isShortScreen ? 120 : 180}
+          height={isShortScreen ? 28 : 38}
           priority
         />
       </div>
-      <div className="flex flex-col gap-2 items-center pt-8 pb-[56px] text-center">
+      <div
+        style={{
+          paddingTop: isShortScreen ? "20px" : "40px",
+        }}
+        className="flex flex-col gap-2 items-center text-center"
+      >
         <h1 className="text-primary text-[26px] font-bold leading-[34px] tracking-[-0.325px]">
           UMA Sandbox
         </h1>

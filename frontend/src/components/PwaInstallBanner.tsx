@@ -17,9 +17,10 @@ export const BANNER_HEIGHT = 44;
 
 interface Props {
   dismissable?: boolean;
+  top?: boolean;
 }
 
-export const PwaInstallBanner = ({ dismissable }: Props) => {
+export const PwaInstallBanner = ({ dismissable, top }: Props) => {
   const { isInstalled, deviceType } = usePwaInstallStatus();
   const [isInstallScreenOpen, setIsInstallScreenOpen] = useState(false);
   const [isBannerVisible, setIsBannerVisible] = useState(true);
@@ -47,7 +48,11 @@ export const PwaInstallBanner = ({ dismissable }: Props) => {
   return (
     <>
       <div
-        className={`w-full p-4 mobile:px-0 mobile:pt-0 bg-white border-b border-gray-200 flex flex-row items-center justify-between gap-3 mb-[10px] ${
+        style={{
+          position: top ? "absolute" : "relative",
+          top: top ? "0" : "auto",
+        }}
+        className={`w-full max-h-[69px] p-4 mobile:px-0 mobile:pt-0 bg-white border-b border-gray-200 flex flex-row items-center justify-between gap-3 mb-[10px] ${
           shouldShowBanner ? "" : "hidden"
         }`}
       >
