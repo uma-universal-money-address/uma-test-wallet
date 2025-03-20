@@ -118,14 +118,20 @@ We use `black` to format Python files:
 pipenv run black .
 ```
 
+### Running Tests
+
+```bash
+pipenv run pytest
+```
+
 ### API Documentation
 
 The backend provides several API endpoints:
 
 - UMA protocol endpoints (`/.well-known/lnurlp/<username>`, `/api/uma/payreq/...`)
-- User management endpoints (`/api/user`, `/api/login`, `/api/logout`)
-- Wallet management endpoints (`/api/wallets`, `/api/transactions`)
-- Webhook endpoints for handling payments (`/api/webhooks/transaction`)
+- User management endpoints (`/user`, `/login`, `/logout`)
+- Wallet management endpoints (`/wallets`, `/transactions`)
+- Webhook endpoints for handling payments (`/webhooks/transaction`)
 
 ## Troubleshooting
 
@@ -147,8 +153,8 @@ The backend implements several key services:
 - **User Service**: Manages user accounts and authentication
 - **Ledger Service**: Handles wallet balances and transactions
 - **Currency Service**: Manages supported currencies and exchange rates
-- **Compliance Service**: Mocks compliance checks for transactions
+- **Compliance Service**: Handles compliance checks for transactions
 - **Sending VASP**: Implements the sending side of UMA transactions
 - **Receiving VASP**: Implements the receiving side of UMA transactions
 
-Lightning payments utilize Lightspark services.
+These services interact with Lightspark for Lightning Network operations.

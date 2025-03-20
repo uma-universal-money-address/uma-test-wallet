@@ -8,7 +8,7 @@ The UMA Test Wallet is designed to be a comprehensive tool for both users and de
 
 ### 1. Educational Resource
 - Helps users build their understanding of UMA payment flows and UX through frictionless first-hand interactions
-- Provides a wallet environment to safely experiment with UMA features
+- Provides a sandbox environment to safely experiment with UMA features
 - Demonstrates the simplicity and power of UMA payments in a practical context
 
 ### 2. UX Best Practices Showcase
