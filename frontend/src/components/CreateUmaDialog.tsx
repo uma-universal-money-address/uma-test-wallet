@@ -1,14 +1,14 @@
 import { ResponsiveDialog } from "@/components/ResponsiveDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
-import { deleteWallet } from "@/lib/deleteWallet";
 import { useWallets } from "@/hooks/useWalletContext";
+import { deleteWallet } from "@/lib/deleteWallet";
+import { useEffect } from "react";
 import OnboardingStepContextProvider, {
   OnboardingStep,
   useOnboardingStepContext,
 } from "../app/(onboarding)/OnboardingStepContextProvider";
 import { Steps } from "../app/(onboarding)/Steps";
-import { useEffect } from "react";
 
 interface Props {
   refreshWallets: () => Promise<void>;
