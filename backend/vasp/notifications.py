@@ -44,9 +44,10 @@ def construct_blueprint(config: Config) -> Blueprint:
                 .order_by(PushSubscription.last_used.desc())
             ).all()
 
-            # Limit the number of subscriptions to last 10 used
-            if len(existing_subscriptions) >= 10:
-                db_session.delete(existing_subscriptions[-1])
+            # Limit the number of subscriptions to 1 for now
+            if len(existing_subscriptions) >= 1:
+                for subscription in existing_subscriptions:
+                    db_session.delete(subscription)
 
             subscription = PushSubscription(
                 user_id=current_user.id,
