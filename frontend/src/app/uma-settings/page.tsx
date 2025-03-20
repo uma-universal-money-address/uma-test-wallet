@@ -50,9 +50,7 @@ export default function Page() {
       title: "Manage connected apps",
       action: {
         type: "external-link",
-        href: `${
-          isDevelopment ? "http" : "https"
-        }://umanwc.${getBackendDomain()}`,
+        href: `${isDevelopment ? "http" : "https"}://${getBackendDomain()}/nwc`,
       },
       description: "View your UMA Auth connections",
     },

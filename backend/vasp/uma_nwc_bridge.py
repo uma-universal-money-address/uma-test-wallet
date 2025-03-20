@@ -596,7 +596,7 @@ def construct_blueprint(
     nonce_cache: INonceCache,
     uma_request_storage: IRequestStorage,
 ) -> Blueprint:
-    bp = Blueprint("umanwc", __name__, url_prefix="/umanwc")
+    bp = Blueprint("umanwc", __name__, url_prefix="/api/umanwc")
 
     def get_nwc_bridge() -> UmaNwcBridge:
         sending_vasp = get_sending_vasp(

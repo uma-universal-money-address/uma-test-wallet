@@ -138,16 +138,13 @@ def create_app() -> Flask:
             challenge_cache=WebauthnChallengeCache(cache=cache), config=config
         )
     )
-    app.register_blueprint(uma.bp)
+    app.register_blueprint(
+        uma.construct_blueprint(pubkey_cache=pubkey_cache, nonce_cache=nonce_cache)
+    )
 
-    from vasp.uma_vasp import well_known, utxo_callback
+    from vasp.uma_vasp import well_known
 
     app.register_blueprint(well_known.bp)
-    app.register_blueprint(
-        utxo_callback.construct_blueprint(
-            pubkey_cache=pubkey_cache, nonce_cache=nonce_cache
-        )
-    )
     app.register_blueprint(
         user.construct_blueprint(
             config=config,
@@ -228,28 +225,28 @@ def create_app() -> Flask:
         path = request.path
         return redirect(f"{nwc_base_path}{path}?{query}", code=302)
 
-    @app.route("/apps")
+    @app.route("/api/apps")
     def nwc_apps() -> WerkzeugResponse:
         """
         Redirect to the NWC app page.
         """
         return redirect_to_nwc()
 
-    @app.route("/apps/new")
+    @app.route("/api/apps/new")
     def new_nwc_app() -> WerkzeugResponse:
         """
         Redirect to the NWC app creation page.
         """
         return redirect_to_nwc()
 
-    @app.route("/oauth/auth")
+    @app.route("/api/oauth/auth")
     def oauth_auth() -> WerkzeugResponse:
         """
         Redirect to the NWC app oauth page.
         """
         return redirect_to_nwc()
 
-    @app.post("/oauth/token")
+    @app.post("/api/oauth/token")
     def oauth_token() -> WerkzeugResponse:
         """
         Redirect to the NWC app oauth page.

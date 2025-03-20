@@ -39,7 +39,7 @@ def construct_blueprint(
     ledger_service: ILedgerService,
     currency_service: ICurrencyService,
 ) -> Blueprint:
-    bp = Blueprint("user", __name__, url_prefix="/user")
+    bp = Blueprint("user", __name__, url_prefix="/api/user")
 
     @bp.get("/")
     @login_required
