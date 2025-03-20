@@ -2,11 +2,13 @@ import { ResponsiveDialog } from "@/components/ResponsiveDialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
 import { deleteWallet } from "@/lib/deleteWallet";
+import { useWallets } from "@/hooks/useWalletContext";
 import OnboardingStepContextProvider, {
   OnboardingStep,
   useOnboardingStepContext,
 } from "../app/(onboarding)/OnboardingStepContextProvider";
 import { Steps } from "../app/(onboarding)/Steps";
+import { useEffect } from "react";
 
 interface Props {
   refreshWallets: () => Promise<void>;
@@ -15,6 +17,7 @@ interface Props {
 export const CreateUmaDialog = ({ refreshWallets }: Props) => {
   const { toast } = useToast();
   const { setIsCreateUmaDialogOpen } = useAppState();
+  const { setPollingEnabled } = useWallets();
 
   return (
     <OnboardingStepContextProvider
@@ -26,6 +29,8 @@ export const CreateUmaDialog = ({ refreshWallets }: Props) => {
       onFinish={() => {
         setIsCreateUmaDialogOpen(false);
         refreshWallets();
+        // Re-enable wallet polling when flow is complete
+        setPollingEnabled(true);
         toast({
           description: "New test UMA created",
         });
@@ -41,6 +46,15 @@ export const CreateUmaDialog = ({ refreshWallets }: Props) => {
 const CreateUmaDialogInternal = ({ children }: { children: JSX.Element }) => {
   const { isCreateUmaDialogOpen, setIsCreateUmaDialogOpen } = useAppState();
   const { wallet, resetStep } = useOnboardingStepContext();
+  const { setPollingEnabled } = useWallets();
+
+  // Track dialog open state changes to disable polling when opened
+  useEffect(() => {
+    // When dialog is opened, disable polling
+    if (isCreateUmaDialogOpen) {
+      setPollingEnabled(false);
+    }
+  }, [isCreateUmaDialogOpen, setPollingEnabled]);
 
   const handleDialogOpenChange = (isOpen: boolean) => {
     setIsCreateUmaDialogOpen(isOpen);
