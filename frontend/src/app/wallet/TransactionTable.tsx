@@ -194,7 +194,7 @@ export const TransactionTable = () => {
       prevWalletBalanceRef.current !== currentBalance;
 
     // Only refresh transactions if the current wallet's balance has changed
-    if (hasBalanceChanged) {
+    if (hasBalanceChanged && currentBalance > 0) {
       refreshTransactions();
     }
 
