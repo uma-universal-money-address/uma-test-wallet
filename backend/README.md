@@ -1,8 +1,48 @@
 # UMA Sandbox Backend
 
-A VASP implementation for simulating UMA transactions.
+A VASP (Virtual Asset Service Provider) implementation for simulating UMA transactions. This backend serves as the server component of the UMA Test Wallet, handling UMA protocol interactions, user authentication, and payment processing.
 
-## Run the flask server locally
+## Features
+
+- Complete UMA protocol implementation (both sending and receiving VASP functionality)
+- User management and authentication
+- Wallet and transaction management
+- Push notification support
+- Compliance service integration
+
+## Prerequisites
+
+- Python 3.11 (UMA SDK does not currently support Python 3.12)
+- `pipenv` for dependency management
+- SQLite for local development
+
+## Setup and Installation
+
+### 1. Clone the repository (if you haven't already)
+
+```bash
+git clone https://github.com/uma-universal-money-address/uma-test-wallet.git
+cd uma-test-wallet/backend
+```
+
+### 2. Set up host configuration
+
+Modify your `/etc/hosts` file to include domains for localhost:
+
+```bash
+sudo vi /etc/hosts
+```
+
+Add localhost domains:
+
+```
+127.0.0.1 localhost
+127.0.0.1 local
+```
+
+> **IMPORTANT**: `local` is necessary because the Python UMA SDK checks for that string when determining whether to make certain requests with HTTP vs HTTPS.
+
+### 3. Configure environment variables
 
 Create a `.env` file with the following environment variables:
 
@@ -25,22 +65,24 @@ VAPID_PRIVATE_KEY=
 VAPID_CLAIM_EMAIL=
 ```
 
-`FLASK_SECRET_KEY` is used to sign session cookies: https://flask.palletsprojects.com/en/latest/quickstart/#sessions
+`FLASK_SECRET_KEY` is used to sign session cookies. See the [Flask documentation](https://flask.palletsprojects.com/en/latest/quickstart/#sessions) for more details.
 
-Install dependencies:
+### 4. Install dependencies
 
 ```bash
 pipenv install -d
 ```
 
-Create the db file if it doesn't already exist:
+### 5. Set up the database
+
+Create the database file if it doesn't already exist:
 
 ```bash
-mkdir instance
+mkdir -p instance
 touch instance/vasp.sqlite
 ```
 
-Run migrations on the db:
+Run migrations on the database:
 
 ```bash
 FLASK_CONFIG="config/local-dev.py" pipenv run alembic upgrade head
@@ -48,38 +90,71 @@ FLASK_CONFIG="config/local-dev.py" pipenv run alembic upgrade head
 
 > The schema is defined with SQLAlchemy ORMs in `vasp/models`
 
-Run the backend:
+## Running the Application
+
+### Using the convenience script
+
+The easiest way to run the backend is with the provided script, which sets all the needed environment variables for you:
 
 ```bash
 sh run_backend.sh
 ```
 
-Alternatively you could just run the `run_backend.sh` script which sets all the needed env variables for you
+### Manually running the server
 
-## Run black
+Alternatively, you can run the server manually:
 
-We use `black` to format python files.
+```bash
+FLASK_CONFIG="config/local-dev.py" FLASK_APP=vasp pipenv run flask run --host=0.0.0.0 --port=5000
+```
+
+## Development
+
+### Code Formatting
+
+We use `black` to format Python files:
 
 ```bash
 pipenv run black .
 ```
 
-## Setup
-
-Modify your /etc/hosts file to include domains for localhost:
+### Running Tests
 
 ```bash
-sudo vi /etc/hosts
+pipenv run pytest
 ```
 
-Add localhost domains:
+### API Documentation
 
-```bash
-127.0.0.1 localhost
-127.0.0.1 local
-...
-```
+The backend provides several API endpoints:
 
-> IMPORTANT: `local` is necessary because the python uma-sdk checks for that string when determining to make certain requests with http vs https.
+- UMA protocol endpoints (`/.well-known/lnurlp/<username>`, `/api/uma/payreq/...`)
+- User management endpoints (`/user`, `/login`, `/logout`)
+- Wallet management endpoints (`/wallets`, `/transactions`)
+- Webhook endpoints for handling payments (`/webhooks/transaction`)
 
-> Warning: uma-sdk does not currently support Python 3.12, so you will need to downgrade to Python 3.11.
+## Troubleshooting
+
+### Common Issues
+
+1. **UMA SDK Python version compatibility**: 
+   - The UMA SDK doesn't support Python 3.12, so make sure to use Python 3.11.
+
+2. **Certificate errors**:
+   - If you encounter SSL certificate validation errors, check that your local domain configuration is correct.
+
+3. **Database migration issues**:
+   - If you encounter database migration issues, you may need to delete the database file and recreate it.
+
+## Architecture
+
+The backend implements several key services:
+
+- **User Service**: Manages user accounts and authentication
+- **Ledger Service**: Handles wallet balances and transactions
+- **Currency Service**: Manages supported currencies and exchange rates
+- **Compliance Service**: Handles compliance checks for transactions
+- **Sending VASP**: Implements the sending side of UMA transactions
+- **Receiving VASP**: Implements the receiving side of UMA transactions
+
+These services interact with Lightspark for Lightning Network operations.
