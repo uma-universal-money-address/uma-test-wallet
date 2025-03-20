@@ -161,7 +161,7 @@ export const SelectRecipient = () => {
   };
 
   const handleUmaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = event.target.value;
+    const newValue = event.target.value.toLowerCase();
     setCustomReceiverUma(newValue);
 
     // Format the UMA address if needed
