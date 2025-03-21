@@ -1,8 +1,8 @@
 "use client";
 
 import { ResponsiveDialog } from "@/components/ResponsiveDialog";
-import { TestWalletButton } from "@/components/TestWalletButton";
 import { SettingProps, SettingRow } from "@/components/SettingRow";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
 import { getBackendUrl } from "@/lib/backendUrl";
