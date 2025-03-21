@@ -62,7 +62,7 @@ def construct_blueprint(
     challenge_cache: IWebauthnChallengeCache,
     config: Config,
 ) -> Blueprint:
-    bp = Blueprint("auth", __name__, url_prefix="/auth")
+    bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
     @bp.get("/nwcsession")
     @login_required

@@ -38,4 +38,4 @@ Now your client ID is your pubkey and relay like: `npub13msd7fakpaqerq036kk0c6pf
 
 Now navigate to the nwc app login page in your browser:
 
-`http://localhost:8080/oauth/auth?client_id=npub13msd7fakpaqerq036kk0c6pf9effz5nn5yk6nqj4gtwtzr5l6fxq64z8x5%20wss://nos.lol&required_commands=pay_invoice%20list_transactions&budget=1000&response_type=code&redirect_uri=http://localhost:8080/oauth/callback&code_challenge=a43f6ed&code_challenge_method=S256&state=foobar`
+`http://localhost:8080/api/oauth/auth?client_id=npub13msd7fakpaqerq036kk0c6pf9effz5nn5yk6nqj4gtwtzr5l6fxq64z8x5%20wss://nos.lol&required_commands=pay_invoice%20list_transactions&budget=1000&response_type=code&redirect_uri=http://localhost:8080/api/oauth/callback&code_challenge=a43f6ed&code_challenge_method=S256&state=foobar`

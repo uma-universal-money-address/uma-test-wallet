@@ -614,7 +614,7 @@ def register_routes(
         receiving_vasp = get_receiving_vasp()
         return receiving_vasp.create_and_send_invoice(current_user.id)
 
-    @app.post("/webhooks/transaction")
+    @app.post("/api/webhooks/transaction")
     def handle_post_transaction() -> Response:
         signature_header = flask_request.headers.get(webhooks.SIGNATURE_HEADER)
         if not signature_header:

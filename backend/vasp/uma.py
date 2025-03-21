@@ -1,3 +1,4 @@
+import json
 import logging
 import random
 from typing import TYPE_CHECKING, List
@@ -7,7 +8,15 @@ from flask import Blueprint, Response, jsonify, request
 from flask_login import current_user, login_user
 from sqlalchemy import exc, func, select
 from sqlalchemy.orm import Session
-from uma import KycStatus
+from uma import (
+    KycStatus,
+    INonceCache,
+    IPublicKeyCache,
+    InvalidSignatureException,
+    PostTransactionCallback,
+    fetch_public_key_for_vasp,
+    verify_post_transaction_callback_signature,
+)
 
 from vasp.db import db
 from vasp.models.Currency import Currency
@@ -21,13 +30,12 @@ from vasp.uma_vasp.uma_exception import abort_with_error
 from vasp.uma_vasp.user import User
 from vasp.user import DEFAULT_PREFERENCES
 from vasp.username_dict import APPROVED_ADJECTIVES, APPROVED_NOUNS
+from vasp.uma_vasp.uma_exception import UmaException
 
 if TYPE_CHECKING:
     current_user: User
 
 log: logging.Logger = logging.getLogger(__name__)
-
-bp = Blueprint("uma", __name__, url_prefix="/uma")
 
 
 def register_uma(
@@ -104,75 +112,110 @@ def register_uma(
             abort_with_error(500, error)
 
 
-@bp.post("")
-def create_uma() -> Response:
-    data = request.get_json()
-    uma_user_name = data["uma_user_name"]
-    if not uma_user_name:
-        abort_with_error(400, "UMA user name is required.")
+def construct_blueprint(
+    pubkey_cache: IPublicKeyCache, nonce_cache: INonceCache
+) -> Blueprint:
+    bp = Blueprint("uma", __name__, url_prefix="/api/uma")
 
-    initial_amount = data.get("initial_amount", 0)
+    @bp.post("")
+    def create_uma() -> Response:
+        data = request.get_json()
+        uma_user_name = data["uma_user_name"]
+        if not uma_user_name:
+            abort_with_error(400, "UMA user name is required.")
 
-    if current_user.is_authenticated:
-        with Session(db.engine) as db_session:
-            count_uma_current_user = db_session.scalar(
-                select(func.count(UmaModel.username)).where(
-                    UmaModel.user_id == current_user.id
+        initial_amount = data.get("initial_amount", 0)
+
+        if current_user.is_authenticated:
+            with Session(db.engine) as db_session:
+                count_uma_current_user = db_session.scalar(
+                    select(func.count(UmaModel.username)).where(
+                        UmaModel.user_id == current_user.id
+                    )
                 )
+                if count_uma_current_user >= 10:
+                    abort_with_error(
+                        400, "You have reached the maximum number of UMAs."
+                    )
+        currencies = ["SAT"]
+        # Default to verified for the purpose of this demo app
+        kyc_status = KycStatus.VERIFIED
+
+        user, wallet = register_uma(
+            uma_user_name=uma_user_name,
+            currencies=currencies,
+            kyc_status=kyc_status,
+            initial_amount=initial_amount,
+        )
+        login_user(user, remember=True)
+
+        with Session(db.engine) as db_session:
+            wallet_fresh = db_session.scalars(
+                select(WalletModel).where(WalletModel.id == wallet.id)
+            ).first()
+
+            return jsonify(
+                {
+                    "id": wallet_fresh.id,
+                    "amount_in_lowest_denom": wallet_fresh.amount_in_lowest_denom,
+                    "color": wallet_fresh.color.value,
+                    "device_token": wallet_fresh.device_token,
+                    "uma": wallet_fresh.uma.to_dict(),
+                    "currency": {
+                        "code": wallet_fresh.currency.code,
+                        "name": CURRENCIES[wallet_fresh.currency.code].name,
+                        "symbol": CURRENCIES[wallet_fresh.currency.code].symbol,
+                        "decimals": CURRENCIES[wallet_fresh.currency.code].decimals,
+                    },
+                }
             )
-            if count_uma_current_user >= 10:
-                abort_with_error(400, "You have reached the maximum number of UMAs.")
-    currencies = ["SAT"]
-    # Default to verified for the purpose of this demo app
-    kyc_status = KycStatus.VERIFIED
 
-    user, wallet = register_uma(
-        uma_user_name=uma_user_name,
-        currencies=currencies,
-        kyc_status=kyc_status,
-        initial_amount=initial_amount,
-    )
-    login_user(user, remember=True)
+    @bp.get("/<uma_user_name>")
+    def uma(uma_user_name: str) -> Response:
+        with Session(db.engine) as db_session:
+            uma_model = db_session.scalars(
+                select(UmaModel).where(UmaModel.username == uma_user_name)
+            ).first()
+            return jsonify({"available": uma_model is None})
 
-    with Session(db.engine) as db_session:
-        wallet_fresh = db_session.scalars(
-            select(WalletModel).where(WalletModel.id == wallet.id)
-        ).first()
-
-        return jsonify(
-            {
-                "id": wallet_fresh.id,
-                "amount_in_lowest_denom": wallet_fresh.amount_in_lowest_denom,
-                "color": wallet_fresh.color.value,
-                "device_token": wallet_fresh.device_token,
-                "uma": wallet_fresh.uma.to_dict(),
-                "currency": {
-                    "code": wallet_fresh.currency.code,
-                    "name": CURRENCIES[wallet_fresh.currency.code].name,
-                    "symbol": CURRENCIES[wallet_fresh.currency.code].symbol,
-                    "decimals": CURRENCIES[wallet_fresh.currency.code].decimals,
-                },
-            }
+    @bp.get("/generate_random_uma")
+    def generate_random_uma() -> Response:
+        random_uma = _generate_random_uma()
+        return (
+            jsonify({"uma": random_uma})
+            if random_uma
+            else jsonify({"error": "Random generation attempts exhausted"})
         )
 
+    @bp.post("/utxoCallback")
+    def handle_utxo_callback() -> str:
+        print(f"Received UTXO callback for {request.args.get('txid')}:")
+        try:
+            tx_callback = PostTransactionCallback.from_json(json.dumps(request.json))
+        except Exception as e:
+            raise UmaException(
+                status_code=400, message=f"Error parsing UTXO callback: {e}"
+            )
 
-@bp.get("/<uma_user_name>")
-def uma(uma_user_name: str) -> Response:
-    with Session(db.engine) as db_session:
-        uma_model = db_session.scalars(
-            select(UmaModel).where(UmaModel.username == uma_user_name)
-        ).first()
-        return jsonify({"available": uma_model is None})
+        print(tx_callback.to_json())
 
+        if tx_callback.vasp_domain:
+            other_vasp_pubkeys = fetch_public_key_for_vasp(
+                vasp_domain=tx_callback.vasp_domain,
+                cache=pubkey_cache,
+            )
+            try:
+                verify_post_transaction_callback_signature(
+                    tx_callback, other_vasp_pubkeys, nonce_cache
+                )
+            except InvalidSignatureException as e:
+                raise UmaException(
+                    f"Error verifying post-tx callback signature: {e}", 424
+                )
 
-@bp.get("/generate_random_uma")
-def generate_random_uma() -> Response:
-    random_uma = _generate_random_uma()
-    return (
-        jsonify({"uma": random_uma})
-        if random_uma
-        else jsonify({"error": "Random generation attempts exhausted"})
-    )
+        return "OK"
+
+    return bp
 
 
 def _generate_random_uma(batch_size: int = 100, max_attempts: int = 100) -> str | None:

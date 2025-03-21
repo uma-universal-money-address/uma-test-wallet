@@ -44,13 +44,13 @@ def uma_config() -> Dict[str, Any]:
         ],
     )
     return {
-        "name": "Pinkdrink",
-        "authorization_endpoint": f"{nwc_base}/oauth/auth",
-        "token_endpoint": f"{nwc_base}/oauth/token",
+        "name": "UMA Test Wallet",
+        "authorization_endpoint": f"{nwc_base}/api/oauth/auth",
+        "token_endpoint": f"{nwc_base}/api/oauth/token",
         "nwc_commands_supported": supported_nwc_commands,
         "uma_major_versions": [0, 1],
         "grant_types_supported": ["authorization_code"],
         "code_challenge_methods_supported": ["S256"],
         "uma_request_endpoint": request_uri,
-        "connection_management_endpoint": f"{nwc_base}",
+        "connection_management_endpoint": f"{nwc_base}/api/apps",
     }
