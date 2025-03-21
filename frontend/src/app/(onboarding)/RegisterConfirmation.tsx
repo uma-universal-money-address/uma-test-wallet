@@ -1,6 +1,6 @@
 "use client";
 
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import Image from "next/image";
 import { StepButtonProps } from "./Steps";
 
@@ -33,7 +33,7 @@ export const RegisterConfirmation = () => {
 export const RegisterConfirmationButtons = ({ onNext }: StepButtonProps) => {
   return (
     <div className="flex flex-col gap-[10px]">
-      <SandboxButton
+      <TestWalletButton
         buttonProps={{
           size: "lg",
           onClick: onNext,
@@ -41,7 +41,7 @@ export const RegisterConfirmationButtons = ({ onNext }: StepButtonProps) => {
         className="w-full"
       >
         Continue
-      </SandboxButton>
+      </TestWalletButton>
     </div>
   );
 };

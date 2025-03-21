@@ -1,6 +1,6 @@
 "use client";
 
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -13,7 +13,7 @@ export const Header = () => {
 
   return (
     <div className="py-4 px-[10px] flex items-center justify-between w-full">
-      <SandboxButton
+      <TestWalletButton
         buttonProps={{
           variant: "icon",
           size: "icon",
@@ -26,7 +26,7 @@ export const Header = () => {
           height={24}
           alt="Back"
         />
-      </SandboxButton>
+      </TestWalletButton>
       <div className="w-6" />
     </div>
   );

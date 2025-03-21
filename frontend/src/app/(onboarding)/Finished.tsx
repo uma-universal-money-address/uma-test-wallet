@@ -1,6 +1,6 @@
 "use client";
 
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { useAppState } from "@/hooks/useAppState";
 import { useWallets } from "@/hooks/useWalletContext";
 import Image from "next/image";
@@ -38,7 +38,7 @@ export const FinishedButtons = ({ onNext }: StepButtonProps) => {
   const { setIsLoggedIn } = useAppState();
   return (
     <div className="flex flex-col gap-[10px]">
-      <SandboxButton
+      <TestWalletButton
         buttonProps={{
           size: "lg",
           onClick: () => {
@@ -51,7 +51,7 @@ export const FinishedButtons = ({ onNext }: StepButtonProps) => {
         className="w-full"
       >
         View your UMA
-      </SandboxButton>
+      </TestWalletButton>
     </div>
   );
 };

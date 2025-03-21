@@ -1,7 +1,7 @@
 "use client";
 
 import { ResponsiveDialog } from "@/components/ResponsiveDialog";
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { SettingProps, SettingRow } from "@/components/SettingRow";
 import { Wallet } from "@/components/Wallet";
 import { useToast } from "@/hooks/use-toast";
@@ -96,7 +96,7 @@ export default function Page() {
                 connections.
               </span>
             </div>
-            <SandboxButton
+            <TestWalletButton
               buttonProps={{
                 variant: "delete",
                 onClick: handleDeleteUma,
@@ -104,8 +104,8 @@ export default function Page() {
               className="w-full"
             >
               Delete test UMA
-            </SandboxButton>
-            <SandboxButton
+            </TestWalletButton>
+            <TestWalletButton
               buttonProps={{
                 variant: "secondary",
                 size: "lg",
@@ -114,10 +114,10 @@ export default function Page() {
               className="w-full"
             >
               Cancel
-            </SandboxButton>
+            </TestWalletButton>
           </div>
         </ResponsiveDialog>
-        <SandboxButton
+        <TestWalletButton
           buttonProps={{
             variant: "delete",
             onClick: () => setIsDeleteUmaOpen(true),
@@ -125,7 +125,7 @@ export default function Page() {
           className="w-full"
         >
           Delete test UMA
-        </SandboxButton>
+        </TestWalletButton>
       </div>
     </div>
   );

@@ -1,13 +1,13 @@
-# Running e2e NWC UMA Sandbox locally
+# Running e2e NWC UMA Test Wallet locally
 
-First build the UMA Sandbox frontend:
+First build the UMA Test Wallet frontend:
 
 ```bash
-cd uma-sandbox/frontend
+cd uma-test-wallet/frontend
 yarn dev
 ```
 
-Then run the UMA Sandbox backend:
+Then run the UMA Test Wallet backend:
 
 ```bash
 sh run_backend.sh

@@ -3,19 +3,19 @@ import "./globals.css";
 import { LayoutContent } from "./LayoutContent";
 
 export const metadata: Metadata = {
-  title: "UMA Sandbox",
+  title: "UMA Test Wallet",
   description: "Test app for simulating UMA transactions.",
   generator: "Next.js",
-  applicationName: "UMA Sandbox",
+  applicationName: "UMA Test Wallet",
   appleWebApp: {
     capable: true,
-    title: "UMA Sandbox",
+    title: "UMA Test Wallet",
     statusBarStyle: "black-translucent",
   },
   icons: [
     {
       rel: "icon",
-      url: "/uma-sandbox-app.svg",
+      url: "/uma-test-wallet-app.svg",
     },
     {
       rel: "apple-touch-icon",

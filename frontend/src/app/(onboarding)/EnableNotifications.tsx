@@ -1,6 +1,6 @@
 "use client";
 
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
 import { usePwaInstallStatus } from "@/hooks/usePwaInstallStatus";
@@ -23,8 +23,8 @@ const AndroidMockNotification = ({
     <div className="flex flex-row w-full items-center justify-start gap-[9px] border-[0.3px] border-[#C0C9D6] rounded-[4px] first:rounded-t-[22px] bg-[#F9F9F9] p-[13px] pb-[11px]">
       <div className="w-[34px] h-[34px] flex items-center justify-center">
         <Image
-          src="/uma-sandbox-app.svg"
-          alt="UMA Sandbox logo"
+          src="/uma-test-wallet-app.svg"
+          alt="UMA Test Wallet logo"
           width={24}
           height={24}
           className="rounded-full"
@@ -64,8 +64,8 @@ const IosMockNotification = ({
   return (
     <div className="flex flex-row w-full items-center justify-start gap-[9px] border-[0.3px] border-[#DEDFE4] rounded-[22px] bg-[#F9F9F9] p-[13px] pb-[11px]">
       <Image
-        src="/uma-sandbox-app.svg"
-        alt="UMA Sandbox logo"
+        src="/uma-test-wallet-app.svg"
+        alt="UMA Test Wallet logo"
         width={34}
         height={34}
       />
@@ -208,7 +208,7 @@ export const EnableNotificationsButtons = ({ onNext }: StepButtonProps) => {
 
   return (
     <div className="flex flex-col">
-      <SandboxButton
+      <TestWalletButton
         buttonProps={{
           size: "lg",
           onClick: handleEnableNotifications,
@@ -216,7 +216,7 @@ export const EnableNotificationsButtons = ({ onNext }: StepButtonProps) => {
         className="w-full"
       >
         Turn on notifications
-      </SandboxButton>
+      </TestWalletButton>
     </div>
   );
 };

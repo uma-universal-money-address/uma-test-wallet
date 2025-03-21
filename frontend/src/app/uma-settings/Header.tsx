@@ -1,6 +1,6 @@
 "use client";
 
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -17,7 +17,7 @@ export const Header = () => {
       <span className="text-primary text-[17px] font-normal leading-[22px] tracking-[-0.212px]">
         Test UMA settings
       </span>
-      <SandboxButton
+      <TestWalletButton
         buttonProps={{
           variant: "icon",
           size: "icon",
@@ -25,7 +25,7 @@ export const Header = () => {
         }}
       >
         <Image src="/icons/close.svg" width={24} height={24} alt="Close" />
-      </SandboxButton>
+      </TestWalletButton>
     </div>
   );
 };

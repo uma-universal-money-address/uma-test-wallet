@@ -9,4 +9,4 @@ contributions.
 
 If you believe you have found a security issue or problem, please report
 it through the GitHub Security Advisory
-["Report a Vulnerability" tab](https://github.com/uma-universal-money-address/uma-sandbox/security/advisories/new).
+["Report a Vulnerability" tab](https://github.com/uma-universal-money-address/uma-test-wallet/security/advisories/new).

@@ -1,7 +1,7 @@
 "use client";
 
-import { SandboxAvatar } from "@/components/SandboxAvatar";
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletAvatar } from "@/components/TestWalletAvatar";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { useAppState } from "@/hooks/useAppState";
 import { useWallets, Wallet } from "@/hooks/useWalletContext";
 import { getUmaFromUsername } from "@/lib/uma";
@@ -38,7 +38,7 @@ const ResourceButton = ({
   url: string;
 }) => {
   return (
-    <SandboxButton
+    <TestWalletButton
       buttonProps={{
         variant: "ghost",
         size: "sidebar",
@@ -60,7 +60,7 @@ const ResourceButton = ({
           {text}
         </span>
       </div>
-    </SandboxButton>
+    </TestWalletButton>
   );
 };
 
@@ -89,7 +89,7 @@ export const Sidebar = () => {
   if (wallets && currentWallet) {
     walletButtons = wallets.map((wallet, index) => {
       return (
-        <SandboxButton
+        <TestWalletButton
           key={wallet.id}
           className={`overflow-hidden justify-start ${
             wallet.id === currentWallet.id ? "bg-[#F2F3F5]" : ""
@@ -100,7 +100,7 @@ export const Sidebar = () => {
             onClick: () => handleChooseWallet(wallet),
           }}
         >
-          <SandboxAvatar
+          <TestWalletAvatar
             ownContact={{
               wallet,
               number: index + 1,
@@ -110,7 +110,7 @@ export const Sidebar = () => {
           <span className="truncate">
             {getUmaFromUsername(wallet.uma.username)}
           </span>
-        </SandboxButton>
+        </TestWalletButton>
       );
     });
   }
@@ -126,14 +126,14 @@ export const Sidebar = () => {
             height={18}
           />
           <span className="text-primary text-[16px] font-bold leading-[24px] tracking-[-0.32px]">
-            Sandbox
+            Test Wallet
           </span>
         </div>
         <section className="flex flex-col gap-10">
           {isLoggedIn && (
             <SidebarSection title="Your test UMAs">
               {walletButtons}
-              <SandboxButton
+              <TestWalletButton
                 buttonProps={{
                   variant: "ghost",
                   size: "sidebar",
@@ -158,7 +158,7 @@ export const Sidebar = () => {
                     New test UMA
                   </span>
                 </div>
-              </SandboxButton>
+              </TestWalletButton>
             </SidebarSection>
           )}
           <SidebarSection title="Resources">
@@ -179,14 +179,14 @@ export const Sidebar = () => {
                 iconSrc="/icons/github.svg"
                 iconAlt="GitHub"
                 text="GitHub"
-                url="https://github.com/uma-universal-money-address/uma-sandbox"
+                url="https://github.com/uma-universal-money-address/uma-test-wallet"
               />
             </div>
           </SidebarSection>
         </section>
       </section>
       {isLoggedIn && (
-        <SandboxButton
+        <TestWalletButton
           buttonProps={{
             variant: "ghost",
             size: "sidebar",
@@ -205,7 +205,7 @@ export const Sidebar = () => {
               Account settings
             </span>
           </div>
-        </SandboxButton>
+        </TestWalletButton>
       )}
     </div>
   );

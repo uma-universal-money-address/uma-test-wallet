@@ -1,5 +1,5 @@
 "use client";
-import { OwnContact, SandboxAvatar } from "@/components/SandboxAvatar";
+import { OwnContact, TestWalletAvatar } from "@/components/TestWalletAvatar";
 import { type ContactInfo } from "@/hooks/useContacts";
 import { useState } from "react";
 
@@ -32,7 +32,7 @@ export const Contact = (props: Props) => {
       onTouchEnd={handleUnpress}
       onMouseLeave={handleUnpress}
     >
-      <SandboxAvatar
+      <TestWalletAvatar
         size="lg"
         ownContact={props.ownContact}
         uma={props.contactInfo.uma}

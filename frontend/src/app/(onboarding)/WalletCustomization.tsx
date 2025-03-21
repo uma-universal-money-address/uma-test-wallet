@@ -1,6 +1,6 @@
 "use client";
 
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -353,7 +353,7 @@ export const WalletCustomizationButtons = ({ onNext }: StepButtonProps) => {
 
   return (
     <div className="flex flex-col gap-[10px]">
-      <SandboxButton
+      <TestWalletButton
         buttonProps={{
           size: "lg",
           onClick: handleFinishStep,
@@ -361,7 +361,7 @@ export const WalletCustomizationButtons = ({ onNext }: StepButtonProps) => {
         className="w-full"
       >
         Add test funds
-      </SandboxButton>
+      </TestWalletButton>
     </div>
   );
 };

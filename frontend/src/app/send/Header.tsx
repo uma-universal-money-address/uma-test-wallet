@@ -1,6 +1,6 @@
 "use client";
 
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -33,7 +33,7 @@ export const Header = () => {
 
   return (
     <div className="py-4 px-[10px] flex items-center justify-between w-full">
-      <SandboxButton
+      <TestWalletButton
         buttonProps={{
           variant: "icon",
           size: "icon",
@@ -46,7 +46,7 @@ export const Header = () => {
           height={24}
           alt="Back"
         />
-      </SandboxButton>
+      </TestWalletButton>
       <span className="text-primary text-center text-[17px] font-normal leading-[22px] tracking-[-0.212px] w-[281px]">
         {HEADER_TEXT_MAPPING[step]}
       </span>

@@ -1,7 +1,7 @@
 "use client";
 
 import { ResponsiveDialog } from "@/components/ResponsiveDialog";
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { useToast } from "@/hooks/use-toast";
 import { useLoginMethods, WebAuthnCredential } from "@/hooks/useLoginMethods";
 import { revokePasskey } from "@/lib/revokePasskey";
@@ -76,7 +76,7 @@ const PasskeyRow = ({
                   </span>
                 </div>
                 <div className="flex flex-col px-6 pb-[28px] gap-3">
-                  <SandboxButton
+                  <TestWalletButton
                     buttonProps={{
                       variant: "delete",
                       onClick: handleRevokePasskey,
@@ -84,20 +84,20 @@ const PasskeyRow = ({
                     className="w-full"
                   >
                     Revoke
-                  </SandboxButton>
-                  <SandboxButton
+                  </TestWalletButton>
+                  <TestWalletButton
                     buttonProps={{
                       variant: "outline",
                       onClick: handleCloseEditModal,
                     }}
                   >
                     Cancel
-                  </SandboxButton>
+                  </TestWalletButton>
                 </div>
               </>
             ) : (
               <div className="flex flex-col px-6 py-[28px]">
-                <SandboxButton
+                <TestWalletButton
                   buttonProps={{
                     variant: "delete",
                     size: "sm",
@@ -112,7 +112,7 @@ const PasskeyRow = ({
                     height={24}
                   />
                   Revoke
-                </SandboxButton>
+                </TestWalletButton>
               </div>
             )}
           </div>
@@ -137,7 +137,7 @@ const PasskeyRow = ({
             )}
           </div>
         </div>
-        <SandboxButton
+        <TestWalletButton
           buttonProps={{
             variant: "icon",
             size: "icon",
@@ -151,7 +151,7 @@ const PasskeyRow = ({
             height={18}
             className="opacity-50 min-w-[18px] min-h-[18px]"
           />
-        </SandboxButton>
+        </TestWalletButton>
       </div>
     </>
   );
@@ -196,7 +196,7 @@ export default function Page() {
         </div>
       </div>
       <div className="p-6">
-        <SandboxButton
+        <TestWalletButton
           buttonProps={{
             size: "lg",
             onClick: () => router.push("/settings/passkeys/create"),
@@ -211,7 +211,7 @@ export default function Page() {
             height={24}
           />
           Create passkey
-        </SandboxButton>
+        </TestWalletButton>
       </div>
     </div>
   );

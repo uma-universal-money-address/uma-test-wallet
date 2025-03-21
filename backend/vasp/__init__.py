@@ -67,7 +67,7 @@ def create_app() -> Flask:
     app.config["SESSION_COOKIE_SECURE"] = False if is_dev else True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["REMEMBER_COOKIE_SAMESITE"] = "Lax"
-    app.config["REMEMBER_COOKIE_NAME"] = "sandbox_remember_token"
+    app.config["REMEMBER_COOKIE_NAME"] = "test_wallet_remember_token"
 
     if not is_dev:
         app.config["SESSION_COOKIE_DOMAIN"] = app.config["COOKIE_DOMAIN"]

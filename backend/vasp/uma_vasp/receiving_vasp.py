@@ -703,7 +703,7 @@ def register_routes(
                     )
                     user.send_push_notification(
                         config=config,
-                        title="UMA Sandbox",
+                        title="UMA Test Wallet",
                         body=f"{payreq_response.sender_uma} sent {amount_normal_denom} {payreq_response.currency_code}",
                     )
 

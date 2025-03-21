@@ -19,7 +19,7 @@ interface Props {
   children: React.ReactNode;
 }
 
-export const SandboxButton = (props: Props) => {
+export const TestWalletButton = (props: Props) => {
   const button = (
     <Button
       {...props.buttonProps}

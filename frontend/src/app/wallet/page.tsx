@@ -1,6 +1,6 @@
 "use client";
 
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { Wallet } from "@/components/Wallet";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
@@ -147,7 +147,7 @@ export default function Page() {
                 </span>
               </div>
 
-              <SandboxButton
+              <TestWalletButton
                 buttonProps={{
                   size: "lg",
                   onClick: () => setIsCreateUmaDialogOpen(true),
@@ -164,7 +164,7 @@ export default function Page() {
                 <span className="text-[16px] font-semibold leading-[21px] tracking-[-.2px]">
                   New test UMA
                 </span>
-              </SandboxButton>
+              </TestWalletButton>
             </div>
           ))}
       </div>

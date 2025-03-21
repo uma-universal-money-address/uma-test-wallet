@@ -281,7 +281,7 @@ class UmaNwcBridge:
         ]
 
         return GetInfoResponse(
-            alias="UMA Sandbox",
+            alias="UMA Test Wallet",
             pubkey=self.config.signing_pubkey_hex,
             network=self.config.bitcoin_network.lower(),
             methods=[

@@ -1,4 +1,4 @@
-# UMA Sandbox Backend
+# UMA Test Wallet Backend
 
 A VASP (Virtual Asset Service Provider) implementation for simulating UMA transactions. This backend serves as the server component of the UMA Test Wallet, handling UMA protocol interactions, user authentication, and payment processing.
 

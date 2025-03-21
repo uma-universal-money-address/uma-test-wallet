@@ -1,4 +1,4 @@
-# UMA Sandbox Frontend
+# UMA Test Wallet Frontend
 
 The frontend component of the UMA Test Wallet, a demonstration and testing platform for UMA (Universal Money Address) integrations.
 

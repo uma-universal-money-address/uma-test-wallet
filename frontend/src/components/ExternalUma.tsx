@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { SandboxAvatar } from "./SandboxAvatar";
+import { TestWalletAvatar } from "./TestWalletAvatar";
 
 export const ExternalUma = ({
   uma,
@@ -33,7 +33,7 @@ export const ExternalUma = ({
       onTouchEnd={handleUnpress}
       onMouseLeave={handleUnpress}
     >
-      <SandboxAvatar uma={uma} size="lg" />
+      <TestWalletAvatar uma={uma} size="lg" />
       <div className="flex flex-row items-center justify-center h-full gap-[6px] overflow-hidden">
         <span className="text-primary text-[15px] font-normal leading-[20px] tracking-[-0.187px] truncate">
           {uma}
