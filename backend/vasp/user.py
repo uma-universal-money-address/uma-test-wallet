@@ -275,6 +275,19 @@ def construct_blueprint(
                 db_session.add(currency)
                 wallet.currency = currency
 
+            new_username = request_json.get("username")
+            if new_username:
+                wallet_uma = db_session.scalars(
+                    select(Uma).where(Uma.id == wallet.uma_id)
+                ).first()
+                if wallet_uma.username != new_username:
+                    existing_uma = db_session.scalars(
+                        select(Uma).where(Uma.username == new_username)
+                    ).first()
+                    if existing_uma:
+                        abort_with_error(400, "Username already taken")
+                    wallet_uma.username = new_username
+
             db_session.commit()
 
             response = jsonify(

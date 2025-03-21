@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, List
 from uuid import uuid4
 
 from flask import Blueprint, Response, jsonify, request
-from flask_login import current_user, login_user
+from flask_login import current_user, login_user, login_required
 from sqlalchemy import exc, func, select
 from sqlalchemy.orm import Session
 from uma import (
@@ -177,6 +177,39 @@ def construct_blueprint(
                 select(UmaModel).where(UmaModel.username == uma_user_name)
             ).first()
             return jsonify({"available": uma_model is None})
+
+    @bp.put("/<uma_user_name>")
+    @login_required
+    def update_uma(uma_user_name: str) -> Response:
+        with Session(db.engine) as db_session:
+            uma_model = db_session.scalars(
+                select(UmaModel).where(UmaModel.username == uma_user_name)
+            ).first()
+
+            if uma_model is None:
+                abort_with_error(404, "UMA not found")
+
+            if uma_model.user_id != current_user.id:
+                abort_with_error(403, "Not authorized to modify this UMA")
+
+            request_json = request.json
+            new_username = request_json.get("username")
+
+            if not new_username:
+                abort_with_error(400, "New username is required")
+
+            # Check if new username already exists
+            existing_uma = db_session.scalars(
+                select(UmaModel).where(UmaModel.username == new_username)
+            ).first()
+
+            if existing_uma:
+                abort_with_error(400, "Username already taken")
+
+            uma_model.username = new_username
+            db_session.commit()
+
+            return jsonify(uma_model.to_dict())
 
     @bp.get("/generate_random_uma")
     def generate_random_uma() -> Response:
