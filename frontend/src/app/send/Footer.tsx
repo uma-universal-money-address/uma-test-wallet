@@ -1,6 +1,6 @@
 "use client";
 
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 
 interface Props {
   onSubmit: () => void;
@@ -12,7 +12,7 @@ interface Props {
 export const Footer = (props: Props) => {
   return (
     <div className="flex flex-col py-6 w-full self-center">
-      <SandboxButton
+      <TestWalletButton
         className="w-full"
         loading={props.isLoading}
         disabled={props.disabled || props.isLoading}
@@ -21,7 +21,7 @@ export const Footer = (props: Props) => {
         }}
       >
         {props.buttonText}
-      </SandboxButton>
+      </TestWalletButton>
     </div>
   );
 };

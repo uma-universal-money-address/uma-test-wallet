@@ -3,8 +3,8 @@ self.addEventListener("push", function (event) {
     const data = event.data.json();
     const options = {
       body: data.body,
-      icon: data.icon || "/uma-sandbox-app.png",
-      badge: "/uma-sandbox-app.png",
+      icon: data.icon || "/uma-test-wallet-app.png",
+      badge: "/uma-test-wallet-app.png",
       vibrate: [100, 50, 100],
       data: {
         dateOfArrival: Date.now(),

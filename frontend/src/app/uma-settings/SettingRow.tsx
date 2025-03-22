@@ -1,6 +1,6 @@
 "use client";
 
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { Switch } from "@/components/ui/switch";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -57,7 +57,7 @@ export const SettingRow = ({
         </div>
         <div className="flex flex-row items-center gap-4">
           {action.type === "link" && (
-            <SandboxButton
+            <TestWalletButton
               buttonProps={{
                 variant: "icon",
                 size: "icon",
@@ -71,7 +71,7 @@ export const SettingRow = ({
                 alt="Navigate"
                 className="max-w-6"
               />
-            </SandboxButton>
+            </TestWalletButton>
           )}
           {action.type === "toggle" && (
             <Switch
@@ -80,7 +80,7 @@ export const SettingRow = ({
             />
           )}
           {action.type === "external-link" && (
-            <SandboxButton
+            <TestWalletButton
               buttonProps={{
                 variant: "icon",
                 size: "icon",
@@ -94,7 +94,7 @@ export const SettingRow = ({
                 className="max-w-6"
                 alt="Open in new tab"
               />
-            </SandboxButton>
+            </TestWalletButton>
           )}
         </div>
       </div>

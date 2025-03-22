@@ -3,7 +3,7 @@
 import { useAppState } from "@/hooks/useAppState";
 import { Wallet } from "@/hooks/useWalletContext";
 import Image from "next/image";
-import { SandboxAvatar } from "./SandboxAvatar";
+import { TestWalletAvatar } from "./TestWalletAvatar";
 import { Button } from "./ui/button";
 
 interface Props {
@@ -34,7 +34,7 @@ export const UmaSwitcherFooter = ({ wallets }: Props) => {
             }`}
           onClick={() => handleChooseWallet(wallet)}
         >
-          <SandboxAvatar
+          <TestWalletAvatar
             ownContact={{
               wallet,
               number: index + 1,

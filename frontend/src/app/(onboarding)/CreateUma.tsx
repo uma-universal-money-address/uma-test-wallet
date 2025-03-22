@@ -1,6 +1,6 @@
 "use client";
 
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { UmaInput } from "@/components/UmaInput";
 import { toast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
@@ -165,7 +165,7 @@ export const CreateUmaButtons = ({ onNext }: StepButtonProps) => {
 
   return (
     <div className="flex flex-col gap-[10px]">
-      <SandboxButton
+      <TestWalletButton
         buttonProps={{
           variant: "secondary",
           size: "lg",
@@ -175,8 +175,8 @@ export const CreateUmaButtons = ({ onNext }: StepButtonProps) => {
         className="w-full"
       >
         Pick for me
-      </SandboxButton>
-      <SandboxButton
+      </TestWalletButton>
+      <TestWalletButton
         buttonProps={{
           size: "lg",
           onClick: handleSubmit,
@@ -185,7 +185,7 @@ export const CreateUmaButtons = ({ onNext }: StepButtonProps) => {
         className="w-full"
       >
         Continue
-      </SandboxButton>
+      </TestWalletButton>
     </div>
   );
 };

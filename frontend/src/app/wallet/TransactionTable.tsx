@@ -1,5 +1,5 @@
 "use client";
-import { SandboxAvatar } from "@/components/SandboxAvatar";
+import { TestWalletAvatar } from "@/components/TestWalletAvatar";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
 import { ExchangeRates, useExchangeRates } from "@/hooks/useExchangeRates";
@@ -108,7 +108,7 @@ const TransactionRow = ({
           />
         </div>
       ) : (
-        <SandboxAvatar
+        <TestWalletAvatar
           size="lg"
           ownContact={
             isOwnContact

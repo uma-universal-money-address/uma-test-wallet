@@ -2,7 +2,7 @@
 
 import { CreateUmaDialog } from "@/components/CreateUmaDialog";
 import { PwaInstallBanner } from "@/components/PwaInstallBanner";
-import { SandboxAvatar } from "@/components/SandboxAvatar";
+import { TestWalletAvatar } from "@/components/TestWalletAvatar";
 import { Button } from "@/components/ui/button";
 import { UmaSwitcherFooter } from "@/components/UmaSwitcherFooter";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -74,7 +74,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               className="flex items-center overflow-hidden cursor-pointer animate-[fadeIn_0.5s_ease-in-out_forwards]"
               onClick={() => setIsUmaSelectorDialogOpen(true)}
             >
-              <span className="min-w-0 pl-[6px]">UMA Sandbox</span>
+              <span className="min-w-0 pl-[6px]">UMA Test Wallet</span>
               <Image
                 src="/icons/chevron-down-small.svg"
                 alt="Chevron down"
@@ -107,7 +107,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               className="flex items-center overflow-hidden cursor-pointer animate-[fadeIn_0.5s_ease-in-out_forwards]"
               onClick={() => setIsUmaSelectorDialogOpen(true)}
             >
-              <SandboxAvatar
+              <TestWalletAvatar
                 ownContact={{
                   wallet: currentWallet,
                   number: currentWalletIndex + 1,

@@ -6,8 +6,8 @@ import { convertCurrency } from "@/lib/convertCurrency";
 import { convertToNormalDenomination } from "@/lib/convertToNormalDenomination";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { SandboxAvatar } from "./SandboxAvatar";
-import { SandboxButton } from "./SandboxButton";
+import { TestWalletAvatar } from "./TestWalletAvatar";
+import { TestWalletButton } from "./TestWalletButton";
 import { Button } from "./ui/button";
 
 interface Props {
@@ -80,7 +80,7 @@ export const Wallet = ({
       {wallet && walletIndex !== undefined && (
         <div className="flex flex-row items-center justify-between gap-4 px-6">
           <div className="flex flex-row items-center gap-2">
-            <SandboxAvatar
+            <TestWalletAvatar
               size="md"
               ownContact={{
                 wallet,
@@ -200,7 +200,7 @@ export const Wallet = ({
       )}
       {options?.showSend && (
         <div className="flex flex-row items-center justify-between px-6">
-          <SandboxButton
+          <TestWalletButton
             className="w-full text-white bg-white/[0.12] hover:bg-white/[0.2]"
             buttonProps={{
               onClick: handleSend,
@@ -208,7 +208,7 @@ export const Wallet = ({
             }}
           >
             Send
-          </SandboxButton>
+          </TestWalletButton>
         </div>
       )}
     </div>

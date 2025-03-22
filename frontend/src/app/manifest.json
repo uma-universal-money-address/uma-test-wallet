@@ -1,9 +1,9 @@
 {
-  "name": "UMA Sandbox",
-  "short_name": "UMA Sandbox",
+  "name": "UMA Test Wallet",
+  "short_name": "UMA Test Wallet",
   "icons": [
     {
-      "src": "/uma-sandbox-app.png",
+      "src": "/uma-test-wallet-app.png",
       "sizes": "512x512",
       "type": "image/png"
     }

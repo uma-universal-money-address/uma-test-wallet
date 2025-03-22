@@ -204,11 +204,11 @@ def construct_blueprint(
     def webauthn_options() -> str:
         public_credential_creation_options = webauthn.generate_registration_options(
             rp_id=get_webauthn_expected_rp_id(),
-            rp_name="UMA Sandbox",
-            user_id="UMA Sandbox".encode(
+            rp_name="UMA Test Wallet",
+            user_id="UMA Test Wallet".encode(
                 "utf-8"
             ),  # Not user specific so credentials can be retrieved without username
-            user_name="UMA Sandbox",
+            user_name="UMA Test Wallet",
             timeout=60000,
         )
 

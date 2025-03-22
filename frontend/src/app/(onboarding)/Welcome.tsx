@@ -1,6 +1,6 @@
 "use client";
 
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
@@ -24,7 +24,7 @@ export const Welcome = () => {
       >
         <Image
           className="dark:invert"
-          src="/uma-sandbox-icon.svg"
+          src="/uma-test-wallet-icon.svg"
           alt="UMA logo"
           width={isShortScreen ? 120 : 180}
           height={isShortScreen ? 28 : 38}
@@ -38,7 +38,7 @@ export const Welcome = () => {
         className="flex flex-col gap-2 items-center text-center"
       >
         <h1 className="text-primary text-[26px] font-bold leading-[34px] tracking-[-0.325px]">
-          UMA Sandbox
+          UMA Test Wallet
         </h1>
         <p className="text-secondary text-[15px] font-normal leading-[20px] tracking-[-0.187px] max-w-[304px]">
           Create a test Universal Money Address (UMA) and simulate sending and
@@ -128,7 +128,7 @@ export const WelcomeButtons = ({ onNext }: StepButtonProps) => {
 
   return (
     <div className="flex flex-col gap-[10px]">
-      <SandboxButton
+      <TestWalletButton
         buttonProps={{
           variant: "secondary",
           size: "lg",
@@ -138,8 +138,8 @@ export const WelcomeButtons = ({ onNext }: StepButtonProps) => {
         className="w-full"
       >
         I already have a test UMA
-      </SandboxButton>
-      <SandboxButton
+      </TestWalletButton>
+      <TestWalletButton
         buttonProps={{
           size: "lg",
           onClick: onNext,
@@ -147,7 +147,7 @@ export const WelcomeButtons = ({ onNext }: StepButtonProps) => {
         className="w-full"
       >
         Create a new test UMA
-      </SandboxButton>
+      </TestWalletButton>
     </div>
   );
 };

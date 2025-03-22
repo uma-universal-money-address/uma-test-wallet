@@ -1,6 +1,6 @@
 import { ResponsiveDialog } from "@/components/ResponsiveDialog";
-import { SandboxAvatar } from "@/components/SandboxAvatar";
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletAvatar } from "@/components/TestWalletAvatar";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
@@ -114,7 +114,7 @@ const UmaSelectorDialogContent = ({
         </div>
       )}
       <div className="flex flex-col px-6 pt-3 pb-4 gap-[10px]">
-        <SandboxButton
+        <TestWalletButton
           buttonProps={{
             size: "lg",
             onClick: handleCreateUma,
@@ -134,7 +134,7 @@ const UmaSelectorDialogContent = ({
             className="invert"
           />
           Create a new test UMA
-        </SandboxButton>
+        </TestWalletButton>
       </div>
     </>
   );
@@ -178,7 +178,7 @@ const WalletRows = ({
           >
             <div className="flex flex-row items-center overflow-hidden">
               <div className="pr-4">
-                <SandboxAvatar
+                <TestWalletAvatar
                   ownContact={{
                     wallet,
                     number: index + 1,

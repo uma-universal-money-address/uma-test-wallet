@@ -1,6 +1,6 @@
 "use client";
 
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import Image from "next/image";
@@ -41,7 +41,7 @@ export const Step = ({
       {showHeader && (
         <div className="flex flex-row w-full justify-between items-center px-4 h-[44px]">
           {stepProps.isBackable ? (
-            <SandboxButton
+            <TestWalletButton
               buttonProps={{
                 variant: "icon",
                 size: "icon",
@@ -55,7 +55,7 @@ export const Step = ({
                 alt="Back"
                 className="max-w-6"
               />
-            </SandboxButton>
+            </TestWalletButton>
           ) : (
             <div className="w-6" />
           )}

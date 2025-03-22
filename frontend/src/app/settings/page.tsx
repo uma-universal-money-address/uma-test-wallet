@@ -1,8 +1,8 @@
 "use client";
 
 import { ResponsiveDialog } from "@/components/ResponsiveDialog";
-import { SandboxButton } from "@/components/SandboxButton";
 import { SettingProps, SettingRow } from "@/components/SettingRow";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
 import { getBackendUrl } from "@/lib/backendUrl";
@@ -110,9 +110,9 @@ export default function Page() {
       title: "GitHub",
       action: {
         type: "external-link",
-        href: "https://github.com/uma-universal-money-address/uma-sandbox",
+        href: "https://github.com/uma-universal-money-address/uma-test-wallet",
       },
-      description: "View the open-source GitHub repository for UMA Sandbox",
+      description: "View the open-source GitHub repository for UMA Test Wallet",
     },
   ];
 
@@ -139,7 +139,7 @@ export default function Page() {
             <span className="text-[26px] font-normal leading-[34px] tracking-[-0.325px] pb-6 px-2">
               Are you sure?
             </span>
-            <SandboxButton
+            <TestWalletButton
               buttonProps={{
                 variant: "destructive",
                 onClick: handleLogout,
@@ -147,8 +147,8 @@ export default function Page() {
               className="w-full"
             >
               Log out
-            </SandboxButton>
-            <SandboxButton
+            </TestWalletButton>
+            <TestWalletButton
               buttonProps={{
                 variant: "secondary",
                 size: "lg",
@@ -157,10 +157,10 @@ export default function Page() {
               className="w-full"
             >
               Cancel
-            </SandboxButton>
+            </TestWalletButton>
           </div>
         </ResponsiveDialog>
-        <SandboxButton
+        <TestWalletButton
           buttonProps={{
             variant: "destructiveOutline",
             onClick: () => setIsLogoutOpen(true),
@@ -168,7 +168,7 @@ export default function Page() {
           className="w-full"
         >
           Log out
-        </SandboxButton>
+        </TestWalletButton>
       </div>
     </div>
   );

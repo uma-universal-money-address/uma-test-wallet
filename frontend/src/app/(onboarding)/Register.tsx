@@ -1,7 +1,7 @@
 "use client";
 
 import { InfoRow } from "@/components/InfoRow";
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { Wallet } from "@/components/Wallet";
 import { useToast } from "@/hooks/use-toast";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
@@ -144,7 +144,7 @@ export const RegisterButtons = ({ onNext }: StepButtonProps) => {
 
   return (
     <div className="flex flex-col gap-[10px]">
-      <SandboxButton
+      <TestWalletButton
         buttonProps={{
           variant: "secondary",
           size: "lg",
@@ -153,8 +153,8 @@ export const RegisterButtons = ({ onNext }: StepButtonProps) => {
         className="w-full"
       >
         Maybe later
-      </SandboxButton>
-      <SandboxButton
+      </TestWalletButton>
+      <TestWalletButton
         buttonProps={{
           size: "lg",
           onClick: handleRegister,
@@ -163,7 +163,7 @@ export const RegisterButtons = ({ onNext }: StepButtonProps) => {
         className="w-full"
       >
         Create passkey
-      </SandboxButton>
+      </TestWalletButton>
     </div>
   );
 };

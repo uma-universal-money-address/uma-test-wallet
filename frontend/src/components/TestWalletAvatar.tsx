@@ -77,7 +77,7 @@ const getBorderRadius = (size: string) => {
   }
 };
 
-export const SandboxAvatar = (props: Props) => {
+export const TestWalletAvatar = (props: Props) => {
   const avatarSrc = props.src || EMPTY_AVATAR;
   const size = props.size || "lg";
 

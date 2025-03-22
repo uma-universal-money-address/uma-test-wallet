@@ -4,7 +4,7 @@ import { usePwaInstallStatus } from "@/hooks/usePwaInstallStatus";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { SandboxButton } from "./SandboxButton";
+import { TestWalletButton } from "./TestWalletButton";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -74,8 +74,8 @@ export const PwaInstallBanner = ({ dismissable, top }: Props) => {
           )}
           <div className="flex flex-row gap-3">
             <Image
-              src="/uma-sandbox-app.svg"
-              alt="UMA sandbox"
+              src="/uma-test-wallet-app.svg"
+              alt="UMA test-wallet"
               width={36}
               height={36}
             />
@@ -212,7 +212,7 @@ const PwaInstallScreenIos = ({
                     Install the app
                   </h1>
                   <p className="text-[15px] font-normal leading[20px] tracking-[-0.187px] text-secondary">
-                    Add UMA Sandbox to your home screen to get a better
+                    Add UMA Test Wallet to your home screen to get a better
                     experience and payment notifications.
                   </p>
                 </div>
@@ -232,12 +232,12 @@ const PwaInstallScreenIos = ({
                     {`Tap "Add to Home Screen"`}
                   </TutorialStep>
                   <TutorialStep number={3}>
-                    Open the UMA Sandbox app
+                    Open the UMA Test Wallet app
                   </TutorialStep>
                 </div>
               </div>
               <div className="p-6 w-full">
-                <SandboxButton
+                <TestWalletButton
                   className="w-full"
                   buttonProps={{
                     size: "lg",
@@ -245,7 +245,7 @@ const PwaInstallScreenIos = ({
                   }}
                 >
                   Got it
-                </SandboxButton>
+                </TestWalletButton>
               </div>
             </div>
           </div>
@@ -332,7 +332,7 @@ const PwaInstallScreenAndroid = ({
                     Install the app
                   </h1>
                   <p className="text-[15px] font-normal leading[20px] tracking-[-0.187px] text-secondary">
-                    Add UMA Sandbox to your home screen to get a better
+                    Add UMA Test Wallet to your home screen to get a better
                     experience and payment notifications.
                   </p>
                 </div>
@@ -352,12 +352,12 @@ const PwaInstallScreenAndroid = ({
                     {`Tap "Add to Home screen"`}
                   </TutorialStep>
                   <TutorialStep number={3}>
-                    Open the UMA Sandbox app
+                    Open the UMA Test Wallet app
                   </TutorialStep>
                 </div>
               </div>
               <div className="p-6 w-full">
-                <SandboxButton
+                <TestWalletButton
                   className="w-full"
                   buttonProps={{
                     size: "lg",
@@ -365,7 +365,7 @@ const PwaInstallScreenAndroid = ({
                   }}
                 >
                   Got it
-                </SandboxButton>
+                </TestWalletButton>
               </div>
             </div>
           </div>

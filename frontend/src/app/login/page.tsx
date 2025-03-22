@@ -1,6 +1,6 @@
 "use client";
 
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
 import { useLoggedIn } from "@/hooks/useLoggedIn";
@@ -116,7 +116,7 @@ export default function Page() {
         <div className="p-5 border border-[#DDE3F3] rounded-[34px]">
           <Image
             className="dark:invert"
-            src="/uma-sandbox-icon.svg"
+            src="/uma-test-wallet-icon.svg"
             alt="UMA logo"
             width={180}
             height={38}
@@ -125,7 +125,7 @@ export default function Page() {
         </div>
         <div className="flex flex-col gap-2 items-center pt-8 pb-[56px] text-center">
           <h1 className="text-primary text-[26px] font-bold leading-[34px] tracking-[-0.325px]">
-            UMA Sandbox
+            UMA Test Wallet
           </h1>
           <p className="text-secondary text-[15px] font-normal leading-[20px] tracking-[-0.187px] max-w-[304px]">
             Create a test Universal Money Address (UMA) and simulate sending and
@@ -134,7 +134,7 @@ export default function Page() {
         </div>
       </div>
       <div className="w-full px-6 pb-4">
-        <SandboxButton
+        <TestWalletButton
           buttonProps={{
             size: "lg",
             onClick: handleLogin,
@@ -143,7 +143,7 @@ export default function Page() {
           className="w-full"
         >
           Login
-        </SandboxButton>
+        </TestWalletButton>
       </div>
     </div>
   );

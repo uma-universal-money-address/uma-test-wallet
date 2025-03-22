@@ -1,7 +1,7 @@
 "use client";
 
 import { InfoRow } from "@/components/InfoRow";
-import { SandboxButton } from "@/components/SandboxButton";
+import { TestWalletButton } from "@/components/TestWalletButton";
 import { useToast } from "@/hooks/use-toast";
 import { getBackendUrl } from "@/lib/backendUrl";
 import { startRegistration } from "@simplewebauthn/browser";
@@ -85,7 +85,7 @@ export default function Page() {
             </div>
           </div>
           <div className="w-full p-6">
-            <SandboxButton
+            <TestWalletButton
               buttonProps={{
                 size: "lg",
                 onClick: handleRegister,
@@ -101,7 +101,7 @@ export default function Page() {
                 height={24}
               />
               Create passkey
-            </SandboxButton>
+            </TestWalletButton>
           </div>
         </div>
       </div>

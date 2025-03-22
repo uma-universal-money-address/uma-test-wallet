@@ -1,5 +1,5 @@
 "use client";
-import { OwnContact, SandboxAvatar } from "@/components/SandboxAvatar";
+import { OwnContact, TestWalletAvatar } from "@/components/TestWalletAvatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useBalance } from "@/hooks/useBalance";
@@ -132,7 +132,7 @@ export const Confirm = () => {
       <section className="">
         <div className="flex flex-col bg-[#f9f9f9] w-full rounded-3xl border-[0.33px] border-[#C0C9D6] p-6">
           <div className="flex items-center gap-3">
-            <SandboxAvatar
+            <TestWalletAvatar
               size="lg"
               ownContact={senderWallet}
               currencyCode={senderWallet?.wallet.currency.code}
@@ -156,7 +156,7 @@ export const Confirm = () => {
             <div className="h-[0.33px] w-full bg-[#C0C9D6]" />
           </div>
           <div className="flex items-center gap-3">
-            <SandboxAvatar
+            <TestWalletAvatar
               size="lg"
               ownContact={receiverWallet}
               uma={receiverUma}
