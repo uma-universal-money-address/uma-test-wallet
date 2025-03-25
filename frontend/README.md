@@ -11,6 +11,7 @@ The frontend component of the UMA Test Wallet, a demonstration and testing platf
 ## Setup and Installation
 
 1. Clone the repository (if you haven't already):
+
    ```bash
    git clone https://github.com/uma-universal-money-address/uma-test-wallet.git
    cd uma-test-wallet/frontend
@@ -54,6 +55,7 @@ This application supports Progressive Web App (PWA) functionality, allowing it t
 ### Testing on Desktop
 
 To test local builds on desktop:
+
 - Use Chrome (not Arc or other browsers)
 - Look for the install button in the address bar
 - Follow the prompts to install
@@ -61,6 +63,7 @@ To test local builds on desktop:
 ### PWA Configuration
 
 Most of the PWA functionality is configured through:
+
 - `public/manifest.json` - App metadata and configuration
 - `src/app/layout.tsx` - HTML metadata
 - `next.config.ts` - Next.js configuration
@@ -69,4 +72,4 @@ If you make changes and Chrome no longer shows the option to install it, check y
 
 ## Environment variables
 
-When building, set the NEXT_PUBLIC_BACKEND_DOMAIN which will get inlined into the js bundle, accessible to the browser. It should be configured to the domain of the backend, e.g. test.uma.me.
+When building, set the NEXT_PUBLIC_BACKEND_DOMAIN which will get inlined into the js bundle, accessible to the browser. It should be configured to either the local backend or `/` for relative paths in production.
