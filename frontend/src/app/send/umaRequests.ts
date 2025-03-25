@@ -11,7 +11,7 @@ export const lnurlpLookup = async (
   receiverUma: string,
 ): Promise<UmaLookupResponse> => {
   const lookupRes = await fetch(
-    `${getBackendUrl()}/api/umalookup/${receiverUma}?senderUma=${senderUma}`,
+    `${getBackendUrl()}/umalookup/${receiverUma}?senderUma=${senderUma}`,
     {
       method: "GET",
       cache: "no-store",
@@ -34,7 +34,7 @@ export const createPayreq = async (
   receiverCurrencyCode = "SAT",
 ) => {
   const payReq = await fetch(
-    `${getBackendUrl()}/api/umapayreq/${lookupCallbackUuid}?amount=${receivingAmount}&receivingCurrencyCode=${receiverCurrencyCode}`,
+    `${getBackendUrl()}/umapayreq/${lookupCallbackUuid}?amount=${receivingAmount}&receivingCurrencyCode=${receiverCurrencyCode}`,
     {
       method: "GET",
       cache: "no-store",
@@ -56,7 +56,7 @@ export const createPayreq = async (
 
 export const sendPayment = async (umaPayreqResponse: UmaPayreqResponse) => {
   const sendRes = await fetch(
-    `${getBackendUrl()}/api/sendpayment/${umaPayreqResponse.callbackUuid}`,
+    `${getBackendUrl()}/sendpayment/${umaPayreqResponse.callbackUuid}`,
     {
       method: "POST",
       credentials: "include",
