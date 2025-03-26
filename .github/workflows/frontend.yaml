@@ -22,7 +22,7 @@ jobs:
     name: "Update lock file for PRs before checks and build"
     permissions:
       contents: write
-    runs-on: "ubuntu-22.04"
+    runs-on: "ubuntu-24.04"
     outputs:
       VERIFIED_LOCK_COMMIT: ${{ steps.sync-lock-file.outputs.VERIFIED_LOCK_COMMIT }}
     steps:
@@ -62,11 +62,11 @@ jobs:
           echo "$(git rev-parse HEAD)"
           echo "VERIFIED_LOCK_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
-  lint-and-format:
+  check:
     # Wait to see if the lock file should be updated before running checks:
     needs: "update-lock-file"
     name: "Check lint and format"
-    runs-on: "ubuntu-22.04"
+    runs-on: "ubuntu-24.04"
     steps:
       - name: "Checkout"
         uses: "actions/checkout@v3"
@@ -85,7 +85,7 @@ jobs:
         with:
           cwd: "./frontend"
           install-mode: "install-prevent-lock-update"
-          cache-prefix: lint-and-format
+          cache-prefix: check
 
       - run: "yarn lint"
         working-directory: "./frontend"
@@ -95,3 +95,51 @@ jobs:
 
       - run: "yarn build"
         working-directory: "./frontend"
+
+  deploy:
+    needs: ["check"]
+    if: "github.event_name == 'push'"
+    runs-on: "ubuntu-24.04"
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: "Configure AWS credentials"
+        uses: "aws-actions/configure-aws-credentials@v4"
+        with:
+          role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_DEV }}:role/github-actions-uma"
+          aws-region: "us-west-2"
+
+      - name: "Checkout"
+        uses: "actions/checkout@v4"
+        with:
+          fetch-depth: 20
+
+      - name: "Setup Node"
+        uses: "actions/setup-node@v4"
+        env:
+          SKIP_YARN_COREPACK_CHECK: true
+        with:
+          node-version-file: "frontend/.nvmrc"
+
+      - name: "Install dependencies"
+        uses: ./.github/actions/yarn-install
+        with:
+          cwd: "frontend"
+          install-mode: "install-prevent-lock-update"
+          cache-prefix: deploy
+
+      - run: "yarn build"
+        working-directory: "frontend"
+        env:
+          NEXT_PUBLIC_BACKEND_DOMAIN: "/"
+
+      - name: "Upload frontend to staging bucket"
+        run: |
+          GIT_HASH="$(git log -1 --format='%cs-%H' frontend)"
+          aws s3 sync frontend/dist/ s3://${{ secrets.FRONTEND_BUILD_BUCKET }}/uma-sandbox/${GIT_HASH:0:19}/
+
+      - name: "Deploy frontend"
+        run: |
+          GIT_HASH="$(git log -1 --format='%cs-%H' frontend)"
+          scripts/deploy.py --source ${{ secrets.FRONTEND_BUILD_BUCKET }} --destination ${{ secrets.FRONTEND_BUCKET_DEV }} --strip-extension $GIT_HASH

@@ -17,9 +17,8 @@ on:
       - ".github/workflows/backend.yaml"
 
 jobs:
-  lint-and-test:
-    runs-on: ubuntu-latest
-
+  check:
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -48,3 +47,64 @@ jobs:
         run: |
           set -o pipefail
           pipenv run black --check --diff .
+
+  build:
+    needs: ["check"]
+    if: "github.event_name == 'push'"
+    runs-on: "ubuntu-24.04"
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: "Configure AWS credentials"
+        uses: "aws-actions/configure-aws-credentials@v4"
+        with:
+          role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_DEV }}:role/github-actions-uma"
+          aws-region: "us-west-2"
+
+      - name: "Log into ECR"
+        id: ecr-login
+        uses: "aws-actions/amazon-ecr-login@v2"
+
+      - name: "Setup QEMU"
+        uses: "docker/setup-qemu-action@v3"
+
+      - name: "Setup builder"
+        uses: "docker/setup-buildx-action@v3"
+
+      - name: "Checkout"
+        uses: "actions/checkout@v4"
+        with:
+          fetch-depth: 20
+
+      - name: "Determine metadata"
+        id: metadata
+        run: |
+          GIT_HASH="$(git log -1 --format='%H' backend)"
+          echo "hash_short=${GIT_HASH:0:8}" >> $GITHUB_OUTPUT
+          echo "date=$(date -u '+%Y%m%d')" >> $GITHUB_OUTPUT
+
+      - name: "Docker metadata"
+        id: docker-meta
+        uses: "docker/metadata-action@v4"
+        with:
+          images: ${{ steps.ecr-login.outputs.registry }}/uma-sandbox
+          labels: |
+            org.opencontainers.image.vendor=Lightspark
+            org.opencontainers.image.title=uma-sandbox
+
+      - name: "Build and push image"
+        uses: "docker/build-push-action@v3"
+        with:
+          context: backend
+          file: backend/Dockerfile
+          platforms: linux/arm64,linux/amd64
+          build-args: BUILDKIT_INLINE_CACHE=1
+          cache-from: type=registry,ref=${{ steps.ecr-login.outputs.registry }}/uma-sandbox:latest
+          labels: ${{ steps.docker-meta.outputs.labels }}
+          tags: |
+            ${{ steps.ecr-login.outputs.registry }}/uma-sandbox:latest,
+            ${{ steps.ecr-login.outputs.registry }}/uma-sandbox:git_${{ steps.metadata.outputs.hash_short }},
+            ${{ steps.ecr-login.outputs.registry }}/uma-sandbox:git_${{ steps.metadata.outputs.date }}_${{ steps.metadata.outputs.hash_short }}
+          push: true
+          provenance: false # skopeo can't handle this
