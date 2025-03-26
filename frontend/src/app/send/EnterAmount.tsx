@@ -8,8 +8,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAppState } from "@/hooks/useAppState";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
+import { useWallets } from "@/hooks/useWalletContext";
 import { convertCurrency } from "@/lib/convertCurrency";
 import { convertToLowestDenomination } from "@/lib/convertToLowestDenomination";
+import { convertToNormalDenomination } from "@/lib/convertToNormalDenomination";
 import { fundWallet } from "@/lib/fundWallet";
 import { type Currency } from "@/types/Currency";
 import assert from "assert";
@@ -46,13 +48,15 @@ export const EnterAmount = () => {
   const hasAmount = amount > 0;
 
   const { currentWallet } = useAppState();
-  const walletCurrency = currentWallet?.currency || {
+  const { wallets } = useWallets();
+  const wallet =
+    wallets?.find((w) => w.id === currentWallet?.id) || currentWallet;
+  const walletCurrency = wallet?.currency || {
     code: "USD",
     name: "US Dollar",
     symbol: "$",
     decimals: 2,
   };
-  const walletBalance = currentWallet?.amountInLowestDenom || 0;
 
   const {
     exchangeRates,
@@ -248,12 +252,17 @@ export const EnterAmount = () => {
       <div className="w-full">
         <div className="text-center text-primary text-[15px] font-normal leading-[20px]">
           Balance:{" "}
-          {(
-            walletBalance / Math.pow(10, walletCurrency.decimals || 0)
-          ).toLocaleString("en", {
-            style: "decimal",
-            maximumFractionDigits: walletCurrency.decimals || 2,
-          })}{" "}
+          {wallet
+            ? Number(
+                convertToNormalDenomination(
+                  wallet.amountInLowestDenom,
+                  wallet.currency,
+                ),
+              ).toLocaleString("en", {
+                style: "decimal",
+                maximumFractionDigits: wallet.currency.decimals || 2,
+              })
+            : "0.00"}{" "}
           {walletCurrency.code}
         </div>
       </div>
