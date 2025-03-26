@@ -22,7 +22,7 @@ log: logging.Logger = logging.getLogger(__name__)
 
 # To be registed in user blueprint (so paths will look like /user/notifications/...)
 def construct_blueprint(config: Config) -> Blueprint:
-    bp = Blueprint("notifications", __name__, url_prefix="/api/user/notifications")
+    bp = Blueprint("notifications", __name__, url_prefix="/notifications")
 
     @bp.get("/vapid-public-key")
     def vapid_public_key() -> WerkzeugResponse:
