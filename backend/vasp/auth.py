@@ -94,6 +94,7 @@ def construct_blueprint(
             session["uma"] = get_uma_from_username(username)
         else:
             session["uma"] = current_user.get_default_uma_address()
+            username = session["uma"].split("@")[0]
 
         with Session(db.engine) as db_session:
             wallet = db_session.scalars(
