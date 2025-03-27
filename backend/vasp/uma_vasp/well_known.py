@@ -1,7 +1,6 @@
 from typing import Any, Dict
 
 from flask import Blueprint, current_app, Response, jsonify
-from flask_cors import cross_origin
 from uma import create_pubkey_response, is_domain_local
 
 from vasp.uma_vasp.config import Config
@@ -19,11 +18,6 @@ def handle_public_key_request() -> Response:
     )
 
 
-@cross_origin(
-    origins=["*"],
-    methods=["GET"],
-    allow_headers=["Content-Type"],
-)
 @bp.route("/uma-configuration")
 def uma_config() -> Dict[str, Any]:
     vasp_domain = current_app.config.get("VASP_DOMAIN", "localhost")
