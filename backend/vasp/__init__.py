@@ -94,9 +94,17 @@ def create_app() -> Flask:
 
     CORS(
         app,
-        origins=get_frontend_allowed_origins(app.config["FRONTEND_DOMAIN"]),
-        allow_headers=["Access-Control-Allow-Origin", "Content-Type"],
-        supports_credentials=True,
+        resources={
+            r"/api/*": {
+                "origins": get_frontend_allowed_origins(app.config["FRONTEND_DOMAIN"]),
+                "allow_headers": ["Access-Control-Allow-Origin", "Content-Type"],
+                "supports_credentials": True,
+            },
+            r"/.well-known/*": {
+                "origins": "*",
+                "allow_headers": ["Content-Type"],
+            },
+        },
     )
 
     app.static_url_path = ""
