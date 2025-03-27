@@ -14,6 +14,7 @@ from vasp.uma_vasp.config import Config
 
 from enum import Enum
 from vasp.utils import (
+    get_username_from_uma,
     get_vasp_domain,
     get_uma_from_username,
     get_frontend_allowed_origins,
@@ -94,7 +95,7 @@ def construct_blueprint(
             session["uma"] = get_uma_from_username(username)
         else:
             session["uma"] = current_user.get_default_uma_address()
-            username = session["uma"].split("@")[0]
+            username = get_username_from_uma(session["uma"])
 
         with Session(db.engine) as db_session:
             wallet = db_session.scalars(
