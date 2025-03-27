@@ -87,7 +87,7 @@ def construct_blueprint(
             abort_with_error(500, "JWT private key not set in config.")
 
         query_params = parse_qs(parsed_url.query)
-        [username] = query_params.get("uma_username")
+        [username] = query_params.get("uma_username", [])
 
         if username:
             session["uma"] = get_uma_from_username(username)
