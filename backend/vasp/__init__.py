@@ -65,6 +65,8 @@ def create_app() -> Flask:
     app.secret_key = require_env("FLASK_SECRET_KEY")
     app.config["REMEMBER_COOKIE_SECURE"] = False if is_dev else True
     app.config["SESSION_COOKIE_SECURE"] = False if is_dev else True
+    app.config["REMEMBER_COOKIE_PARTITIONED"] = False if is_dev else True
+    app.config["SESSION_COOKIE_PARTITIONED"] = False if is_dev else True
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.config["REMEMBER_COOKIE_SAMESITE"] = "Lax"
     app.config["REMEMBER_COOKIE_NAME"] = "test_wallet_remember_token"
