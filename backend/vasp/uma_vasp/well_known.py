@@ -52,5 +52,5 @@ def uma_config() -> Dict[str, Any]:
         "grant_types_supported": ["authorization_code"],
         "code_challenge_methods_supported": ["S256"],
         "uma_request_endpoint": request_uri,
-        "connection_management_endpoint": f"{nwc_base}/apps",
+        "connection_management_endpoint": f"{nwc_base}/",
     }
