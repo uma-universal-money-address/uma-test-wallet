@@ -167,7 +167,7 @@ export const Sidebar = () => {
                 iconSrc="/icons/playground.svg"
                 iconAlt="Playground"
                 text="UMA Playground"
-                url="https://playground.uma.me"
+                url="https://uma.me/playground"
               />
               <ResourceButton
                 iconSrc="/icons/book.svg"
