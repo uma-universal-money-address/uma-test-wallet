@@ -318,7 +318,8 @@ class UmaNwcBridge:
                     to_currency_code=currency_code,
                 )
             )
-            balance = balance * currency_multiplier
+            wallet_currency = CURRENCIES[wallet_currency_code]
+            balance = (balance / 10**wallet_currency.decimals) * currency_multiplier
 
         currency = CURRENCIES[currency_code]
         return GetBalanceResponse(
