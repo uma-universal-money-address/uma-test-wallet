@@ -322,7 +322,11 @@ class UmaNwcBridge:
 
         return GetBalanceResponse(
             balance=balance,
-            currency=user_currency_to_uma_auth_currency(CURRENCIES[currency_code]),
+            currency=(
+                user_currency_to_uma_auth_currency(CURRENCIES[currency_code])
+                if currency_code != "SAT"
+                else None
+            ),
         ).to_dict()
 
     def handle_budget_estimate(self) -> dict[str, Any]:
