@@ -92,9 +92,9 @@ export default function Page() {
           setNotificationsStepCompleted(true);
         } else {
           router.push(
-            `${getBackendUrl()}${path}?redirect_uri=${encodeURIComponent(
-              redirectUri,
-            )}`,
+            `${getBackendUrl({
+              withApiPrefix: false,
+            })}${path}?redirect_uri=${encodeURIComponent(redirectUri)}`,
           );
         }
       } else {
