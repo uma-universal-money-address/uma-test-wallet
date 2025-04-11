@@ -28,7 +28,7 @@ export const convertCurrency = (
         ),
       ) /
         exchangeRateOriginalCurrency) *
-      1e10
+      1e8
     );
   }
 
