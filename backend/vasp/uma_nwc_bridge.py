@@ -301,6 +301,30 @@ class UmaNwcBridge:
             currencies=currencies,
         ).to_dict()
 
+    def balance(self) -> dict[str, Any]:
+        uma = session.get("uma")
+        if uma is None:
+            abort_with_error(404, "Uma not found in session.")
+
+        currency_code = request.args.get("currency_code") or "SAT"
+        if currency_code not in CURRENCIES:
+            abort_with_error(400, "Invalid currency code")
+
+        balance, wallet_currency_code = self.ledger_service.get_wallet_balance(uma)
+        if currency_code != wallet_currency_code:
+            currency_multiplier = self.currency_service.get_currency_multiplier(
+                CurrencyOptions(
+                    from_currency_code=wallet_currency_code,
+                    to_currency_code=currency_code,
+                )
+            )
+            balance = balance * currency_multiplier
+
+        return GetBalanceResponse(
+            balance=balance,
+            currency=user_currency_to_uma_auth_currency(CURRENCIES[currency_code]),
+        ).to_dict()
+
     def handle_budget_estimate(self) -> dict[str, Any]:
         uma = session["uma"]
         if uma is None:
@@ -328,7 +352,7 @@ class UmaNwcBridge:
             )
             return BudgetEstimateResponse(
                 estimated_budget_currency_amount=(
-                    round(currency_multiplier * int(sending_currency_amount))
+                    max(round(currency_multiplier * int(sending_currency_amount)), 1)
                 )
             ).to_dict()
         except Exception as e:
@@ -652,18 +676,7 @@ def construct_blueprint(
 
     @bp.get("/balance")
     def balance() -> dict[str, Any]:
-        uma = session.get("uma")
-        if uma is None:
-            abort_with_error(404, "Uma not found in session.")
-        return GetBalanceResponse(
-            balance=ledger_service.get_wallet_balance(uma)[0],
-            currency=UmaCurrency(
-                code="SAT",
-                symbol=CURRENCIES["SAT"].symbol,
-                name=CURRENCIES["SAT"].name,
-                decimals=CURRENCIES["SAT"].decimals,
-            ),
-        ).to_dict()
+        return get_nwc_bridge().balance()
 
     @bp.get("/payments")
     def transactions() -> Response:
