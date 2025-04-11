@@ -320,10 +320,16 @@ class UmaNwcBridge:
             )
             balance = balance * currency_multiplier
 
+        currency = CURRENCIES[currency_code]
         return GetBalanceResponse(
             balance=balance,
             currency=(
-                user_currency_to_uma_auth_currency(CURRENCIES[currency_code])
+                UmaCurrency(
+                    code=currency_code,
+                    symbol=currency.symbol,
+                    name=currency.name,
+                    decimals=currency.decimals,
+                )
                 if currency_code != "SAT"
                 else None
             ),
