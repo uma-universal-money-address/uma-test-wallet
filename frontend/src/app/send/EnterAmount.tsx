@@ -66,7 +66,9 @@ export const EnterAmount = () => {
 
   useEffect(() => {
     if (!isLoadingExchangeRates && !exchangeRatesError && exchangeRates) {
-      const lowestDenomAmt = Number(convertToLowestDenomination(amount, selectedCurrency));
+      const lowestDenomAmt = Number(
+        convertToLowestDenomination(amount, selectedCurrency),
+      );
       setConvertedAmount(
         convertCurrency(
           exchangeRates,
