@@ -49,7 +49,7 @@ export const PwaInstallBanner = ({ dismissable, top }: Props) => {
     <>
       <div
         style={{
-          position: top ? "absolute" : "relative",
+          position: "relative",
           top: top ? "0" : "auto",
         }}
         className={`w-full max-h-[69px] p-4 mobile:px-0 mobile:pt-0 bg-white border-b border-gray-200 flex flex-row items-center justify-between gap-3 mb-[10px] ${
