@@ -46,15 +46,13 @@ class DemoCurrencyService(ICurrencyService):
             symbol=CURRENCIES[currency_code].symbol,
             millisatoshi_per_unit=(
                 (
-                    self.get_currency_multiplier(
+                    self.get_smallest_unit_multiplier(
                         currency_options=CurrencyOptions(
                             from_currency_code=currency_code,
                             to_currency_code="SAT",
                         ),
-                    )
-                    / (10 ** CURRENCIES[currency_code].decimals)
+                    ) * 1000
                 )
-                * 1000
             ),
             min_sendable=CURRENCIES[currency_code].min_sendable,
             max_sendable=CURRENCIES[currency_code].max_sendable,
@@ -98,3 +96,12 @@ class DemoCurrencyService(ICurrencyService):
             return float(to_currency_rate) / float(from_currency_rate)
         else:
             raise ValueError("Invalid currency code provided.")
+        
+    def get_smallest_unit_multiplier(self, currency_options: CurrencyOptions) -> float:
+        base_multiplier = self.get_currency_multiplier(currency_options)
+        from_currency = CURRENCIES[currency_options.from_currency_code] 
+        to_currency = CURRENCIES[currency_options.to_currency_code]
+        return base_multiplier / (10 ** (from_currency.decimals - to_currency.decimals))
+
+        
+            
