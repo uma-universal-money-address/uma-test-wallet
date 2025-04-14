@@ -32,9 +32,6 @@ from vasp.uma_vasp.lightspark_helpers import get_node
 from vasp.uma_vasp.sending_vasp import SendingVasp, get_sending_vasp
 from vasp.uma_vasp.uma_exception import abort_with_error
 from vasp.uma_vasp.user import User
-from vasp.models.Currency import Currency as CurrencyModel
-from vasp.models.Uma import Uma as UmaModel
-from vasp.models.Wallet import Wallet
 from uma import Currency
 from uma.nonce_cache import INonceCache
 from uma.public_key_cache import IPublicKeyCache
