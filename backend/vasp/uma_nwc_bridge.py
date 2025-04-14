@@ -559,7 +559,9 @@ class UmaNwcBridge:
             # and we're only sending 1 SAT, we'll still round up to sending one cent instead of 0.
             # The alternative would be to throw an error if the sending amount is less than the minimum sendable
             # amount of the wallet currency, but for demo purposes, this is more user-friendly.
-            sending_amount = max(round(request_data.sending_currency_amount * currency_multiplier), 1)
+            sending_amount = max(
+                round(request_data.sending_currency_amount * currency_multiplier), 1
+            )
 
         uma_lookup_result = self.sending_vasp.handle_uma_lookup(
             sender_uma=session["uma"], receiver_uma=request_data.receiver_address
@@ -606,7 +608,9 @@ class UmaNwcBridge:
                 )
                 * 1000
             )
-            sending_amount_msats = round(sending_amount * sending_currency_to_msats_multiplier)
+            sending_amount_msats = round(
+                sending_amount * sending_currency_to_msats_multiplier
+            )
         uma_payreq_result = self.sending_vasp.handle_uma_payreq(
             uma_lookup_result["callbackUuid"],
             is_amount_in_msats=True,
