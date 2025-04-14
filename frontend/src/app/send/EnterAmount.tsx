@@ -66,9 +66,9 @@ export const EnterAmount = () => {
 
   useEffect(() => {
     if (!isLoadingExchangeRates && !exchangeRatesError && exchangeRates) {
-      const lowestDenomAmt = Number(
+      const lowestDenomAmt = walletCurrency.code === 'SAT' ? Number(
         convertToLowestDenomination(amount, selectedCurrency),
-      );
+      ): amount;
       setConvertedAmount(
         convertCurrency(
           exchangeRates,
