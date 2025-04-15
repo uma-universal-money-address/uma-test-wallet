@@ -27,3 +27,7 @@ class ICurrencyService(ABC):
     @abstractmethod
     def get_currency_multiplier(self, currency_options: CurrencyOptions) -> float:
         pass
+
+    @abstractmethod
+    def get_smallest_unit_multiplier(self, currency_options: CurrencyOptions) -> float:
+        pass

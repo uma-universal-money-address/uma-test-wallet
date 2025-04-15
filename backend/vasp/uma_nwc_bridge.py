@@ -32,9 +32,6 @@ from vasp.uma_vasp.lightspark_helpers import get_node
 from vasp.uma_vasp.sending_vasp import SendingVasp, get_sending_vasp
 from vasp.uma_vasp.uma_exception import abort_with_error
 from vasp.uma_vasp.user import User
-from vasp.models.Currency import Currency as CurrencyModel
-from vasp.models.Uma import Uma as UmaModel
-from vasp.models.Wallet import Wallet
 from uma import Currency
 from uma.nonce_cache import INonceCache
 from uma.public_key_cache import IPublicKeyCache
@@ -306,33 +303,38 @@ class UmaNwcBridge:
         if uma is None:
             abort_with_error(404, "Uma not found in session.")
 
+        # By default, nwc assumes the balance is in msats.
+        should_return_msats = "currency_code" not in request.args
         currency_code = request.args.get("currency_code") or "SAT"
         if currency_code not in CURRENCIES:
             abort_with_error(400, "Invalid currency code")
 
         balance, wallet_currency_code = self.ledger_service.get_wallet_balance(uma)
         if currency_code != wallet_currency_code:
-            currency_multiplier = self.currency_service.get_currency_multiplier(
+            currency_multiplier = self.currency_service.get_smallest_unit_multiplier(
                 CurrencyOptions(
                     from_currency_code=wallet_currency_code,
                     to_currency_code=currency_code,
                 )
             )
-            wallet_currency = CURRENCIES[wallet_currency_code]
-            balance = (balance / 10**wallet_currency.decimals) * currency_multiplier
+            if should_return_msats:
+                currency_multiplier = currency_multiplier * 1000
+            balance = balance * currency_multiplier
+        elif should_return_msats:
+            balance = balance * 1000
 
         currency = CURRENCIES[currency_code]
         return GetBalanceResponse(
             balance=balance,
             currency=(
-                UmaCurrency(
+                None
+                if should_return_msats
+                else UmaCurrency(
                     code=currency_code,
                     symbol=currency.symbol,
                     name=currency.name,
                     decimals=currency.decimals,
                 )
-                if currency_code != "SAT"
-                else None
             ),
         ).to_dict()
 
@@ -355,7 +357,7 @@ class UmaNwcBridge:
             abort_with_error(400, "Invalid sending currency amount")
 
         try:
-            currency_multiplier = self.currency_service.get_currency_multiplier(
+            currency_multiplier = self.currency_service.get_smallest_unit_multiplier(
                 CurrencyOptions(
                     from_currency_code=sending_currency_code,
                     to_currency_code=budget_currency_code,
@@ -447,6 +449,7 @@ class UmaNwcBridge:
             and sending_currency_code != "BTC"
             and sending_currency_code != "SAT"
         ):
+            # TODO: support other sending currencies for quotes like we do in pay_to_address.
             abort_with_error(
                 400, "Sending currencies besides BTC are not yet supported"
             )
@@ -534,7 +537,31 @@ class UmaNwcBridge:
         except Exception as e:
             abort_with_error(400, f"Invalid request: {e}")
 
-        amount = request_data.sending_currency_amount
+        sending_currency_code = request_data.sending_currency_code
+        if request_data.sending_currency_code not in CURRENCIES:
+            abort_with_error(400, "Invalid sending currency code")
+
+        wallet_currency = self.currency_service.get_uma_currencies_for_uma(
+            get_username_from_uma(session["uma"])
+        )[0]
+        wallet_currency_code = wallet_currency.code
+
+        sending_amount = request_data.sending_currency_amount
+        if request_data.sending_currency_code != wallet_currency.code:
+            currency_multiplier = self.currency_service.get_smallest_unit_multiplier(
+                CurrencyOptions(
+                    from_currency_code=request_data.sending_currency_code,
+                    to_currency_code=wallet_currency_code,
+                )
+            )
+            # Ensure we're at least sending 1 of the minimum sendable amount of the wallet currency.
+            # note that this means that in some cases, we'll round up. For example, if the wallet currency is USD,
+            # and we're only sending 1 SAT, we'll still round up to sending one cent instead of 0.
+            # The alternative would be to throw an error if the sending amount is less than the minimum sendable
+            # amount of the wallet currency, but for demo purposes, this is more user-friendly.
+            sending_amount = max(
+                round(request_data.sending_currency_amount * currency_multiplier), 1
+            )
 
         uma_lookup_result = self.sending_vasp.handle_uma_lookup(
             sender_uma=session["uma"], receiver_uma=request_data.receiver_address
@@ -569,39 +596,42 @@ class UmaNwcBridge:
             receiving_currency_name = receiving_currency.get("name")
             receiving_currency_decimals = receiving_currency.get("decimals")
 
-        is_in_sats = receiving_currency_code == "SAT"
+        sending_amount_msats = request_data.sending_currency_amount * 1000
+        sending_currency_to_msats_multiplier = 1000
+        if sending_currency_code != "SAT":
+            sending_currency_to_msats_multiplier = (
+                self.currency_service.get_smallest_unit_multiplier(
+                    CurrencyOptions(
+                        from_currency_code=sending_currency_code,
+                        to_currency_code="SAT",
+                    )
+                )
+                * 1000
+            )
+            sending_amount_msats = round(
+                sending_amount * sending_currency_to_msats_multiplier
+            )
         uma_payreq_result = self.sending_vasp.handle_uma_payreq(
             uma_lookup_result["callbackUuid"],
-            is_amount_in_msats=is_in_sats,
-            amount=int(amount) * 1000 if is_in_sats else amount,
+            is_amount_in_msats=True,
+            amount=sending_amount_msats,
             receiving_currency_code=receiving_currency_code,
             user_id=session.get("user_id"),
         )
 
         payment = self.sending_vasp.handle_send_payment(uma_payreq_result.callback_uuid)
 
-        with Session(db.engine) as db_session:
-            wallet = db_session.scalars(
-                select(Wallet)
-                .join(UmaModel)
-                .where(UmaModel.username == get_username_from_uma(session["uma"]))
-            ).first()
-            sending_currency_model = db_session.scalars(
-                select(CurrencyModel).where(CurrencyModel.wallet_id == wallet.id)
-            ).first()
-            sending_currency_code = sending_currency_model.code
-            sending_currency = UmaCurrency(
-                code=sending_currency_code,
-                symbol=CURRENCIES[sending_currency_code].symbol,
-                name=CURRENCIES[sending_currency_code].name,
-                decimals=CURRENCIES[sending_currency_code].decimals,
-            )
-
+        sending_internal_currency = CURRENCIES[sending_currency_code]
         quote = UmaQuote(
             payment_hash=uma_payreq_result.payment_hash,
             expires_at=uma_payreq_result.invoice_expires_at,
             multiplier=uma_payreq_result.conversion_rate,
-            sending_currency=sending_currency,
+            sending_currency=UmaCurrency(
+                code=sending_currency_code,
+                symbol=sending_internal_currency.symbol,
+                name=sending_internal_currency.name,
+                decimals=sending_internal_currency.decimals,
+            ),
             receiving_currency=UmaCurrency(
                 code=receiving_currency_code,
                 symbol=receiving_currency_symbol,
@@ -609,7 +639,7 @@ class UmaNwcBridge:
                 decimals=receiving_currency_decimals,
             ),
             fees=round(uma_payreq_result.exchange_fees_msats / 1000),
-            total_sending_amount=round(uma_payreq_result.amount_msats / 1000),
+            total_sending_amount=request_data.sending_currency_amount,
             total_receiving_amount=uma_payreq_result.amount_receiving_currency,
             created_at=round(datetime.now(tz=timezone.utc).timestamp()),
         )
