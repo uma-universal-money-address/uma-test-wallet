@@ -602,7 +602,7 @@ class UmaNwcBridge:
             sending_currency_to_msats_multiplier = (
                 self.currency_service.get_smallest_unit_multiplier(
                     CurrencyOptions(
-                        from_currency_code=sending_currency_code,
+                        from_currency_code=wallet_currency.code,
                         to_currency_code="SAT",
                     )
                 )
@@ -621,16 +621,15 @@ class UmaNwcBridge:
 
         payment = self.sending_vasp.handle_send_payment(uma_payreq_result.callback_uuid)
 
-        sending_internal_currency = CURRENCIES[sending_currency_code]
         quote = UmaQuote(
             payment_hash=uma_payreq_result.payment_hash,
             expires_at=uma_payreq_result.invoice_expires_at,
             multiplier=uma_payreq_result.conversion_rate,
             sending_currency=UmaCurrency(
-                code=sending_currency_code,
-                symbol=sending_internal_currency.symbol,
-                name=sending_internal_currency.name,
-                decimals=sending_internal_currency.decimals,
+                code=wallet_currency.code,
+                symbol=wallet_currency.symbol,
+                name=wallet_currency.name,
+                decimals=wallet_currency.decimals,
             ),
             receiving_currency=UmaCurrency(
                 code=receiving_currency_code,
