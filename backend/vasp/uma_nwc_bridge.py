@@ -550,8 +550,8 @@ class UmaNwcBridge:
         if request_data.sending_currency_code != wallet_currency.code:
             currency_multiplier = self.currency_service.get_smallest_unit_multiplier(
                 CurrencyOptions(
-                    from_currency_code=request_data.sending_currency_code,
-                    to_currency_code=wallet_currency_code,
+                    from_currency_code=wallet_currency_code,
+                    to_currency_code=request_data.sending_currency_code,
                 )
             )
             # Ensure we're at least sending 1 of the minimum sendable amount of the wallet currency.
