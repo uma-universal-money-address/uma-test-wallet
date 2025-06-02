@@ -74,6 +74,7 @@ def get_frontend_allowed_origins(frontend_domain: str) -> list[str]:
     return [
         "http://localhost:3000",
         "http://localhost:3001",
+        "http://localhost:3002",
         "http://test.localhost:3000",
         "https://www.uma.me",
         "https://pennywall.uma.me",
