@@ -74,7 +74,7 @@ def register_uma(
                         id=str(uuid4()),
                         kyc_status=kyc_status.value,
                         email_address=f"{uma_user_name}@test.uma.me",
-                        full_name=uma_user_name,
+                        full_name=f"{uma_user_name}",
                     )
                     db_session.add(user)
 
