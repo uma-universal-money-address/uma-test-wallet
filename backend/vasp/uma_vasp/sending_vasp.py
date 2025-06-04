@@ -386,8 +386,14 @@ class SendingVasp:
             abort_with_error(403, "Unauthorized")
 
         uma_username = get_username_from_uma(sender_uma)
-        default_full_name = user.full_name if user.full_name is not None else uma_username
-        default_email = user.email_address if user.email_address is not None else f"{uma_username}@test.uma.me"
+        default_full_name = (
+            user.full_name if user.full_name is not None else uma_username
+        )
+        default_email = (
+            user.email_address
+            if user.email_address is not None
+            else f"{uma_username}@test.uma.me"
+        )
 
         receiving_domain = get_domain_from_uma_address(receiver_uma)
         receiver_vasp_pubkey = fetch_public_key_for_vasp(
