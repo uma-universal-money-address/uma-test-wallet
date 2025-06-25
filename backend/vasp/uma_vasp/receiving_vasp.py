@@ -553,7 +553,7 @@ class LightsparkInvoiceCreator(IUmaInvoiceCreator):
             node_id=self.config.node_id,
             amount_msats=amount_msats,
             metadata=metadata,
-            expiry_secs=300,
+            expiry_secs=900,
             signing_private_key=self.config.get_signing_privkey(),
             receiver_identifier=receiver_identifier,
         ).data.encoded_payment_request
