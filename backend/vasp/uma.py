@@ -1,6 +1,7 @@
 import json
 import logging
 import random
+from datetime import date, timedelta
 from typing import TYPE_CHECKING, List
 from uuid import uuid4
 
@@ -52,7 +53,6 @@ def register_uma(
                 error = f"UMA {uma_user_name} is already registered."
                 abort_with_error(400, error)
             else:
-
                 if current_user.is_authenticated:
                     existing_user = db_session.scalars(
                         select(UserModel).where(UserModel.id == current_user.id)
@@ -75,6 +75,8 @@ def register_uma(
                         kyc_status=kyc_status.value,
                         email_address=f"{uma_user_name}@test.uma.me",
                         full_name=uma_user_name,
+                        country_of_residence=_generate_random_country(),
+                        birthday=_generate_random_birthday(),
                     )
                     db_session.add(user)
 
@@ -251,6 +253,30 @@ def construct_blueprint(
         return "OK"
 
     return bp
+
+
+def _generate_random_birthday() -> date:
+    """Generate a random birthday for users aged 18-80 years old."""
+    today = date.today()
+    # Generate age between 18 and 80 years
+    min_age = 18
+    max_age = 80
+
+    # Calculate the date range
+    max_birth_date = today - timedelta(days=min_age * 365)
+    min_birth_date = today - timedelta(days=max_age * 365)
+
+    # Generate random number of days between min and max birth dates
+    days_range = (max_birth_date - min_birth_date).days
+    random_days = random.randint(0, days_range)
+
+    return min_birth_date + timedelta(days=random_days)
+
+
+def _generate_random_country() -> str:
+    """Generate a random country of residence from a predefined list."""
+    countries = ["US", "BR", "GB", "IN", "PH", "IT", "MX", "FR", "DE", "NG"]
+    return random.choice(countries)
 
 
 def _generate_random_uma(batch_size: int = 100, max_attempts: int = 100) -> str | None:

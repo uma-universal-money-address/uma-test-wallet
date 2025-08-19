@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Mapped, relationship, mapped_column
-from sqlalchemy import String, LargeBinary, Enum
+from sqlalchemy import String, LargeBinary, Enum, Date
 from typing import Optional
+from datetime import date
 from vasp.models.Base import Base
 from vasp.models.Transaction import Transaction
 from vasp.models.Uma import Uma
@@ -26,6 +27,8 @@ class User(Base):
     kyc_status: Mapped[KycStatus] = mapped_column(Enum(KycStatus))
     email_address: Mapped[Optional[str]] = mapped_column(String)
     full_name: Mapped[Optional[str]] = mapped_column(String)
+    country_of_residence: Mapped[Optional[str]] = mapped_column(String(2))
+    birthday: Mapped[Optional[date]] = mapped_column(Date)
     avatar: Mapped[Optional[LargeBinary]] = mapped_column(LargeBinary)
     umas: Mapped[List[Uma]] = relationship(back_populates="user")
     wallets: Mapped[List[Wallet]] = relationship(back_populates="user")
