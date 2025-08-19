@@ -284,6 +284,12 @@ class ReceivingVasp:
                 "identifier": receiver_uma,
                 "name": user.full_name,
                 "email": user.email_address,
+                **(
+                    {"countryOfResidence": user.country_of_residence}
+                    if user.country_of_residence
+                    else {}
+                ),
+                **({"birthDate": user.birthday.isoformat()} if user.birthday else {}),
             },
         )
 

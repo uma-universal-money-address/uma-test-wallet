@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 from sqlalchemy import LargeBinary
 from uma import KycStatus
+from datetime import date
 from sqlalchemy.orm import Session
 import logging
 from flask_login import UserMixin
@@ -35,6 +36,8 @@ class User(UserMixin):
     kyc_status: KycStatus
     email_address: Optional[str]
     full_name: Optional[str]
+    country_of_residence: Optional[str]
+    birthday: Optional[date]
     wallets: List["Wallet"]
     avatar: Optional[LargeBinary] = None
 
@@ -105,6 +108,8 @@ class User(UserMixin):
             kyc_status=KycStatus(user_model.kyc_status),
             email_address=user_model.email_address,
             full_name=user_model.full_name,
+            country_of_residence=user_model.country_of_residence,
+            birthday=user_model.birthday,
             wallets=user_model.wallets,
             avatar=user_model.avatar,
         )
@@ -123,6 +128,8 @@ class User(UserMixin):
                     kyc_status=user_model.kyc_status,
                     email_address=user_model.email_address,
                     full_name=user_model.full_name,
+                    country_of_residence=user_model.country_of_residence,
+                    birthday=user_model.birthday,
                     wallets=user_model.wallets,
                     avatar=user_model.avatar,
                 )
