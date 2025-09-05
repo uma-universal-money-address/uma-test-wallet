@@ -241,7 +241,9 @@ class ReceivingVasp:
         msats_per_currency_unit = self.currency_service.get_uma_currency(
             receiving_currency_code
         ).millisatoshi_per_unit
-        receiver_fees_msats = 0 if receiving_currency_code == "SAT" else 2_000
+        receiver_fees_msats = (
+            0 if receiving_currency_code in ["SAT", "MXN"] else 250_000
+        )
 
         receiver_uma = get_uma_from_username(username)
         compliance_data = compliance_from_payer_data(payer_data)
@@ -363,8 +365,10 @@ class ReceivingVasp:
             ),
             receiver_fees_msats=(
                 0
-                if request.receiving_currency_code == "SAT"
-                else 2_000 if request.receiving_currency_code is not None else None
+                if request.receiving_currency_code in ["SAT", "MXN"]
+                else 2_000
+                if request.receiving_currency_code is not None
+                else None
             ),
             receiver_node_pubkey=None,
             receiver_utxos=[],
