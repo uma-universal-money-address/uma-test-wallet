@@ -366,7 +366,7 @@ class ReceivingVasp:
             receiver_fees_msats=(
                 0
                 if request.receiving_currency_code in ["SAT", "MXN"]
-                else 2_000
+                else 250_000
                 if request.receiving_currency_code is not None
                 else None
             ),
