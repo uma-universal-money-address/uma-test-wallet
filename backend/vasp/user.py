@@ -19,6 +19,7 @@ from vasp.uma_vasp.currencies import CURRENCIES
 from vasp.uma_vasp.interfaces.currency_service import ICurrencyService
 from vasp.uma_vasp.interfaces.ledger_service import ILedgerService
 from vasp.uma_vasp.uma_exception import abort_with_error
+from uma import ErrorCode
 from vasp.uma_vasp.user import User
 from vasp.utils import get_uma_from_username, get_username_from_uma, get_vasp_domain
 
@@ -66,7 +67,9 @@ def construct_blueprint(
     def balance() -> Response:
         uma = request.args.get("uma")
         if (uma is None) or (uma == ""):
-            abort_with_error(400, "UMA is required to retrieve balance")
+            abort_with_error(
+                ErrorCode.INVALID_INPUT, "UMA is required to retrieve balance"
+            )
         balance, currency = ledger_service.get_wallet_balance(uma=uma)
         return jsonify(
             {
@@ -134,7 +137,9 @@ def construct_blueprint(
                 select(UserModel).where(UserModel.id == current_user.id)
             ).first()
             if user_model is None:
-                abort_with_error(404, f"User {current_user.id} not found.")
+                abort_with_error(
+                    ErrorCode.USER_NOT_FOUND, f"User {current_user.id} not found."
+                )
             return jsonify({"username": user_model.username})
 
     @bp.get("/avatar/<user_id>")
@@ -144,7 +149,7 @@ def construct_blueprint(
                 select(UserModel).where(UserModel.id == int(user_id))
             ).first()
             if user_model is None:
-                abort_with_error(404, f"User {user_id} not found.")
+                abort_with_error(ErrorCode.USER_NOT_FOUND, f"User {user_id} not found.")
             if user_model.avatar:
                 return jsonify({"avatar": base64.b64encode(user_model.avatar).decode()})
             else:
@@ -158,7 +163,9 @@ def construct_blueprint(
                 select(UserModel).where(UserModel.id == current_user.id)
             ).first()
             if user_model is None:
-                abort_with_error(404, f"User {current_user.id} not found.")
+                abort_with_error(
+                    ErrorCode.USER_NOT_FOUND, f"User {current_user.id} not found."
+                )
             if request.method == "POST":
                 request_files = request.files
                 fs = request_files.get("avatar")
@@ -185,7 +192,9 @@ def construct_blueprint(
                 select(UserModel).where(UserModel.id == current_user.id)
             ).first()
             if user_model is None:
-                abort_with_error(404, f"User {current_user.id} not found.")
+                abort_with_error(
+                    ErrorCode.USER_NOT_FOUND, f"User {current_user.id} not found."
+                )
 
             if request.method == "GET":
                 return jsonify({"full_name": user_model.full_name})
@@ -205,7 +214,9 @@ def construct_blueprint(
                 select(Wallet).where(Wallet.user_id == current_user.id)
             ).first()
             if wallet is None:
-                abort_with_error(404, f"Wallet for {current_user.id} not found.")
+                abort_with_error(
+                    ErrorCode.INVALID_INPUT, f"Wallet for {current_user.id} not found."
+                )
 
             request_json = request.json
             wallet.device_token = request_json.get("device_token")
@@ -258,7 +269,9 @@ def construct_blueprint(
                 select(Wallet).where(Wallet.id == wallet_id)
             ).first()
             if wallet is None:
-                abort_with_error(404, f"Wallet {wallet_id} not found.")
+                abort_with_error(
+                    ErrorCode.INVALID_INPUT, f"Wallet {wallet_id} not found."
+                )
             request_json = request.json
 
             color = request_json.get("color")
@@ -285,7 +298,9 @@ def construct_blueprint(
                         select(Uma).where(Uma.username == new_username)
                     ).first()
                     if existing_uma:
-                        abort_with_error(400, "Username already taken")
+                        abort_with_error(
+                            ErrorCode.INVALID_INPUT, "Username already taken"
+                        )
                     wallet_uma.username = new_username
 
             db_session.commit()
@@ -318,7 +333,9 @@ def construct_blueprint(
                 .where(Wallet.id == wallet_id)
             ).first()
             if wallet is None:
-                abort_with_error(404, f"Wallet {wallet_id} not found.")
+                abort_with_error(
+                    ErrorCode.INVALID_INPUT, f"Wallet {wallet_id} not found."
+                )
             db_session.delete(wallet)
             db_session.delete(wallet.currency)
             db_session.delete(wallet.uma)
@@ -335,7 +352,9 @@ def construct_blueprint(
                 .where(Wallet.id == wallet_id)
             ).first()
             if wallet is None:
-                abort_with_error(404, f"Wallet {wallet_id} not found.")
+                abort_with_error(
+                    ErrorCode.INVALID_INPUT, f"Wallet {wallet_id} not found."
+                )
             request_json = request.json
             amount_in_lowest_denom = request_json.get("amountInLowestDenom")
             if amount_in_lowest_denom:
@@ -371,7 +390,9 @@ def construct_blueprint(
     def transactions() -> Response:
         uma = request.args.get("uma")
         if uma is None:
-            abort_with_error(400, "UMA is required to retrieve transactions.")
+            abort_with_error(
+                ErrorCode.INVALID_INPUT, "UMA is required to retrieve transactions."
+            )
 
         with Session(db.engine) as db_session:
             # TODO: Add pagination
@@ -421,14 +442,16 @@ def construct_blueprint(
                 return jsonify(response)
 
             if not request.is_json:
-                abort_with_error(400, "Request is not in JSON format.")
+                abort_with_error(
+                    ErrorCode.INVALID_INPUT, "Request is not in JSON format."
+                )
 
             request_json = request.json
             # Check if valid PreferenceType
             for preference_type in request_json.keys():
                 if preference_type.upper() not in [e.value for e in PreferenceType]:
                     abort_with_error(
-                        400,
+                        ErrorCode.INVALID_INPUT,
                         f"Invalid preference type {preference_type.upper()}.",
                     )
 
@@ -499,7 +522,10 @@ def construct_blueprint(
                 .where(WebAuthnCredential.id == credential_id)
             ).first()
             if credential is None:
-                abort_with_error(404, f"WebAuthnCredential {credential_id} not found.")
+                abort_with_error(
+                    ErrorCode.INVALID_INPUT,
+                    f"WebAuthnCredential {credential_id} not found.",
+                )
             db_session.delete(credential)
             db_session.commit()
             return jsonify({"message": f"WebAuthnCredential {credential_id} deleted."})
