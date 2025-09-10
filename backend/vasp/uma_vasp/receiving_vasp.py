@@ -29,23 +29,22 @@ from vasp.uma_vasp.interfaces.currency_service import (
 )
 from vasp.uma_vasp.currencies import CURRENCIES
 from vasp.uma_vasp.lightspark_helpers import get_node
-from vasp.uma_vasp.uma_exception import UmaException, abort_with_error
+from vasp.uma_vasp.uma_exception import abort_with_error
 from vasp.uma_vasp.user import User
 from vasp.models.PayReqResponse import PayReqResponse as PayReqResponseModel
 from vasp.models.Transaction import Transaction
 from vasp.models.Uma import Uma
 from uma import (
+    ErrorCode,
     INonceCache,
     InvoiceCurrency,
     IPublicKeyCache,
     IUmaInvoiceCreator,
     KycStatus,
-    LnurlpRequest,
     LnurlpResponse,
     PayReqResponse,
     PayRequest,
     PubkeyResponse,
-    UnsupportedVersionException,
     compliance_from_payer_data,
     create_counterparty_data_options,
     create_pay_req_response,
@@ -93,17 +92,7 @@ class ReceivingVasp:
 
     def handle_lnurlp_request(self, username: str) -> Dict[str, Any]:
         print(f"Handling LNURLP query for uma {username}")
-        lnurlp_request: LnurlpRequest
-        try:
-            lnurlp_request = parse_lnurlp_request(flask_request.url)
-        except UnsupportedVersionException as e:
-            raise e
-        except Exception as e:
-            print(f"Invalid UMA lnurlp request: {e}")
-            raise UmaException(
-                f"Invalid UMA lnurlp request: {e}",
-                status_code=400,
-            )
+        lnurlp_request = parse_lnurlp_request(flask_request.url)
 
         if not lnurlp_request.is_uma_request():
             return self._handle_non_uma_lnurlp_request(username).to_dict()
@@ -111,9 +100,9 @@ class ReceivingVasp:
         if not self.compliance_service.should_accept_transaction_from_vasp(
             none_throws(lnurlp_request.vasp_domain), lnurlp_request.receiver_address
         ):
-            raise UmaException(
+            abort_with_error(
+                ErrorCode.SENDER_NOT_ACCEPTED,
                 f"Cannot accept transactions from vasp {lnurlp_request.vasp_domain}",
-                status_code=403,
             )
 
         sender_vasp_pubkey_response: PubkeyResponse
@@ -122,25 +111,19 @@ class ReceivingVasp:
                 none_throws(lnurlp_request.vasp_domain), self.vasp_pubkey_cache
             )
         except Exception as e:
-            raise UmaException(
+            abort_with_error(
+                ErrorCode.COUNTERPARTY_PUBKEY_FETCH_ERROR,
                 f"Cannot fetch public key for vasp {lnurlp_request.vasp_domain}: {e}",
-                status_code=424,
             )
 
         # Skip signature verification in testing mode to avoid needing to run 2 VASPs.
         is_testing = current_app.config.get("TESTING", False)
         if not is_testing:
-            try:
-                verify_uma_lnurlp_query_signature(
-                    request=lnurlp_request,
-                    other_vasp_pubkeys=sender_vasp_pubkey_response,
-                    nonce_cache=self.nonce_cache,
-                )
-            except Exception as e:
-                raise UmaException(
-                    f"Invalid signature: {e}",
-                    status_code=400,
-                )
+            verify_uma_lnurlp_query_signature(
+                request=lnurlp_request,
+                other_vasp_pubkeys=sender_vasp_pubkey_response,
+                nonce_cache=self.nonce_cache,
+            )
 
         metadata = self._create_metadata(username)
         payer_data_options = create_counterparty_data_options(
@@ -190,10 +173,7 @@ class ReceivingVasp:
     def handle_pay_request_callback(self, username: str) -> Dict[str, Any]:
         user = self.user_service.get_user_from_uma(username)
         if not user:
-            raise UmaException(
-                f"Cannot find user {username}",
-                status_code=404,
-            )
+            abort_with_error(ErrorCode.USER_NOT_FOUND, f"Cannot find user {username}")
 
         request: PayRequest
         try:
@@ -205,10 +185,10 @@ class ReceivingVasp:
             request = parse_pay_request(request_data)
         except Exception as e:
             print(f"Invalid UMA pay request: {e}")
-            raise UmaException(
-                f"Invalid UMA pay request: {e}",
-                status_code=400,
+            abort_with_error(
+                ErrorCode.PARSE_PAYREQ_REQUEST_ERROR, f"Invalid UMA pay request: {e}"
             )
+
         if not request.is_uma_request():
             return self._handle_non_uma_pay_request(request, username).to_dict()
 
@@ -217,9 +197,9 @@ class ReceivingVasp:
         if not self.compliance_service.should_accept_transaction_from_vasp(
             vasp_domain, get_uma_from_username(username)
         ):
-            raise UmaException(
+            abort_with_error(
+                ErrorCode.SENDER_NOT_ACCEPTED,
                 f"Cannot accept transactions from vasp {vasp_domain}",
-                status_code=403,
             )
 
         # Skip signature verification in testing mode to avoid needing to run 2 VASPs.
@@ -302,10 +282,11 @@ class ReceivingVasp:
         )
 
         if pay_req_response.payment_info is None:
-            raise UmaException(
+            abort_with_error(
+                ErrorCode.INTERNAL_ERROR,
                 "Error because payment_info is missing from payreq",
-                status_code=500,
             )
+
         payment_info = pay_req_response.payment_info
 
         invoice_data = self.lightspark_client.get_decoded_payment_request(
@@ -317,9 +298,8 @@ class ReceivingVasp:
                 select(Uma).where(Uma.username == username)
             ).first()
             if not uma:
-                raise UmaException(
-                    f"Cannot find UMA for user {username}",
-                    status_code=404,
+                abort_with_error(
+                    ErrorCode.USER_NOT_FOUND, f"Cannot find UMA for user {username}"
                 )
             payreq_response_model = PayReqResponseModel(
                 user_id=user.id,
@@ -379,19 +359,15 @@ class ReceivingVasp:
     def handle_create_uma_invoice(self, user_id: str) -> str:
         user = self.user_service.get_user_from_id(user_id)
         if not user:
-            raise UmaException(
-                f"Cannot find user {user_id}",
-                status_code=404,
-            )
+            abort_with_error(ErrorCode.USER_NOT_FOUND, f"Cannot find user {user_id}")
 
         with Session(db.engine) as db_session:
             username = db_session.scalars(
                 select(Uma.username).where(Uma.user_id == user.id, Uma.default)
             ).first()
             if not username:
-                raise UmaException(
-                    f"Cannot find UMA for user {user_id}",
-                    status_code=404,
+                abort_with_error(
+                    ErrorCode.USER_NOT_FOUND, f"Cannot find UMA for user {user_id}"
                 )
 
         flask_request_data = flask_request.json
@@ -406,9 +382,9 @@ class ReceivingVasp:
             if currency.code == currency_code
         ]
         if len(receiver_currencies) == 0:
-            raise UmaException(
+            abort_with_error(
+                ErrorCode.INVALID_CURRENCY,
                 f"User does not support currency {currency_code}",
-                status_code=400,
             )
         currency = receiver_currencies[0]
 
@@ -450,18 +426,14 @@ class ReceivingVasp:
     def create_and_send_invoice(self, user_id: str) -> Response:
         user = self.user_service.get_user_from_id(user_id)
         if not user:
-            raise UmaException(
-                f"Cannot find user {user_id}",
-                status_code=404,
-            )
+            abort_with_error(ErrorCode.USER_NOT_FOUND, f"Cannot find user {user_id}")
         with Session(db.engine) as db_session:
             username = db_session.scalars(
                 select(Uma.username).where(Uma.user_id == user.id, Uma.default)
             ).first()
             if not username:
-                raise UmaException(
-                    f"Cannot find UMA for user {user_id}",
-                    status_code=404,
+                abort_with_error(
+                    ErrorCode.USER_NOT_FOUND, f"Cannot find UMA for user {user_id}"
                 )
 
         flask_request_data = flask_request.json
@@ -476,9 +448,9 @@ class ReceivingVasp:
             if currency.code == currency_code
         ]
         if len(receiver_currencies) == 0:
-            raise UmaException(
+            abort_with_error(
+                ErrorCode.INVALID_CURRENCY,
                 f"User does not support currency {currency_code}",
-                status_code=400,
             )
         currency = receiver_currencies[0]
 
@@ -506,10 +478,7 @@ class ReceivingVasp:
 
         sender_uma = flask_request_data.get("sender_uma")
         if not sender_uma:
-            raise UmaException(
-                "Cannot find sender_uma",
-                status_code=404,
-            )
+            abort_with_error(ErrorCode.INVALID_INPUT, "Cannot find sender_uma")
 
         invoice = create_uma_invoice(
             receiver_uma=get_uma_from_username(username),
@@ -541,7 +510,8 @@ class ReceivingVasp:
 
         if not res.ok:
             abort_with_error(
-                424, f"Error sending pay request: {res.status_code} {res.text}"
+                ErrorCode.PAYREQ_REQUEST_FAILED,
+                f"Error sending pay request: {res.status_code} {res.text}",
             )
 
         return Response(status=200)
@@ -601,7 +571,7 @@ def register_routes(
         username = get_username_from_uma(username)
         user = user_service.get_user_from_uma(username)
         if not user:
-            abort_with_error(404, f"Cannot find user {username}")
+            abort_with_error(ErrorCode.USER_NOT_FOUND, f"Cannot find user {username}")
         receiving_vasp = get_receiving_vasp()
         return receiving_vasp.handle_lnurlp_request(username)
 
@@ -632,7 +602,7 @@ def register_routes(
     def handle_post_transaction() -> Response:
         signature_header = flask_request.headers.get(webhooks.SIGNATURE_HEADER)
         if not signature_header:
-            abort_with_error(400, "Missing signature header")
+            abort_with_error(ErrorCode.INVALID_INPUT, "Missing signature header")
 
         event = webhooks.WebhookEvent.verify_and_parse(
             flask_request.data,
@@ -644,7 +614,9 @@ def register_routes(
                 event.entity_id, LightningTransaction
             )
             if not payment:
-                abort_with_error(500, f"Cannot find payment {event.entity_id}")
+                abort_with_error(
+                    ErrorCode.INTERNAL_ERROR, f"Cannot find payment {event.entity_id}"
+                )
 
             if payment.status == TransactionStatus.SUCCESS and isinstance(
                 payment, IncomingPayment
@@ -658,7 +630,7 @@ def register_routes(
                     return Response(status=200)
                 if not transaction_hash:
                     abort_with_error(
-                        500,
+                        ErrorCode.INTERNAL_ERROR,
                         f"Cannot find transaction_hash for payment {payment.id}",
                     )
 
@@ -670,14 +642,14 @@ def register_routes(
                     ).first()
                     if not payreq_response:
                         abort_with_error(
-                            500,
+                            ErrorCode.INTERNAL_ERROR,
                             f"Cannot find payreq_response for transaction_hash: {transaction_hash}",
                         )
 
                     user = user_service.get_user_from_id(payreq_response.user_id)
                     if not user:
                         abort_with_error(
-                            500,
+                            ErrorCode.INTERNAL_ERROR,
                             f"Cannot find user: {payreq_response.user_id}",
                         )
 
@@ -686,7 +658,7 @@ def register_routes(
                     ).first()
                     if not receiver_uma_model:
                         abort_with_error(
-                            500,
+                            ErrorCode.INTERNAL_ERROR,
                             f"Cannot find UMA: {payreq_response.uma_id}",
                         )
 

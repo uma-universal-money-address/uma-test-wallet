@@ -32,7 +32,7 @@ from vasp.uma_vasp.lightspark_helpers import get_node
 from vasp.uma_vasp.sending_vasp import SendingVasp, get_sending_vasp
 from vasp.uma_vasp.uma_exception import abort_with_error
 from vasp.uma_vasp.user import User
-from uma import Currency
+from uma import Currency, ErrorCode
 from uma.nonce_cache import INonceCache
 from uma.public_key_cache import IPublicKeyCache
 from uma_auth.models.currency_preference import CurrencyPreference
@@ -79,7 +79,7 @@ class UmaNwcBridge:
             osk_password = self.config.osk_node_signing_key_password
             if not osk_password:
                 abort_with_error(
-                    400,
+                    ErrorCode.INTERNAL_ERROR,
                     "OSK password is required for OSK nodes.",
                 )
             self.lightspark_client.recover_node_signing_key(
@@ -91,7 +91,8 @@ class UmaNwcBridge:
         master_seed = self.config.get_remote_signing_node_master_seed()
         if not master_seed:
             abort_with_error(
-                400, "Remote signing master seed is required for remote signing nodes."
+                ErrorCode.INTERNAL_ERROR,
+                "Remote signing master seed is required for remote signing nodes.",
             )
         self.lightspark_client.provide_node_master_seed(
             self.config.node_id, master_seed, node.bitcoin_network
@@ -101,7 +102,7 @@ class UmaNwcBridge:
         uma = session.get("uma")
 
         if uma is None:
-            abort_with_error(404, "Uma not found in session")
+            abort_with_error(ErrorCode.USER_NOT_FOUND, "Uma not found in session")
 
         with Session(db.engine) as db_session:
             # TODO: Add pagination
@@ -139,28 +140,33 @@ class UmaNwcBridge:
     def handle_pay_invoice(self) -> dict[str, Any]:
         uma = session.get("uma")
         if uma is None:
-            abort_with_error(404, "Uma not found in session.")
+            abort_with_error(ErrorCode.USER_NOT_FOUND, "Uma not found in session.")
 
         request_json = request.get_json()
         if not request_json:
-            abort_with_error(400, "Request must be JSON")
+            abort_with_error(ErrorCode.INVALID_INPUT, "Request must be JSON")
         try:
             request_data = PayInvoiceRequest.from_dict(request_json)
         except Exception as e:
-            abort_with_error(400, f"Invalid request: {e}")
+            abort_with_error(ErrorCode.INVALID_INPUT, f"Invalid request: {e}")
 
         invoice = request_data.invoice
         try:
             bolt11 = bolt11_decode(invoice)
         except Exception as e:
-            abort_with_error(400, f"Invalid invoice: {e}")
+            abort_with_error(ErrorCode.INVALID_INVOICE, f"Invalid invoice: {e}")
 
         amount = request_data.amount
         if not bolt11.amount_msat:
             if not amount:
-                abort_with_error(400, "Need to provide amount for 0 amount invoice.")
+                abort_with_error(
+                    ErrorCode.INVALID_INPUT,
+                    "Need to provide amount for 0 amount invoice.",
+                )
         elif amount and amount != bolt11.amount_msat:
-            abort_with_error(400, "Amount does not match invoice amount.")
+            abort_with_error(
+                ErrorCode.INVALID_INPUT, "Amount does not match invoice amount."
+            )
 
         self._load_signing_key()
         payment_result = self.lightspark_client.pay_invoice(
@@ -171,12 +177,12 @@ class UmaNwcBridge:
             amount_msats=amount,
         )
         if not payment_result:
-            abort_with_error(500, "Payment failed.")
+            abort_with_error(ErrorCode.INTERNAL_ERROR, "Payment failed.")
         payment = self.sending_vasp.wait_for_payment_completion(payment_result)
         transaction_hash = payment.transaction_hash
         if payment.status != TransactionStatus.SUCCESS or not transaction_hash:
             abort_with_error(
-                500,
+                ErrorCode.INTERNAL_ERROR,
                 f"Payment failed. {payment.failure_message}",
             )
 
@@ -189,17 +195,17 @@ class UmaNwcBridge:
         )
         preimage = payment_result.payment_preimage
         if not preimage:
-            abort_with_error(500, "Payment preimage not found.")
+            abort_with_error(ErrorCode.INTERNAL_ERROR, "Payment preimage not found.")
         return PayInvoiceResponse(preimage=preimage).to_dict()
 
     def handle_create_invoice(self) -> dict[str, Any]:
         request_json = request.get_json()
         if not request_json:
-            abort_with_error(400, "Request must be JSON")
+            abort_with_error(ErrorCode.INVALID_INPUT, "Request must be JSON")
         try:
             request_data = MakeInvoiceRequest.from_dict(request_json)
         except Exception as e:
-            abort_with_error(400, f"Invalid request: {e}")
+            abort_with_error(ErrorCode.INVALID_INPUT, f"Invalid request: {e}")
 
         invoice = self.lightspark_client.create_invoice(
             self.config.node_id,
@@ -227,11 +233,13 @@ class UmaNwcBridge:
             payment_hash
         )
         if not invoice and (not payments or len(payments) == 0):
-            abort_with_error(404, "Invoice not found.")
+            abort_with_error(ErrorCode.REQUEST_NOT_FOUND, "Invoice not found.")
         if not invoice:
             payment_request = payments[0].payment_request_data
             if not payment_request:
-                abort_with_error(404, "No payment_request for this payment.")
+                abort_with_error(
+                    ErrorCode.REQUEST_NOT_FOUND, "No payment_request for this payment."
+                )
             decoded_bolt11 = bolt11_decode(payment_request.encoded_payment_request)
         is_outgoing = payments and len(payments) > 0
         resolved_at = payments[0].resolved_at if is_outgoing else None
@@ -268,7 +276,7 @@ class UmaNwcBridge:
     def handle_get_info(self) -> dict[str, Any]:
         uma = session["uma"]
         if uma is None:
-            abort_with_error(404, "Uma not found in session.")
+            abort_with_error(ErrorCode.USER_NOT_FOUND, "Uma not found in session.")
 
         uma_currencies = self.currency_service.get_uma_currencies_for_uma(
             get_username_from_uma(uma)
@@ -301,13 +309,13 @@ class UmaNwcBridge:
     def balance(self) -> dict[str, Any]:
         uma = session.get("uma")
         if uma is None:
-            abort_with_error(404, "Uma not found in session.")
+            abort_with_error(ErrorCode.USER_NOT_FOUND, "Uma not found in session.")
 
         # By default, nwc assumes the balance is in msats.
         should_return_msats = "currency_code" not in request.args
         currency_code = request.args.get("currency_code") or "SAT"
         if currency_code not in CURRENCIES:
-            abort_with_error(400, "Invalid currency code")
+            abort_with_error(ErrorCode.INVALID_CURRENCY, "Invalid currency code")
 
         balance, wallet_currency_code = self.ledger_service.get_wallet_balance(uma)
         if currency_code != wallet_currency_code:
@@ -341,7 +349,7 @@ class UmaNwcBridge:
     def handle_budget_estimate(self) -> dict[str, Any]:
         uma = session["uma"]
         if uma is None:
-            abort_with_error(404, "Uma not found in session.")
+            abort_with_error(ErrorCode.USER_NOT_FOUND, "Uma not found in session.")
 
         sending_currency_code = request.args.get("sending_currency_code")
         sending_currency_amount = request.args.get("sending_currency_amount")
@@ -352,9 +360,11 @@ class UmaNwcBridge:
             or not sending_currency_amount
             or not budget_currency_code
         ):
-            abort_with_error(400, "Missing required parameters")
+            abort_with_error(
+                ErrorCode.MISSING_REQUIRED_UMA_PARAMETERS, "Missing required parameters"
+            )
         if not sending_currency_amount.isnumeric():
-            abort_with_error(400, "Invalid sending currency amount")
+            abort_with_error(ErrorCode.INVALID_INPUT, "Invalid sending currency amount")
 
         try:
             currency_multiplier = self.currency_service.get_smallest_unit_multiplier(
@@ -369,7 +379,9 @@ class UmaNwcBridge:
                 )
             ).to_dict()
         except Exception as e:
-            abort_with_error(400, f"Error getting currency multiplier: {e}")
+            abort_with_error(
+                ErrorCode.INTERNAL_ERROR, f"Error getting currency multiplier: {e}"
+            )
 
     def handle_lookup_user(self, receiver_uma: str) -> dict[str, Any]:
         lookup_response = self.sending_vasp.handle_uma_lookup(
@@ -416,21 +428,26 @@ class UmaNwcBridge:
             or not receiving_currency_code
             or not locked_currency_amount
         ):
-            abort_with_error(400, "Missing required parameters")
+            abort_with_error(
+                ErrorCode.MISSING_REQUIRED_UMA_PARAMETERS, "Missing required parameters"
+            )
         if not locked_currency_amount.isnumeric():
-            abort_with_error(400, "Invalid locked currency amount")
+            abort_with_error(ErrorCode.INVALID_INPUT, "Invalid locked currency amount")
         if (
             not is_sender_locked
             and locked_currency_side
             and locked_currency_side.lower() != "receiving"
         ):
-            abort_with_error(400, "Invalid locked currency side")
+            abort_with_error(ErrorCode.INVALID_INPUT, "Invalid locked currency side")
         uma_lookup_result = self.sending_vasp.handle_uma_lookup(
             sender_uma=session["uma"], receiver_uma=receiving_uma
         )
         receiving_currencies = uma_lookup_result.get("receiverCurrencies")
         if not receiving_currencies:
-            abort_with_error(400, "Receiver not found")
+            abort_with_error(
+                ErrorCode.MISSING_REQUIRED_UMA_PARAMETERS,
+                "Receiving currencies not found",
+            )
 
         receiving_currency = next(
             (
@@ -442,7 +459,10 @@ class UmaNwcBridge:
         )
 
         if not receiving_currency:
-            abort_with_error(400, "Receiver does not accept the specified currency")
+            abort_with_error(
+                ErrorCode.INVALID_CURRENCY,
+                "Receiver does not accept the specified currency",
+            )
 
         if (
             is_sender_locked
@@ -451,7 +471,8 @@ class UmaNwcBridge:
         ):
             # TODO: support other sending currencies for quotes like we do in pay_to_address.
             abort_with_error(
-                400, "Sending currencies besides BTC are not yet supported"
+                ErrorCode.INVALID_CURRENCY,
+                "Sending currencies besides BTC are not yet supported",
             )
 
         uma_payreq_result = self.sending_vasp.handle_uma_payreq(
@@ -511,13 +532,13 @@ class UmaNwcBridge:
                 select(Quote).where(Quote.payment_hash == payment_hash)
             ).first()
             if not quote:
-                abort_with_error(404, "Quote not found")
+                abort_with_error(ErrorCode.QUOTE_NOT_FOUND, "Quote not found")
             if quote.user_id != session.get("user_id"):
-                abort_with_error(403, "Quote does not belong to user")
+                abort_with_error(ErrorCode.FORBIDDEN, "Quote does not belong to user")
             if quote.settled_at:
-                abort_with_error(400, "Quote already settled")
+                abort_with_error(ErrorCode.INVALID_INPUT, "Quote already settled")
             if quote.expires_at.timestamp() < datetime.now().timestamp():
-                abort_with_error(400, "Quote expired")
+                abort_with_error(ErrorCode.QUOTE_EXPIRED, "Quote expired")
 
         payment = self.sending_vasp.handle_send_payment(quote.callback_uuid)
 
@@ -530,16 +551,18 @@ class UmaNwcBridge:
     def handle_pay_to_address(self) -> dict[str, Any]:
         request_json = request.get_json()
         if not request_json:
-            abort_with_error(400, "Request must be JSON")
+            abort_with_error(ErrorCode.INVALID_INPUT, "Request must be JSON")
 
         try:
             request_data = PayToAddressRequest.from_dict(request_json)
         except Exception as e:
-            abort_with_error(400, f"Invalid request: {e}")
+            abort_with_error(ErrorCode.INVALID_INPUT, f"Invalid request: {e}")
 
         sending_currency_code = request_data.sending_currency_code
         if request_data.sending_currency_code not in CURRENCIES:
-            abort_with_error(400, "Invalid sending currency code")
+            abort_with_error(
+                ErrorCode.INVALID_CURRENCY, "Invalid sending currency code"
+            )
 
         wallet_currency = self.currency_service.get_uma_currencies_for_uma(
             get_username_from_uma(session["uma"])
@@ -584,7 +607,10 @@ class UmaNwcBridge:
             None,
         )
         if len(receiving_currencies) > 0 and not receiving_currency:
-            abort_with_error(400, "Receiver does not accept the specified currency")
+            abort_with_error(
+                ErrorCode.INVALID_CURRENCY,
+                "Receiver does not accept the specified currency",
+            )
 
         if not receiving_currency:
             receiving_currency = CURRENCIES[receiving_currency_code]
@@ -689,12 +715,12 @@ def construct_blueprint(
     def data_from_jwt() -> None:
         auth_header = request.headers.get("Authorization")
         if not auth_header:
-            abort_with_error(401, "Unauthorized")
+            abort_with_error(ErrorCode.FORBIDDEN, "Unauthorized")
         jwt_token = auth_header.split("Bearer ")[-1]
         jwt_public_key = current_app.config.get("NWC_JWT_PUBKEY")
         if not jwt_public_key:
             print("JWT public key not configured")
-            abort_with_error(500, "JWT public key not configured")
+            abort_with_error(ErrorCode.INTERNAL_ERROR, "JWT public key not configured")
         try:
             decoded = jwt.decode(
                 jwt_token,
@@ -712,7 +738,7 @@ def construct_blueprint(
             session["uma"] = uma
         except jwt.exceptions.InvalidTokenError as e:
             print("Invalid token error", e)
-            abort_with_error(401, "Unauthorized")
+            abort_with_error(ErrorCode.FORBIDDEN, "Unauthorized")
 
     @bp.get("/balance")
     def balance() -> dict[str, Any]:
@@ -737,7 +763,9 @@ def construct_blueprint(
     @bp.route("/receiver/<receiver_type>/<receiver_uma>")
     def handle_lookup_user(receiver_type: str, receiver_uma: str) -> dict[str, Any]:
         if receiver_type != "lud16":
-            abort_with_error(400, "Only UMA receivers are supported")
+            abort_with_error(
+                ErrorCode.INVALID_INPUT, "Only UMA receivers are supported"
+            )
         return get_nwc_bridge().handle_lookup_user(receiver_uma)
 
     @bp.route("/quote/lud16")
@@ -770,20 +798,22 @@ def construct_blueprint(
         user_id = session.get("user_id")
         user = User.from_id(user_id)
         if user is None:
-            abort_with_error(404, f"User {user_id} not found.")
+            abort_with_error(ErrorCode.USER_NOT_FOUND, f"User {user_id} not found.")
         uma = session.get("uma")
         if uma is None:
-            abort_with_error(404, "Uma not found in session.")
+            abort_with_error(ErrorCode.USER_NOT_FOUND, "Uma not found in session.")
 
         body = request.get_json()
         requested_permissions = body.get("permissions")
         if not requested_permissions:
-            abort_with_error(400, "Permissions are required.")
+            abort_with_error(ErrorCode.INVALID_INPUT, "Permissions are required.")
         requested_expiration = body.get("expiration")
 
         jwt_private_key = current_app.config.get("NWC_JWT_PRIVKEY")
         if not jwt_private_key:
-            abort_with_error(500, "JWT private key not set in config.")
+            abort_with_error(
+                ErrorCode.INTERNAL_ERROR, "JWT private key not set in config."
+            )
 
         claims = {
             "sub": str(user_id),

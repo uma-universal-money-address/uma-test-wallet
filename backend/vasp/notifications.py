@@ -7,6 +7,7 @@ from flask_login import login_required, current_user
 
 from vasp.db import db
 from vasp.uma_vasp.uma_exception import abort_with_error
+from uma import ErrorCode
 from vasp.uma_vasp.user import User
 from vasp.models.PushSubscription import PushSubscription
 from vasp.uma_vasp.config import Config
@@ -34,7 +35,7 @@ def construct_blueprint(config: Config) -> Blueprint:
         data = request.get_json()
 
         if "subscription_json" not in data:
-            abort_with_error(400, "Subscription not found.")
+            abort_with_error(ErrorCode.INVALID_INPUT, "Subscription not found.")
 
         subscription_json = data["subscription_json"]
         with Session(db.engine) as db_session:
@@ -79,9 +80,9 @@ def construct_blueprint(config: Config) -> Blueprint:
         data = request.get_json()
 
         if "title" not in data:
-            abort_with_error(400, "Title not found.")
+            abort_with_error(ErrorCode.INVALID_INPUT, "Title not found.")
         if "body" not in data:
-            abort_with_error(400, "Body not found.")
+            abort_with_error(ErrorCode.INVALID_INPUT, "Body not found.")
 
         title = data["title"]
         body = data["body"]

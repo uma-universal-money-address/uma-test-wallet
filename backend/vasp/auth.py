@@ -35,6 +35,7 @@ import json
 from werkzeug.wrappers import Response as WerkzeugResponse
 import webauthn
 from uuid import uuid4
+from uma import ErrorCode
 
 from typing import TYPE_CHECKING
 
@@ -70,7 +71,7 @@ def construct_blueprint(
     def nwc_login() -> WerkzeugResponse:
         redirect_url = request.args.get("redirect_uri")
         if not redirect_url:
-            abort_with_error(400, "Redirect URL is required.")
+            abort_with_error(ErrorCode.INVALID_INPUT, "Redirect URL is required.")
         parsed_url = urlparse(unquote(redirect_url))
         vasp_domain = get_vasp_domain()
         nwc_base_path = current_app.config.get(
@@ -79,13 +80,15 @@ def construct_blueprint(
         expected_domain = urlparse(nwc_base_path).netloc
         if parsed_url.netloc != expected_domain:
             abort_with_error(
-                400,
+                ErrorCode.INVALID_INPUT,
                 f"Invalid redirect URL: {parsed_url.netloc}. Domain should be {expected_domain}",
             )
 
         jwt_private_key = current_app.config.get("NWC_JWT_PRIVKEY")
         if not jwt_private_key:
-            abort_with_error(500, "JWT private key not set in config.")
+            abort_with_error(
+                ErrorCode.INVALID_INPUT, "JWT private key not set in config."
+            )
 
         query_params = parse_qs(parsed_url.query)
         username_list = query_params.get("uma_username", [])
@@ -105,7 +108,9 @@ def construct_blueprint(
                 .where(Uma.username == username)
             ).first()
             if not wallet:
-                abort_with_error(400, f"Wallet not found for user {username}")
+                abort_with_error(
+                    ErrorCode.USER_NOT_FOUND, f"Wallet not found for user {username}"
+                )
             currency = db_session.scalars(
                 select(Currency).where(Currency.wallet_id == wallet.id)
             ).first()
@@ -149,7 +154,7 @@ def construct_blueprint(
             user = handle_webauthn_login(webauthn_login_data)
 
         if not user:
-            abort_with_error(400, "Unable to login user.")
+            abort_with_error(ErrorCode.INVALID_INPUT, "Unable to login user.")
 
         print(f"Logging in user {user.id}")
         login_user(user, remember=True)
@@ -191,7 +196,7 @@ def construct_blueprint(
                     select(UserModel).where(UserModel.google_id == id)
                 ).first()
             else:
-                abort_with_error(400, "Invalid auth method")
+                abort_with_error(ErrorCode.INVALID_INPUT, "Invalid auth method")
 
             if user:
                 existing_user = User.from_model(user)
@@ -229,7 +234,7 @@ def construct_blueprint(
     def webauthn_register() -> WerkzeugResponse:
         challenge_data = challenge_cache.get_challenge_data(current_user.id)
         if not challenge_data:
-            abort_with_error(400, "No challenge data found.")
+            abort_with_error(ErrorCode.INVALID_INPUT, "No challenge data found.")
 
         auth_verification = webauthn.verify_registration_response(
             credential=request.get_json(),
@@ -287,13 +292,13 @@ def construct_blueprint(
         challenge_id = webauthn_login_data["challenge_id"]
         credential = webauthn_login_data["credential"]
         if not challenge_id:
-            abort_with_error(400, "Challenge ID is required.")
+            abort_with_error(ErrorCode.INVALID_INPUT, "Challenge ID is required.")
         if not credential:
-            abort_with_error(400, "Credential is required.")
+            abort_with_error(ErrorCode.INVALID_INPUT, "Credential is required.")
 
         challenge_data = challenge_cache.get_challenge_data(challenge_id)
         if not challenge_data:
-            abort_with_error(400, "No challenge data found.")
+            abort_with_error(ErrorCode.INVALID_INPUT, "No challenge data found.")
 
         # The credential ID saved has padding due to Python's implementation of webauthn
         # Thus we need to add padding to the credential ID provided by the browser which does not
@@ -307,7 +312,7 @@ def construct_blueprint(
             ).first()
 
             if not credential_model:
-                abort_with_error(400, "Credential not found.")
+                abort_with_error(ErrorCode.INVALID_INPUT, "Credential not found.")
 
             try:
                 webauthn.verify_authentication_response(
@@ -319,7 +324,9 @@ def construct_blueprint(
                     credential_current_sign_count=0,  # Not used
                 )
             except Exception as e:
-                abort_with_error(400, f"Unable to verify webauthn: {str(e)}")
+                abort_with_error(
+                    ErrorCode.INVALID_INPUT, f"Unable to verify webauthn: {str(e)}"
+                )
 
             challenge_cache.delete_challenge_data(challenge_id)
             return User.from_id(credential_model.user_id)

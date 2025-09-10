@@ -21,7 +21,7 @@ from uma import (
     INonceCache,
     InMemoryNonceCache,
     InMemoryPublicKeyCache,
-    UnsupportedVersionException,
+    UmaException,
 )
 
 from vasp.uma_vasp.user import User
@@ -42,7 +42,6 @@ from vasp.uma_nwc_bridge import (
 from vasp.uma_vasp.sending_vasp import (
     register_routes as register_sending_vasp_routes,
 )
-from vasp.uma_vasp.uma_exception import UmaException
 from vasp.db import db, setup_rds_iam_auth
 from vasp.uma_vasp.interfaces.request_storage import IRequestStorage
 from werkzeug.wrappers.response import Response as WerkzeugResponse
@@ -184,11 +183,7 @@ def create_app() -> Flask:
 
     @app.errorhandler(UmaException)
     def invalid_api_usage(e: UmaException) -> tuple[Response, int]:
-        return jsonify(e.to_dict()), e.status_code
-
-    @app.errorhandler(UnsupportedVersionException)
-    def unsupported_version(e: UnsupportedVersionException) -> tuple[Response, int]:
-        return jsonify(json.loads(e.to_json())), 412
+        return (jsonify(json.loads(e.to_json())), e.http_status_code)
 
     register_receiving_vasp_routes(
         app,

@@ -16,8 +16,9 @@ from vasp.models.User import User as UserModel
 from vasp.models.PushSubscription import PushSubscription
 from vasp.models.Wallet import Wallet
 from vasp.models.WebAuthnCredential import WebAuthnCredential
-from vasp.uma_vasp.uma_exception import UmaException
+from vasp.uma_vasp.uma_exception import abort_with_error
 from vasp.uma_vasp.config import Config
+from uma import ErrorCode
 
 log: logging.Logger = logging.getLogger(__name__)
 
@@ -48,9 +49,9 @@ class User(UserMixin):
         default_uma = get_default_uma(self.umas)
         if default_uma is None:
             log.error(f"User {self.id} has no default UMA.")
-            raise UmaException(
+            abort_with_error(
+                ErrorCode.INVALID_INPUT,
                 f"User {self.id} has no default UMA.",
-                status_code=400,
             )
         return default_uma
 
@@ -117,7 +118,7 @@ class User(UserMixin):
     @classmethod
     def from_id(cls, user_id: str) -> Optional["User"]:
         with Session(db.engine) as db_session:
-            user_model: UserModel = db_session.get(UserModel, user_id)
+            user_model: Optional[UserModel] = db_session.get(UserModel, user_id)
             if user_model:
                 return cls(
                     id=user_model.id,

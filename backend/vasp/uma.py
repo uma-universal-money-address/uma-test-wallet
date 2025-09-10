@@ -10,10 +10,10 @@ from flask_login import current_user, login_user, login_required
 from sqlalchemy import exc, func, select
 from sqlalchemy.orm import Session
 from uma import (
+    ErrorCode,
     KycStatus,
     INonceCache,
     IPublicKeyCache,
-    InvalidSignatureException,
     PostTransactionCallback,
     fetch_public_key_for_vasp,
     verify_post_transaction_callback_signature,
@@ -31,7 +31,6 @@ from vasp.uma_vasp.uma_exception import abort_with_error
 from vasp.uma_vasp.user import User
 from vasp.user import DEFAULT_PREFERENCES
 from vasp.username_dict import APPROVED_ADJECTIVES, APPROVED_NOUNS
-from vasp.uma_vasp.uma_exception import UmaException
 
 if TYPE_CHECKING:
     current_user: User
@@ -51,7 +50,7 @@ def register_uma(
                 select(UmaModel).where(UmaModel.username == uma_user_name)
             ).first():
                 error = f"UMA {uma_user_name} is already registered."
-                abort_with_error(400, error)
+                abort_with_error(ErrorCode.INVALID_INPUT, error)
             else:
                 if current_user.is_authenticated:
                     existing_user = db_session.scalars(
@@ -113,7 +112,7 @@ def register_uma(
 
         except exc.SQLAlchemyError as err:
             error = f"Error registering user {uma_user_name}: {err}"
-            abort_with_error(500, error)
+            abort_with_error(ErrorCode.INTERNAL_ERROR, error)
 
 
 def construct_blueprint(
@@ -126,20 +125,24 @@ def construct_blueprint(
         data = request.get_json()
         uma_user_name = data["uma_user_name"]
         if not uma_user_name:
-            abort_with_error(400, "UMA user name is required.")
+            abort_with_error(ErrorCode.INVALID_INPUT, "UMA user name is required.")
 
         initial_amount = data.get("initial_amount", 0)
 
         if current_user.is_authenticated:
             with Session(db.engine) as db_session:
-                count_uma_current_user = db_session.scalar(
-                    select(func.count(UmaModel.username)).where(
-                        UmaModel.user_id == current_user.id
+                count_uma_current_user = (
+                    db_session.scalar(
+                        select(func.count(UmaModel.username)).where(
+                            UmaModel.user_id == current_user.id
+                        )
                     )
+                    or 0
                 )
                 if count_uma_current_user >= 10:
                     abort_with_error(
-                        400, "You have reached the maximum number of UMAs."
+                        ErrorCode.INVALID_INPUT,
+                        "You have reached the maximum number of UMAs.",
                     )
         currencies = ["SAT"]
         # Default to verified for the purpose of this demo app
@@ -191,16 +194,18 @@ def construct_blueprint(
             ).first()
 
             if uma_model is None:
-                abort_with_error(404, "UMA not found")
+                abort_with_error(ErrorCode.USER_NOT_FOUND, "UMA not found")
 
             if uma_model.user_id != current_user.id:
-                abort_with_error(403, "Not authorized to modify this UMA")
+                abort_with_error(
+                    ErrorCode.FORBIDDEN, "Not authorized to modify this UMA"
+                )
 
             request_json = request.json
             new_username = request_json.get("username")
 
             if not new_username:
-                abort_with_error(400, "New username is required")
+                abort_with_error(ErrorCode.INVALID_INPUT, "New username is required")
 
             # Check if new username already exists
             existing_uma = db_session.scalars(
@@ -208,7 +213,7 @@ def construct_blueprint(
             ).first()
 
             if existing_uma:
-                abort_with_error(400, "Username already taken")
+                abort_with_error(ErrorCode.INVALID_INPUT, "Username already taken")
 
             uma_model.username = new_username
             db_session.commit()
@@ -227,11 +232,12 @@ def construct_blueprint(
     @bp.post("/utxoCallback")
     def handle_utxo_callback() -> str:
         print(f"Received UTXO callback for {request.args.get('txid')}:")
+        tx_callback = None
         try:
             tx_callback = PostTransactionCallback.from_json(json.dumps(request.json))
         except Exception as e:
-            raise UmaException(
-                status_code=400, message=f"Error parsing UTXO callback: {e}"
+            abort_with_error(
+                ErrorCode.PARSE_UTXO_CALLBACK_ERROR, f"Error parsing UTXO callback: {e}"
             )
 
         print(tx_callback.to_json())
@@ -241,14 +247,9 @@ def construct_blueprint(
                 vasp_domain=tx_callback.vasp_domain,
                 cache=pubkey_cache,
             )
-            try:
-                verify_post_transaction_callback_signature(
-                    tx_callback, other_vasp_pubkeys, nonce_cache
-                )
-            except InvalidSignatureException as e:
-                raise UmaException(
-                    f"Error verifying post-tx callback signature: {e}", 424
-                )
+            verify_post_transaction_callback_signature(
+                tx_callback, other_vasp_pubkeys, nonce_cache
+            )
 
         return "OK"
 
