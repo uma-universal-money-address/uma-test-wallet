@@ -87,8 +87,10 @@ export const Confirm = () => {
   }, [router, umaPayreqResponse, receiverUma, toast, setError]);
 
   useEffect(() => {
-    const handleKeyDown = () => {
-      handleSubmit();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Enter" && !isLoading) {
+        handleSubmit();
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -96,7 +98,7 @@ export const Confirm = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [handleSubmit]);
+  }, [handleSubmit, isLoading]);
 
   const senderWallet: OwnContact | undefined = useMemo(() => {
     if (!wallets) return undefined;
