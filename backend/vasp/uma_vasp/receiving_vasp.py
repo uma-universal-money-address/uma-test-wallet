@@ -126,14 +126,16 @@ class ReceivingVasp:
             )
 
         metadata = self._create_metadata(username)
-        payer_data_options = create_counterparty_data_options(
-            {
-                "name": False,
-                "email": False,
-                "identifier": True,
-                "compliance": True,
-            }
-        )
+        payer_data_dict = {
+            "name": False,
+            "email": False,
+            "identifier": True,
+            "compliance": True,
+        }
+        user_currencies = self.currency_service.get_uma_currencies_for_uma(username)
+        if any(currency.code in ["BRL", "EUR"] for currency in user_currencies):
+            payer_data_dict["postalAddress"] = True
+        payer_data_options = create_counterparty_data_options(payer_data_dict)
         callback = self.config.get_complete_url(
             get_vasp_domain(), f"{PAY_REQUEST_CALLBACK}{username}"
         )
@@ -403,14 +405,15 @@ class ReceivingVasp:
             get_vasp_domain(), f"{PAY_REQUEST_CALLBACK}{user.id}"
         )
 
-        payer_data_options = create_counterparty_data_options(
-            {
-                "name": False,
-                "email": False,
-                "identifier": True,
-                "compliance": True,
-            }
-        )
+        payer_data_dict = {
+            "name": False,
+            "email": False,
+            "identifier": True,
+            "compliance": True,
+        }
+        if currency.code in ["BRL", "EUR"]:
+            payer_data_dict["postalAddress"] = True
+        payer_data_options = create_counterparty_data_options(payer_data_dict)
 
         invoice = create_uma_invoice(
             receiver_uma=get_uma_from_username(username),
@@ -469,14 +472,15 @@ class ReceivingVasp:
             get_vasp_domain(), f"{PAY_REQUEST_CALLBACK}{user.id}"
         )
 
-        payer_data_options = create_counterparty_data_options(
-            {
-                "name": False,
-                "email": False,
-                "identifier": True,
-                "compliance": True,
-            }
-        )
+        payer_data_dict = {
+            "name": False,
+            "email": False,
+            "identifier": True,
+            "compliance": True,
+        }
+        if currency.code in ["BRL", "EUR"]:
+            payer_data_dict["postalAddress"] = True
+        payer_data_options = create_counterparty_data_options(payer_data_dict)
 
         sender_uma = flask_request_data.get("sender_uma")
         if not sender_uma:

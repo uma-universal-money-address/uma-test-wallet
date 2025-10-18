@@ -55,6 +55,12 @@ def create_app() -> Flask:
     # create and configure the app
     app: Flask = Flask(__name__)
 
+    # Increase logging verbosity for debugging
+    logging.getLogger().setLevel(logging.DEBUG)
+    app.logger.setLevel(logging.DEBUG)
+    logging.getLogger("werkzeug").setLevel(logging.DEBUG)
+    logging.getLogger("vasp").setLevel(logging.DEBUG)
+
     app.config.from_envvar("FLASK_CONFIG")
     app.config["CACHE_TYPE"] = "FileSystemCache"
     app.config["CACHE_DIR"] = "/tmp"
@@ -257,5 +263,33 @@ def create_app() -> Flask:
         Redirect to the NWC app oauth page.
         """
         return redirect_to_nwc()
+
+    @app.after_request
+    def log_response(response: Response) -> Response:
+        try:
+            content_length = response.calculate_content_length()
+        except Exception:
+            data = response.get_data(as_text=False) or b""
+            content_length = len(data)
+
+        log.debug(
+            "HTTP %s %s -> %s (%s bytes)",
+            request.method,
+            request.path,
+            response.status,
+            content_length,
+        )
+
+        content_type = response.headers.get("Content-Type", "")
+        if ("application/json" in content_type or content_type.startswith("text/")):
+            try:
+                body_text = response.get_data(as_text=True)
+                if len(body_text) > 2048:
+                    body_text = body_text[:2048] + "..."
+                log.debug("Response body: %s", body_text)
+            except Exception:
+                pass
+
+        return response
 
     return app
