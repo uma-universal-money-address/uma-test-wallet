@@ -56,10 +56,10 @@ def create_app() -> Flask:
     app: Flask = Flask(__name__)
 
     # Increase logging verbosity for debugging
-    logging.getLogger().setLevel(logging.DEBUG)
-    app.logger.setLevel(logging.DEBUG)
-    logging.getLogger("werkzeug").setLevel(logging.DEBUG)
-    logging.getLogger("vasp").setLevel(logging.DEBUG)
+    # logging.getLogger().setLevel(logging.DEBUG)
+    # app.logger.setLevel(logging.DEBUG)
+    # logging.getLogger("werkzeug").setLevel(logging.DEBUG)
+    # logging.getLogger("vasp").setLevel(logging.DEBUG)
 
     app.config.from_envvar("FLASK_CONFIG")
     app.config["CACHE_TYPE"] = "FileSystemCache"
