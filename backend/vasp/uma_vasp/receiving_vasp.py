@@ -68,6 +68,9 @@ log: logging.Logger = logging.getLogger(__name__)
 
 PAY_REQUEST_CALLBACK = "/api/uma/payreq/"
 
+# Currencies that require requesting postalAddress
+POSTAL_ADDRESS_REQUIRED_CURRENCIES = {"BRL", "GBP", "INR", "PHP"}
+
 
 class ReceivingVasp:
     def __init__(
@@ -133,7 +136,10 @@ class ReceivingVasp:
             "compliance": True,
         }
         user_currencies = self.currency_service.get_uma_currencies_for_uma(username)
-        if any(currency.code in ["BRL", "EUR"] for currency in user_currencies):
+        if any(
+            currency.code in POSTAL_ADDRESS_REQUIRED_CURRENCIES
+            for currency in user_currencies
+        ):
             payer_data_dict["postalAddress"] = True
         payer_data_options = create_counterparty_data_options(payer_data_dict)
         callback = self.config.get_complete_url(
@@ -411,7 +417,7 @@ class ReceivingVasp:
             "identifier": True,
             "compliance": True,
         }
-        if currency.code in ["BRL", "EUR"]:
+        if currency.code in POSTAL_ADDRESS_REQUIRED_CURRENCIES:
             payer_data_dict["postalAddress"] = True
         payer_data_options = create_counterparty_data_options(payer_data_dict)
 
@@ -478,7 +484,7 @@ class ReceivingVasp:
             "identifier": True,
             "compliance": True,
         }
-        if currency.code in ["BRL", "EUR"]:
+        if currency.code in POSTAL_ADDRESS_REQUIRED_CURRENCIES:
             payer_data_dict["postalAddress"] = True
         payer_data_options = create_counterparty_data_options(payer_data_dict)
 
