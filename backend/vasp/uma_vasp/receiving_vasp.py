@@ -133,6 +133,7 @@ class ReceivingVasp:
             "name": False,
             "email": False,
             "identifier": True,
+            "accountIdentifier": False,
             "compliance": True,
         }
         user_currencies = self.currency_service.get_uma_currencies_for_uma(username)
@@ -354,9 +355,7 @@ class ReceivingVasp:
             receiver_fees_msats=(
                 0
                 if request.receiving_currency_code in ["SAT", "MXN"]
-                else 2_000
-                if request.receiving_currency_code is not None
-                else None
+                else 2_000 if request.receiving_currency_code is not None else None
             ),
             receiver_node_pubkey=None,
             receiver_utxos=[],
@@ -415,6 +414,7 @@ class ReceivingVasp:
             "name": False,
             "email": False,
             "identifier": True,
+            "accountIdentifier": False,
             "compliance": True,
         }
         if currency.code in POSTAL_ADDRESS_REQUIRED_CURRENCIES:

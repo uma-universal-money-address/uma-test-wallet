@@ -281,7 +281,7 @@ def create_app() -> Flask:
         )
 
         content_type = response.headers.get("Content-Type", "")
-        if ("application/json" in content_type or content_type.startswith("text/")):
+        if "application/json" in content_type or content_type.startswith("text/"):
             try:
                 body_text = response.get_data(as_text=True)
                 if len(body_text) > 2048:
