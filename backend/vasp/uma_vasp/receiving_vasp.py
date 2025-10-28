@@ -286,6 +286,11 @@ class ReceivingVasp:
                     if user.country_of_residence
                     else {}
                 ),
+                **(
+                    {"ultimateInstitutionCountry": user.country_of_residence}
+                    if user.country_of_residence
+                    else {}
+                ),
                 **({"birthDate": user.birthday.isoformat()} if user.birthday else {}),
             },
         )
