@@ -18,20 +18,6 @@ jobs:
           fetch-depth: 0
       - name: "Check that release commit is in main or hotfix"
         run: "git merge-base --is-ancestor HEAD origin/main || git merge-base --is-ancestor HEAD origin/hotfix"
-      - name: "Check if there are schema migrations"
-        id: alembic
-        run: |
-          git log --oneline origin/prod.. backend/alembic/versions/
-          if [ "$(git log --oneline origin/prod.. backend/alembic/versions/)" ]; then
-            echo "present=1" >> "$GITHUB_OUTPUT"
-          fi
-
-          git log --oneline ..origin/prod backend/alembic/versions/
-          if [ "$(git log --oneline ..origin/prod backend/alembic/versions/)" ]; then
-            echo "present=1" >> "$GITHUB_OUTPUT"
-            echo "*** SCHEMA MIGRATIONS PRESENT DURING ROLLBACK ***"
-            echo "Schema downgrade needs to be done manually!"
-          fi
       - name: "Configure AWS credentials (dev)"
         uses: "aws-actions/configure-aws-credentials@v4"
         with:
