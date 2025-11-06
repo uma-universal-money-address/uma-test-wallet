@@ -40,7 +40,7 @@ jobs:
         run: |
           GIT_HASH="$(git log -1 --format='%cs-%H' frontend)"
           echo "Frontend git hash: $GIT_HASH"
-          scripts/deploy.py --check $GIT_HASH:0:19
+          scripts/deploy.py --source ${{ secrets.FRONTEND_BUILD_BUCKET }} --destination ${{ secrets.FRONTEND_BUCKET_PROD }} --check $GIT_HASH:0:19
       - name: "Copy backend image to prod ECR"
         run: |
           GIT_HASH="$(git log -1 --format='%H' backend)"
