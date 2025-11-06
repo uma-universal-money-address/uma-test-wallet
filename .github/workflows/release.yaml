@@ -21,7 +21,7 @@ jobs:
       - name: "Configure AWS credentials (dev)"
         uses: "aws-actions/configure-aws-credentials@v4"
         with:
-          role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID_DEV }}:role/github-actions-uma"
+          role-to-assume: "arn:aws:iam::674966927423:role/github-actions-uma"
           aws-region: "us-west-2"
       - name: "Log into ECR (dev)"
         id: ecr-dev
