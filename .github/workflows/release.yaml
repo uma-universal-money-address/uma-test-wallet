@@ -55,7 +55,7 @@ jobs:
         run: |
           curl --data-binary @- --header "Content-Type: application/json" --silent "${{ secrets.SLACK_WEBHOOK_ENGUMA }}" <<EOF
           {
-            "text": ":arrow_forward: ${{ github.actor }} is <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id}}|releasing> <${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}|${{ github.ref_name }}> to production"
+            "text": ":arrow_forward: ${{ github.actor }} is <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id}}|releasing> uma-test-wallet <${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ github.ref_name }}|${{ github.ref_name }}> to production"
           }
           EOF
       - name: "Restart pods"
@@ -81,6 +81,6 @@ jobs:
         run: |
           curl --data-binary @- --header "Content-Type: application/json" --silent "${{ secrets.SLACK_WEBHOOK_ENGUMA }}" <<EOF
           {
-            "text": ":x: ${{ github.workflow }} workflow by ${{ github.actor }} <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id}}|failed> in ${{ github.job }} on <${{ github.server_url }}/${{ github.repository }}/commit/$GITHUB_SHA|${{ github.ref_name }}>"
+            "text": ":x: uma-test-wallet ${{ github.workflow }} workflow by ${{ github.actor }} <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id}}|failed> in ${{ github.job }} on <${{ github.server_url }}/${{ github.repository }}/commit/$GITHUB_SHA|${{ github.ref_name }}>"
           }
           EOF
