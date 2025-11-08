@@ -11,6 +11,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
+      actions: write
     env:
       XDG_RUNTIME_DIR: /tmp
       KUBECONFIG: "/tmp/${{ github.run_id }}.kubeconfig"
