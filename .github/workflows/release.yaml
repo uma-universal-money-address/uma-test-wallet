@@ -21,7 +21,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: "Check that release commit is in main"
-        run: "echo 'skipping for tests' # git merge-base --is-ancestor HEAD origin/main"
+        run: "git merge-base --is-ancestor HEAD origin/main"
       - name: "Configure AWS credentials (dev)"
         uses: "aws-actions/configure-aws-credentials@v4"
         with:
@@ -76,7 +76,7 @@ jobs:
       - name: "Deploy frontend"
         run: |
           GIT_HASH="$(git log -1 --format='%cs-%H' frontend)"
-          scripts/deploy.py --source ${{ secrets.FRONTEND_BUILD_BUCKET }} --destination ${{ secrets.FRONTEND_BUCKET_PROD }} --strip-extension $GIT_HASH --version $GIT_HASH:0:19
+          scripts/deploy.py --source ${{ secrets.FRONTEND_BUILD_BUCKET }} --destination ${{ secrets.FRONTEND_BUCKET_PROD }} --strip-extension $GIT_HASH
       - name: "Notify failure on Slack"
         if: "failure()"
         run: |
