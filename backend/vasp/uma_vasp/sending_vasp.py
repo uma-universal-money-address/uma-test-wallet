@@ -404,12 +404,13 @@ class SendingVasp:
             abort_with_error(ErrorCode.FORBIDDEN, "Unauthorized")
 
         uma_username = get_username_from_uma(sender_uma)
+        sender_wallet = user.get_wallet_for_uma(uma_username)
         default_full_name = (
-            user.full_name if user.full_name is not None else uma_username
+            sender_wallet.full_name if sender_wallet.full_name is not None else uma_username
         )
         default_email = (
-            user.email_address
-            if user.email_address is not None
+            sender_wallet.email_address
+            if sender_wallet.email_address is not None
             else f"{uma_username}@test.uma.me"
         )
 
@@ -425,7 +426,7 @@ class SendingVasp:
             receiver_encryption_pubkey=receiver_vasp_pubkey.get_encryption_pubkey(),
             signing_private_key=self.config.get_signing_privkey(),
             payer_identifier=sender_uma,
-            payer_kyc_status=user.kyc_status,
+            payer_kyc_status=sender_wallet.kyc_status,
             travel_rule_info=self.compliance_service.get_travel_rule_info_for_transaction(
                 sending_user_id=user.id,
                 sending_uma_address=sender_uma,

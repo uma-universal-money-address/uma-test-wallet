@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Optional
 from sqlalchemy import LargeBinary
-from uma import KycStatus
+from uma import ErrorCode, KycStatus
 from datetime import date
 from sqlalchemy.orm import Session
 import logging
@@ -18,7 +18,7 @@ from vasp.models.Wallet import Wallet
 from vasp.models.WebAuthnCredential import WebAuthnCredential
 from vasp.uma_vasp.uma_exception import abort_with_error
 from vasp.uma_vasp.config import Config
-from uma import ErrorCode
+
 
 log: logging.Logger = logging.getLogger(__name__)
 
@@ -34,11 +34,6 @@ class User(UserMixin):
     phone_number: Optional[str]
     webauthn_credentials: Optional[List["WebAuthnCredential"]]
     umas: List["UmaModel"]
-    kyc_status: KycStatus
-    email_address: Optional[str]
-    full_name: Optional[str]
-    country_of_residence: Optional[str]
-    birthday: Optional[date]
     wallets: List["Wallet"]
     avatar: Optional[LargeBinary] = None
 
@@ -54,6 +49,59 @@ class User(UserMixin):
                 f"User {self.id} has no default UMA.",
             )
         return default_uma
+
+    def get_default_wallet(self) -> Wallet:
+        default_uma = self.get_default_uma()
+        for wallet in self.wallets:
+            if wallet.id == default_uma.wallet_id:
+                return wallet
+        if self.wallets:
+            return self.wallets[0]
+        log.error(f"User {self.id} has no wallets.")
+        abort_with_error(
+            ErrorCode.INVALID_INPUT,
+            f"User {self.id} has no wallets.",
+        )
+
+    def get_wallet_for_uma(self, uma_username: str) -> Wallet:
+        target_uma = next((uma for uma in self.umas if uma.username == uma_username), None)
+        if not target_uma:
+            log.error(f"User {self.id} has no UMA named {uma_username}.")
+            abort_with_error(
+                ErrorCode.INVALID_INPUT,
+                f"User {self.id} has no UMA named {uma_username}.",
+            )
+
+        for wallet in self.wallets:
+            if wallet.id == target_uma.wallet_id:
+                return wallet
+
+        log.error(f"User {self.id} has no wallet for UMA {uma_username}.")
+        abort_with_error(
+            ErrorCode.INVALID_INPUT,
+            f"User {self.id} has no wallet for UMA {uma_username}.",
+        )
+
+    # TODO(Peng): see if you can remove these
+    @property
+    def kyc_status(self) -> KycStatus:
+        return self.get_default_wallet().kyc_status
+
+    @property
+    def email_address(self) -> Optional[str]:
+        return self.get_default_wallet().email_address
+
+    @property
+    def full_name(self) -> Optional[str]:
+        return self.get_default_wallet().full_name
+
+    @property
+    def country_of_residence(self) -> Optional[str]:
+        return self.get_default_wallet().country_of_residence
+
+    @property
+    def birthday(self) -> Optional[date]:
+        return self.get_default_wallet().birthday
 
     def get_default_uma_address(self) -> str:
         default_uma = self.get_default_uma()
@@ -106,11 +154,6 @@ class User(UserMixin):
             phone_number=user_model.phone_number,
             webauthn_credentials=user_model.webauthn_credentials,
             umas=user_model.umas,
-            kyc_status=KycStatus(user_model.kyc_status),
-            email_address=user_model.email_address,
-            full_name=user_model.full_name,
-            country_of_residence=user_model.country_of_residence,
-            birthday=user_model.birthday,
             wallets=user_model.wallets,
             avatar=user_model.avatar,
         )
@@ -126,11 +169,6 @@ class User(UserMixin):
                     phone_number=user_model.phone_number,
                     webauthn_credentials=user_model.webauthn_credentials,
                     umas=user_model.umas,
-                    kyc_status=user_model.kyc_status,
-                    email_address=user_model.email_address,
-                    full_name=user_model.full_name,
-                    country_of_residence=user_model.country_of_residence,
-                    birthday=user_model.birthday,
                     wallets=user_model.wallets,
                     avatar=user_model.avatar,
                 )

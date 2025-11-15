@@ -51,9 +51,6 @@ def construct_blueprint(
                 "google_id": current_user.google_id,
                 "phone_number": current_user.phone_number,
                 "webauthn_id": current_user.webauthn_id,
-                "kyc_status": current_user.kyc_status.value,
-                "email_address": current_user.email_address,
-                "full_name": current_user.full_name,
             }
         )
 
@@ -184,7 +181,7 @@ def construct_blueprint(
                 else:
                     return jsonify({"avatar": None})
 
-    @bp.route("/full-name", methods=["GET", "POST"])
+    @bp.get("/full-name")
     @login_required
     def full_name() -> Response:
         with Session(db.engine) as db_session:
@@ -195,16 +192,7 @@ def construct_blueprint(
                 abort_with_error(
                     ErrorCode.USER_NOT_FOUND, f"User {current_user.id} not found."
                 )
-
-            if request.method == "GET":
-                return jsonify({"full_name": user_model.full_name})
-            else:
-                request_json = request.json
-                user_model.full_name = request_json.get("full_name")
-                db_session.commit()
-                response = jsonify({"full_name": user_model.full_name})
-                response.status_code = 201
-                return response
+            return jsonify({"full_name": user_model.full_name})
 
     @bp.post("/device-token")
     @login_required
@@ -248,6 +236,15 @@ def construct_blueprint(
                             "amount_in_lowest_denom": wallet.amount_in_lowest_denom,
                             "color": wallet.color.value,
                             "device_token": wallet.device_token,
+                            "kyc_status": wallet.kyc_status.value
+                            if wallet.kyc_status
+                            else None,
+                            "email_address": wallet.email_address,
+                            "full_name": wallet.full_name,
+                            "country_of_residence": wallet.country_of_residence,
+                            "birthday": wallet.birthday.isoformat()
+                            if wallet.birthday
+                            else None,
                             "uma": wallet.uma.to_dict(),
                             "currency": {
                                 "code": wallet.currency.code,
