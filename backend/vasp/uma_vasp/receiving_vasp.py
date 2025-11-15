@@ -183,6 +183,7 @@ class ReceivingVasp:
         user = self.user_service.get_user_from_uma(username)
         if not user:
             abort_with_error(ErrorCode.USER_NOT_FOUND, f"Cannot find user {username}")
+        receiver_wallet = user.get_wallet_for_uma(username)
 
         request: PayRequest
         try:
@@ -273,25 +274,29 @@ class ReceivingVasp:
             signing_private_key=self.config.get_signing_privkey(),
             payee_data={
                 "identifier": receiver_uma,
-                "name": user.full_name,
-                "email": user.email_address,
+                "name": receiver_wallet.full_name,
+                "email": receiver_wallet.email_address,
                 "userType": "INDIVIDUAL",
                 **(
-                    {"countryOfResidence": user.country_of_residence}
-                    if user.country_of_residence
+                    {"countryOfResidence": receiver_wallet.country_of_residence}
+                    if receiver_wallet.country_of_residence
                     else {}
                 ),
                 **(
-                    {"nationality": user.country_of_residence}
-                    if user.country_of_residence
+                    {"nationality": receiver_wallet.country_of_residence}
+                    if receiver_wallet.country_of_residence
                     else {}
                 ),
                 **(
-                    {"ultimateInstitutionCountry": user.country_of_residence}
-                    if user.country_of_residence
+                    {"ultimateInstitutionCountry": receiver_wallet.country_of_residence}
+                    if receiver_wallet.country_of_residence
                     else {}
                 ),
-                **({"birthDate": user.birthday.isoformat()} if user.birthday else {}),
+                **(
+                    {"birthDate": receiver_wallet.birthday.isoformat()}
+                    if receiver_wallet.birthday
+                    else {}
+                ),
             },
         )
 

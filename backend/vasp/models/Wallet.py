@@ -1,9 +1,11 @@
 from datetime import datetime
 import enum
 from sqlalchemy.orm import Mapped, relationship, mapped_column
-from sqlalchemy import ForeignKey, Integer, String, Enum, DateTime
+from sqlalchemy import ForeignKey, Integer, String, Enum, DateTime, Date
 from sqlalchemy.sql import func
 from typing import Optional, Dict, Any
+from datetime import date
+from uma import KycStatus
 from vasp.models.Base import Base
 from typing import TYPE_CHECKING
 from vasp.utils import generate_uuid
@@ -39,6 +41,11 @@ class Wallet(Base):
     color: Mapped[Color] = mapped_column(Enum(Color))
 
     device_token: Mapped[Optional[str]] = mapped_column(String)
+    kyc_status: Mapped[KycStatus] = mapped_column(Enum(KycStatus))
+    email_address: Mapped[Optional[str]] = mapped_column(String)
+    full_name: Mapped[Optional[str]] = mapped_column(String)
+    country_of_residence: Mapped[Optional[str]] = mapped_column(String(2))
+    birthday: Mapped[Optional[date]] = mapped_column(Date)
 
     user: Mapped["User"] = relationship(
         back_populates="wallets", foreign_keys=[user_id]
@@ -61,6 +68,11 @@ class Wallet(Base):
             "amount_in_lowest_denom": self.amount_in_lowest_denom,
             "color": self.color.value,
             "device_token": self.device_token,
+            "kyc_status": self.kyc_status.value if self.kyc_status else None,
+            "email_address": self.email_address,
+            "full_name": self.full_name,
+            "country_of_residence": self.country_of_residence,
+            "birthday": self.birthday,
             "uma_id": self.uma.id,
             "currency_id": self.currency.id,
         }
