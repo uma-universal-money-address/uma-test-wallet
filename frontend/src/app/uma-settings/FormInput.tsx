@@ -54,15 +54,6 @@ export const FormInput = ({
     }
 
     setLocalValue(processedValue);
-
-    // Validate
-    if (validator) {
-      const validationError = validator(processedValue);
-      setError(validationError);
-    } else {
-      setError("");
-    }
-
     // Clear existing timeout
     if (timeoutId) {
       clearTimeout(timeoutId);

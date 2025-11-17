@@ -245,7 +245,7 @@ def construct_blueprint(
             wallet = _get_wallet_for_current_user(db_session, wallet_id)
             return jsonify(wallet.to_dict())
 
-    @bp.route("/wallets/<wallet_id>", methods=["POST", "PUT"])
+    @bp.route("/wallets/<wallet_id>", methods=["POST", "PUT", "PATCH"])
     @login_required
     def update_wallet(wallet_id: str) -> Response:
         if not request.is_json:

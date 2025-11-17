@@ -7,7 +7,6 @@ import {
 import { getBackendUrl } from "./backendUrl";
 import {
   RAW_WALLET_COLOR_TO_NUMBER_MAPPING,
-  WalletColor,
 } from "./walletColorMapping";
 
 export type WalletUpdatePayload = Partial<
@@ -63,7 +62,7 @@ const normalizeAddress = (address?: WalletAddress | null) => {
 export const updateWallet = async (
   walletId: string,
   payload: WalletUpdatePayload,
-  method: "POST" | "PUT" = "PUT",
+  method: "PATCH" | "PUT" = "PATCH",
 ): Promise<Wallet> => {
   const body: Record<string, unknown> = {};
 
@@ -71,7 +70,7 @@ export const updateWallet = async (
     body.color =
       payload.color === null
         ? null
-        : RAW_WALLET_COLOR_TO_NUMBER_MAPPING[payload.color];
+      : RAW_WALLET_COLOR_TO_NUMBER_MAPPING[payload.color];
   }
   if (payload.currencyCode !== undefined) {
     body.currencyCode = payload.currencyCode;

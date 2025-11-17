@@ -1,12 +1,11 @@
 "use client";
 
 import { Checkbox } from "@/components/ui/checkbox";
-import { RequiredCounterpartyField } from "@/hooks/useWalletContext";
 
-interface CheckboxGroupProps {
-  options: readonly string[];
-  selectedValues: RequiredCounterpartyField[];
-  onChange: (values: RequiredCounterpartyField[]) => void;
+interface CheckboxGroupProps<T extends string> {
+  options: readonly T[];
+  selectedValues: T[];
+  onChange: (values: T[]) => void;
   disabled?: boolean;
 }
 
@@ -17,15 +16,15 @@ const formatFieldLabel = (field: string): string => {
     .join(" ");
 };
 
-export const CheckboxGroup = ({
+export const CheckboxGroup = <T extends string>({
   options,
   selectedValues,
   onChange,
   disabled,
-}: CheckboxGroupProps) => {
-  const handleCheckboxChange = (value: string, checked: boolean) => {
+}: CheckboxGroupProps<T>) => {
+  const handleCheckboxChange = (value: T, checked: boolean) => {
     const newValues = checked
-      ? [...selectedValues, value as RequiredCounterpartyField]
+      ? [...selectedValues, value]
       : selectedValues.filter((v) => v !== value);
     onChange(newValues);
   };
@@ -36,7 +35,7 @@ export const CheckboxGroup = ({
         <Checkbox
           key={option}
           label={formatFieldLabel(option)}
-          checked={selectedValues.includes(option as RequiredCounterpartyField)}
+          checked={selectedValues.includes(option)}
           onChange={(e) => handleCheckboxChange(option, e.target.checked)}
           disabled={disabled}
         />
