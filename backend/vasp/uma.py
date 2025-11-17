@@ -4,7 +4,6 @@ import random
 from datetime import date, timedelta
 from typing import TYPE_CHECKING, List
 from uuid import uuid4
-
 from flask import Blueprint, Response, jsonify, request
 from flask_login import current_user, login_user, login_required
 from sqlalchemy import exc, func, select
@@ -252,7 +251,6 @@ def construct_blueprint(
             )
 
         return "OK"
-
     return bp
 
 

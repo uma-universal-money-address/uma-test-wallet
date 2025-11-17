@@ -6,12 +6,19 @@ import { TestWalletButton } from "@/components/TestWalletButton";
 import { Wallet } from "@/components/Wallet";
 import { useToast } from "@/hooks/use-toast";
 import { useAppState } from "@/hooks/useAppState";
-import { useWallets } from "@/hooks/useWalletContext";
+import {
+  useWallets,
+  REQUIRED_COUNTERPARTY_FIELD_OPTIONS,
+  RequiredCounterpartyField,
+} from "@/hooks/useWalletContext";
 import { getBackendDomain } from "@/lib/backendDomain";
 import { deleteWallet } from "@/lib/deleteWallet";
 import isDevelopment from "@/lib/isDevelopment";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { FormSection } from "./FormSection";
+import { CheckboxGroup } from "./CheckboxGroup";
+import { updateWallet } from "@/lib/updateWallet";
 
 export default function Page() {
   const { toast } = useToast();
@@ -44,6 +51,25 @@ export default function Page() {
     }
   };
 
+  const handleRequiredCounterpartyFieldsChange = async (
+    values: RequiredCounterpartyField[],
+  ) => {
+    if (!currentWallet) return;
+
+    try {
+      const updatedWallet = await updateWallet(currentWallet.id, {
+        requiredCounterpartyFields: values,
+      });
+      setCurrentWallet(updatedWallet);
+      await fetchWallets();
+    } catch (e) {
+      toast({
+        description: `Failed to update required counterparty fields: ${e}`,
+        variant: "error",
+      });
+    }
+  };
+
   const settingRows: SettingProps[] = [
     {
       icon: "/icons/square-grid-circle.svg",
@@ -59,27 +85,28 @@ export default function Page() {
   ];
 
   return (
-    <div className="flex flex-col justify-between h-full w-full overflow-y-scroll no-scrollbar">
-      <div className="flex flex-col gap-10">
-        <div className="px-4">
-          <Wallet
-            wallet={currentWallet}
-            walletIndex={currWalletIndex}
-            isLoading={isLoadingWallets}
-            options={{
-              showAddBalance: false,
-              showUma: true,
-              showSend: false,
-            }}
+      <div className="flex flex-col pt-2 px-6 pb-4 gap-6">
+        <FormSection title="Required Counterparty Fields">
+          <CheckboxGroup
+            options={REQUIRED_COUNTERPARTY_FIELD_OPTIONS}
+            selectedValues={currentWallet?.requiredCounterpartyFields || []}
+            onChange={handleRequiredCounterpartyFieldsChange}
+            disabled={!currentWallet}
           />
-        </div>
-        <div className="flex flex-col divide-y">
-          {settingRows.map((settingProps) => (
-            <SettingRow key={settingProps.title} {...settingProps} />
-          ))}
-        </div>
-      </div>
-      <div className="p-6">
+        </FormSection>
+
+        {settingRows.map((settingProps) => (
+          <SettingRow key={settingProps.title} {...settingProps} />
+        ))}
+        <TestWalletButton
+          buttonProps={{
+            variant: "delete",
+            onClick: () => setIsDeleteUmaOpen(true),
+          }}
+          className="w-full"
+        >
+          Delete test UMA
+        </TestWalletButton>
         <ResponsiveDialog
           title="Are you sure?"
           description="Are you sure you want to log out?"
@@ -117,16 +144,6 @@ export default function Page() {
             </TestWalletButton>
           </div>
         </ResponsiveDialog>
-        <TestWalletButton
-          buttonProps={{
-            variant: "delete",
-            onClick: () => setIsDeleteUmaOpen(true),
-          }}
-          className="w-full"
-        >
-          Delete test UMA
-        </TestWalletButton>
-      </div>
     </div>
   );
 }
