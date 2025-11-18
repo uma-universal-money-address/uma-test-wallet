@@ -94,7 +94,7 @@ def downgrade() -> None:
 
     conn = op.get_bind()
     inspector = sa.inspect(conn)
-    columns = [c["name"] for c in inspector.get_columns("user")]
+    columns = [c["name"] for c in inspector.get_columns("user")]  # pyre-ignore[16]
 
     if "kyc_status" not in columns:
         op.add_column(
