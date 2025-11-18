@@ -3,6 +3,10 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from OpenSSL import crypto
 from uuid import uuid4
 import os
+from typing import TYPE_CHECKING, Optional, Union, Dict, Any
+
+if TYPE_CHECKING:
+    from vasp.models.Wallet import Wallet
 
 def get_vasp_domain() -> str:
     return current_app.config.get("VASP_DOMAIN", "localhost")
@@ -107,7 +111,10 @@ REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE = {
 }
 
 
-def get_wallet_data_for_payee_field(wallet, field_name: str):
+def get_wallet_data_for_payee_field(
+    wallet: "Wallet", field_name: str
+) -> Optional[Union[str, Dict[str, Any]]]:
+
     field_mapping = {
         "name": lambda w: w.full_name,
         "email": lambda w: w.email_address,
