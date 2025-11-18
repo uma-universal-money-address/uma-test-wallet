@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Optional, Union, Dict, Any
 if TYPE_CHECKING:
     from vasp.models.Wallet import Wallet
 
+
 def get_vasp_domain() -> str:
     return current_app.config.get("VASP_DOMAIN", "localhost")
 
@@ -89,7 +90,7 @@ def get_frontend_allowed_origins(frontend_domain: str) -> list[str]:
 is_dev: bool = os.environ.get("FLASK_ENV") == "development"
 
 
-# Mapping from RequiredCounterpartyField enum values (UPPER_SNAKE_CASE) to 
+# Mapping from RequiredCounterpartyField enum values (UPPER_SNAKE_CASE) to
 # UMA protocol counterparty data field names (camelCase)
 REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE = {
     "FULL_NAME": "name",
@@ -129,7 +130,7 @@ def get_wallet_data_for_payee_field(
         "userType": lambda w: w.user_type.value if w.user_type else None,
         "ultimateInstitutionCountry": lambda w: w.ultimate_institution_country,
     }
-    
+
     getter = field_mapping.get(field_name)
     if getter:
         return getter(wallet)

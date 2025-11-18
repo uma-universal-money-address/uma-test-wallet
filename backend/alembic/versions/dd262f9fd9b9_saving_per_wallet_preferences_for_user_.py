@@ -5,6 +5,7 @@ Revises: 65731fa8f965
 Create Date: 2025-11-13 11:13:54.591171
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -12,8 +13,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'dd262f9fd9b9'
-down_revision: Union[str, None] = '65731fa8f965'
+revision: str = "dd262f9fd9b9"
+down_revision: Union[str, None] = "65731fa8f965"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -31,7 +32,9 @@ def upgrade() -> None:
     op.add_column("wallet", sa.Column("birthday", sa.Date(), nullable=True))
     op.add_column(
         "wallet",
-        sa.Column("kyc_status", kyc_status_enum, nullable=False, server_default="VERIFIED"),
+        sa.Column(
+            "kyc_status", kyc_status_enum, nullable=False, server_default="VERIFIED"
+        ),
     )
     op.add_column("wallet", sa.Column("email_address", sa.String(), nullable=True))
     op.add_column("wallet", sa.Column("full_name", sa.String(), nullable=True))
@@ -92,11 +95,15 @@ def downgrade() -> None:
     # Recreate columns on user table
     op.add_column(
         "user",
-        sa.Column("kyc_status", kyc_status_enum, nullable=False, server_default="VERIFIED"),
+        sa.Column(
+            "kyc_status", kyc_status_enum, nullable=False, server_default="VERIFIED"
+        ),
     )
     op.add_column("user", sa.Column("email_address", sa.String(), nullable=True))
     op.add_column("user", sa.Column("full_name", sa.String(), nullable=True))
-    op.add_column("user", sa.Column("country_of_residence", sa.String(length=2), nullable=True))
+    op.add_column(
+        "user", sa.Column("country_of_residence", sa.String(length=2), nullable=True)
+    )
     op.add_column("user", sa.Column("birthday", sa.Date(), nullable=True))
 
     conn = op.get_bind()

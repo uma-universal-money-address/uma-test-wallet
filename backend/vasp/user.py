@@ -226,9 +226,7 @@ def construct_blueprint(
                 .order_by(Wallet.created_at.asc())
             ).all()
 
-            return jsonify(
-                {"wallets": [wallet.to_dict() for wallet in wallets]}
-            )
+            return jsonify({"wallets": [wallet.to_dict() for wallet in wallets]})
 
     @bp.get("/wallets/<wallet_id>")
     @login_required
@@ -304,7 +302,9 @@ def construct_blueprint(
             if "user_type" in payload:
                 user_type_value = payload["user_type"]
                 wallet.user_type = (
-                    WalletUserType(user_type_value) if user_type_value is not None else WalletUserType.INDIVIDUAL
+                    WalletUserType(user_type_value)
+                    if user_type_value is not None
+                    else WalletUserType.INDIVIDUAL
                 )
 
             if "required_counterparty_fields" in payload:
@@ -583,9 +583,7 @@ def _get_wallet_for_current_user(db_session: Session, wallet_id: str) -> Wallet:
     if wallet is None:
         abort_with_error(ErrorCode.USER_NOT_FOUND, "Wallet not found.")
     if not current_user.is_authenticated or wallet.user_id != current_user.id:
-        abort_with_error(
-            ErrorCode.FORBIDDEN, "Not authorized to access this wallet."
-        )
+        abort_with_error(ErrorCode.FORBIDDEN, "Not authorized to access this wallet.")
     return wallet
 
 

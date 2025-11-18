@@ -251,6 +251,7 @@ def construct_blueprint(
             )
 
         return "OK"
+
     return bp
 
 

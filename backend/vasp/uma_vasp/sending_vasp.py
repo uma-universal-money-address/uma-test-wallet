@@ -406,7 +406,9 @@ class SendingVasp:
         uma_username = get_username_from_uma(sender_uma)
         sender_wallet = user.get_wallet_for_uma(uma_username)
         default_full_name = (
-            sender_wallet.full_name if sender_wallet.full_name is not None else uma_username
+            sender_wallet.full_name
+            if sender_wallet.full_name is not None
+            else uma_username
         )
         default_email = (
             sender_wallet.email_address

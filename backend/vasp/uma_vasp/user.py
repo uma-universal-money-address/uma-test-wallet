@@ -64,7 +64,9 @@ class User(UserMixin):
         )
 
     def get_wallet_for_uma(self, uma_username: str) -> Wallet:
-        target_uma = next((uma for uma in self.umas if uma.username == uma_username), None)
+        target_uma = next(
+            (uma for uma in self.umas if uma.username == uma_username), None
+        )
         if not target_uma:
             log.error(f"User {self.id} has no UMA named {uma_username}.")
             abort_with_error(

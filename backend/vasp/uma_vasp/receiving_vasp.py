@@ -136,20 +136,20 @@ class ReceivingVasp:
             )
 
         metadata = self._create_metadata(username)
-        
+
         # Get the wallet for this UMA to retrieve required counterparty fields
         user = self.user_service.get_user_from_uma(username)
         if not user:
             abort_with_error(ErrorCode.USER_NOT_FOUND, f"Cannot find user {username}")
         receiver_wallet = user.get_wallet_for_uma(username)
-        
+
         # Build payer_data_dict from wallet's required counterparty fields
         # Initialize with identifier and compliance always required
         payer_data_dict = {
             "identifier": True,
             "compliance": True,
         }
-        
+
         # Add fields from wallet's required counterparty data
         for field in receiver_wallet.required_counterparty_fields:
             camel_case_name = REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE.get(field.value)
@@ -180,10 +180,15 @@ class ReceivingVasp:
         )
 
         response_dict = response.to_dict()
-        
+
         # Add bank account name matching status if not UNKNOWN
-        if receiver_wallet.bank_account_name_matching_status != BankAccountNameMatchingStatus.UNKNOWN:
-            response_dict["compliance"]["bankAccountNameMatchingStatus"] = receiver_wallet.bank_account_name_matching_status.value
+        if (
+            receiver_wallet.bank_account_name_matching_status
+            != BankAccountNameMatchingStatus.UNKNOWN
+        ):
+            response_dict["compliance"][
+                "bankAccountNameMatchingStatus"
+            ] = receiver_wallet.bank_account_name_matching_status.value
 
         return response_dict
 
@@ -281,10 +286,12 @@ class ReceivingVasp:
         # Build payee_data dynamically based on requested_payee_data from the request
         payee_data = {}
         if request.requested_payee_data:
-            requested_fields: Union[CounterpartyDataOptions, Dict[str, Any]] = request.requested_payee_data
+            requested_fields: Union[CounterpartyDataOptions, Dict[str, Any]] = (
+                request.requested_payee_data
+            )
             if isinstance(requested_fields, dict):
                 requested_fields_dict = requested_fields
-            
+
             # Populate payee_data with wallet values for each requested field
             for field_name, is_required in requested_fields_dict.items():
                 if is_required:
@@ -293,7 +300,9 @@ class ReceivingVasp:
                     if field_name == "identifier":
                         payee_data[field_name] = receiver_uma
                     else:
-                        value = get_wallet_data_for_payee_field(receiver_wallet, field_name)
+                        value = get_wallet_data_for_payee_field(
+                            receiver_wallet, field_name
+                        )
                         if value is not None:
                             payee_data[field_name] = value
         else:
@@ -452,13 +461,13 @@ class ReceivingVasp:
             "identifier": True,
             "compliance": True,
         }
-        
+
         # Add fields from wallet's required counterparty data
         for field in receiver_wallet.required_counterparty_fields:
             camel_case_name = REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE.get(field.value)
             if camel_case_name:
                 payer_data_dict[camel_case_name] = True
-                
+
         if currency.code in POSTAL_ADDRESS_REQUIRED_CURRENCIES:
             payer_data_dict["postalAddress"] = True
         payer_data_options = create_counterparty_data_options(payer_data_dict)
@@ -528,13 +537,13 @@ class ReceivingVasp:
             "identifier": True,
             "compliance": True,
         }
-        
+
         # Add fields from wallet's required counterparty data
         for field in receiver_wallet.required_counterparty_fields:
             camel_case_name = REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE.get(field.value)
             if camel_case_name:
                 payer_data_dict[camel_case_name] = True
-                
+
         if currency.code in POSTAL_ADDRESS_REQUIRED_CURRENCIES:
             payer_data_dict["postalAddress"] = True
         payer_data_options = create_counterparty_data_options(payer_data_dict)

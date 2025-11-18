@@ -124,15 +124,13 @@ class Wallet(Base):
             currency_info = CURRENCIES.get(self.currency.code)
             currency_payload = {
                 "code": self.currency.code,
-                "name": getattr(currency_info, "name", None)
-                if currency_info
-                else None,
-                "symbol": getattr(currency_info, "symbol", None)
-                if currency_info
-                else None,
-                "decimals": getattr(currency_info, "decimals", None)
-                if currency_info
-                else None,
+                "name": getattr(currency_info, "name", None) if currency_info else None,
+                "symbol": (
+                    getattr(currency_info, "symbol", None) if currency_info else None
+                ),
+                "decimals": (
+                    getattr(currency_info, "decimals", None) if currency_info else None
+                ),
             }
         else:
             currency_payload = None
@@ -150,9 +148,11 @@ class Wallet(Base):
             "required_counterparty_fields": [
                 field.value for field in self.required_counterparty_fields
             ],
-            "bank_account_name_matching_status": self.bank_account_name_matching_status.value
-            if self.bank_account_name_matching_status
-            else None,
+            "bank_account_name_matching_status": (
+                self.bank_account_name_matching_status.value
+                if self.bank_account_name_matching_status
+                else None
+            ),
             "phone_number": self.phone_number,
             "nationality": self.nationality,
             "address": self.address,
