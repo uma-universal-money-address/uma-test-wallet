@@ -84,3 +84,25 @@ def get_frontend_allowed_origins(frontend_domain: str) -> list[str]:
 
 
 is_dev: bool = os.environ.get("FLASK_ENV") == "development"
+
+
+# Mapping from RequiredCounterpartyField enum values (UPPER_SNAKE_CASE) to 
+# UMA protocol counterparty data field names (camelCase)
+REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE = {
+    "FULL_NAME": "name",
+    "BIRTH_DATE": "birthDate",
+    "NATIONALITY": "nationality",
+    "PHONE_NUMBER": "phoneNumber",
+    "EMAIL": "email",
+    "POSTAL_ADDRESS": "postalAddress",
+    "TAX_ID": "taxId",
+    "REGISTRATION_NUMBER": "registrationNumber",
+    "USER_TYPE": "userType",
+    "COUNTRY_OF_RESIDENCE": "countryOfResidence",
+    "ACCOUNT_IDENTIFIER": "accountIdentifier",
+    "FI_LEGAL_ENTITY_NAME": "fiLegalEntityName",
+    "FI_ADDRESS": "fiAddress",
+    "PURPOSE_OF_PAYMENT": "purposeOfPayment",
+    "ULTIMATE_INSTITUTION_COUNTRY": "ultimateInstitutionCountry",
+    "IDENTIFIER": "identifier",
+}

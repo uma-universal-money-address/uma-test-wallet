@@ -18,7 +18,12 @@ from lightspark import (
     IncomingPayment,
 )
 from vasp.db import db
-from vasp.utils import get_vasp_domain, get_username_from_uma, get_uma_from_username
+from vasp.utils import (
+    get_vasp_domain,
+    get_username_from_uma,
+    get_uma_from_username,
+    REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE,
+)
 from vasp.uma_vasp.address_helpers import get_domain_from_uma_address
 from vasp.uma_vasp.config import Config
 from vasp.uma_vasp.interfaces.compliance_service import IComplianceService
@@ -34,6 +39,7 @@ from vasp.uma_vasp.user import User
 from vasp.models.PayReqResponse import PayReqResponse as PayReqResponseModel
 from vasp.models.Transaction import Transaction
 from vasp.models.Uma import Uma
+from vasp.models.Wallet import BankAccountNameMatchingStatus
 from uma import (
     ErrorCode,
     INonceCache,
@@ -129,13 +135,25 @@ class ReceivingVasp:
             )
 
         metadata = self._create_metadata(username)
+        
+        # Get the wallet for this UMA to retrieve required counterparty fields
+        user = self.user_service.get_user_from_uma(username)
+        if not user:
+            abort_with_error(ErrorCode.USER_NOT_FOUND, f"Cannot find user {username}")
+        receiver_wallet = user.get_wallet_for_uma(username)
+        
+        # Build payer_data_dict from wallet's required counterparty fields
+        # Initialize with identifier and compliance always required
         payer_data_dict = {
-            "name": False,
-            "email": False,
             "identifier": True,
-            "accountIdentifier": False,
             "compliance": True,
         }
+        
+        # Add fields from wallet's required counterparty data
+        for field in receiver_wallet.required_counterparty_fields:
+            camel_case_name = REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE.get(field.value)
+            if camel_case_name:
+                payer_data_dict[camel_case_name] = True
         user_currencies = self.currency_service.get_uma_currencies_for_uma(username)
         if any(
             currency.code in POSTAL_ADDRESS_REQUIRED_CURRENCIES
@@ -157,10 +175,16 @@ class ReceivingVasp:
             max_sendable_sats=10_000_000,
             payer_data_options=payer_data_options,
             currency_options=self.currency_service.get_uma_currencies_for_uma(username),
-            receiver_kyc_status=KycStatus.VERIFIED,
+            receiver_kyc_status=receiver_wallet.kyc_status,
         )
 
-        return response.to_dict()
+        response_dict = response.to_dict()
+        
+        # Add bank account name matching status if not UNKNOWN
+        if receiver_wallet.bank_account_name_matching_status != BankAccountNameMatchingStatus.UNKNOWN:
+            response_dict["compliance"]["bankAccountNameMatchingStatus"] = receiver_wallet.bank_account_name_matching_status.value
+
+        return response_dict
 
     def _handle_non_uma_lnurlp_request(self, username: str) -> LnurlpResponse:
         metadata = self._create_metadata(username)
