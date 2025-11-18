@@ -1,13 +1,11 @@
 import {
+  type RawWallet,
   type Wallet,
   type WalletAddress,
-  type RawWallet,
   mapRawWalletToWallet,
 } from "@/hooks/useWalletContext";
 import { getBackendUrl } from "./backendUrl";
-import {
-  RAW_WALLET_COLOR_TO_NUMBER_MAPPING,
-} from "./walletColorMapping";
+import { RAW_WALLET_COLOR_TO_NUMBER_MAPPING } from "./walletColorMapping";
 
 export type WalletUpdatePayload = Partial<
   Pick<
@@ -70,7 +68,7 @@ export const updateWallet = async (
     body.color =
       payload.color === null
         ? null
-      : RAW_WALLET_COLOR_TO_NUMBER_MAPPING[payload.color];
+        : RAW_WALLET_COLOR_TO_NUMBER_MAPPING[payload.color];
   }
   if (payload.currencyCode !== undefined) {
     body.currencyCode = payload.currencyCode;

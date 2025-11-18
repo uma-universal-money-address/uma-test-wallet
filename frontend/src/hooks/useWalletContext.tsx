@@ -147,8 +147,7 @@ export interface WalletContextData {
 const Context = React.createContext<WalletContextData>(null!);
 
 export const mapRawWalletToWallet = (rawWallet: RawWallet): Wallet => {
-  const color =
-    RAW_WALLET_COLOR_MAPPING[rawWallet.color] ?? WalletColor.BLACK;
+  const color = RAW_WALLET_COLOR_MAPPING[rawWallet.color] ?? WalletColor.BLACK;
   const requiredCounterpartyFields =
     rawWallet.required_counterparty_fields ?? [];
   const address = rawWallet.address

@@ -75,13 +75,13 @@ export const FormInput = ({
     if (validator) {
       const validationError = validator(localValue);
       setError(validationError);
-      
+
       // Only call onChange on blur if validation passes
       if (!validationError && localValue !== value) {
         onChange(localValue);
       }
     }
-    
+
     onBlur?.();
   }, [localValue, value, validator, onChange, onBlur]);
 
@@ -112,4 +112,3 @@ export const FormInput = ({
     </div>
   );
 };
-

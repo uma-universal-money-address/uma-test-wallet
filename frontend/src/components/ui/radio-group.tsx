@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
 import { cn } from "@/lib/utils";
+import * as React from "react";
 
 export interface RadioOption {
   value: string;
@@ -34,7 +34,7 @@ const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
                 onChange={(e) => onChange?.(e.target.value)}
                 disabled={disabled}
                 className={cn(
-                  "h-4 w-4 border border-input bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                  "h-4 w-4 border border-input bg-background text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
                 )}
               />
               <label
@@ -48,10 +48,9 @@ const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
         })}
       </div>
     );
-  }
+  },
 );
 
 RadioGroup.displayName = "RadioGroup";
 
 export { RadioGroup };
-

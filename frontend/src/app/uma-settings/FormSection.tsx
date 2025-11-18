@@ -13,10 +13,7 @@ export const FormSection = ({ title, children }: FormSectionProps) => {
           {title}
         </h2>
       </div>
-      <div className="flex flex-col gap-4 px-6 pb-5">
-        {children}
-      </div>
+      <div className="flex flex-col gap-4 px-6 pb-5">{children}</div>
     </div>
   );
 };
-

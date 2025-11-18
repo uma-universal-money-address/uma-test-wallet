@@ -43,4 +43,3 @@ export const CheckboxGroup = <T extends string>({
     </div>
   );
 };
-
