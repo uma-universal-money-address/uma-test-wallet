@@ -82,7 +82,6 @@ class User(UserMixin):
             f"User {self.id} has no wallet for UMA {uma_username}.",
         )
 
-    # TODO(Peng): see if you can remove these
     @property
     def kyc_status(self) -> KycStatus:
         return self.get_default_wallet().kyc_status
