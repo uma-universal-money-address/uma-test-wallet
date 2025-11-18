@@ -2,7 +2,7 @@
 
 import json
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -281,10 +281,9 @@ class ReceivingVasp:
         # Build payee_data dynamically based on requested_payee_data from the request
         payee_data = {}
         if request.requested_payee_data:
-            # requested_payee_data is a CounterpartyDataOptions object with fields as attributes
-            # Each field that was requested (value = True) should be populated from wallet
-            requested_fields: CounterpartyDataOptions = request.requested_payee_data
-            requested_fields_dict = requested_fields.to_dict()
+            requested_fields: Union[CounterpartyDataOptions, Dict[str, Any]] = request.requested_payee_data
+            if isinstance(requested_fields, dict):
+                requested_fields_dict = requested_fields
             
             # Populate payee_data with wallet values for each requested field
             for field_name, is_required in requested_fields_dict.items():

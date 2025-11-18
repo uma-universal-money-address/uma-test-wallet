@@ -1,8 +1,7 @@
-import { Wallet } from "@/hooks/useWalletContext";
+import { mapRawWalletToWallet, Wallet } from "@/hooks/useWalletContext";
 import { UmaError } from "@/types/UmaError";
 import { getBackendDomain } from "./backendDomain";
 import { getBackendUrl } from "./backendUrl";
-import { RAW_WALLET_COLOR_MAPPING } from "./walletColorMapping";
 
 export const checkUmaAvailability = async (umaUserName: string) => {
   const response = await fetch(`${getBackendUrl()}/uma/${umaUserName}`, {
@@ -26,19 +25,7 @@ export const createUma = async (umaUserName: string): Promise<Wallet> => {
     throw new UmaError(error.reason || "Failed to create UMA username.", error);
   }
   const rawWallet = await response.json();
-  return {
-    id: rawWallet.id,
-    amountInLowestDenom: rawWallet.amount_in_lowest_denom,
-    color: RAW_WALLET_COLOR_MAPPING[rawWallet.color],
-    deviceToken: rawWallet.device_token,
-    name: rawWallet.name,
-    uma: {
-      userId: rawWallet.uma.user_id,
-      username: rawWallet.uma.username,
-      default: rawWallet.uma.default,
-    },
-    currency: rawWallet.currency,
-  };
+  return mapRawWalletToWallet(rawWallet);
 };
 
 export const pickRandomUma = async () => {

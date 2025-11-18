@@ -111,7 +111,7 @@ export interface RawWallet {
   id: string;
   amount_in_lowest_denom: number;
   color: RawWalletColor;
-  device_token?: string | null;
+  device_token: string | null;
   full_name?: string | null;
   email_address?: string | null;
   birthday?: string | null;
@@ -165,7 +165,7 @@ export const mapRawWalletToWallet = (rawWallet: RawWallet): Wallet => {
     id: rawWallet.id,
     amountInLowestDenom: rawWallet.amount_in_lowest_denom,
     color,
-    deviceToken: rawWallet.device_token ?? "",
+    deviceToken: rawWallet.device_token,
     name: rawWallet.full_name ?? "",
     fullName: rawWallet.full_name ?? "",
     emailAddress: rawWallet.email_address ?? "",
