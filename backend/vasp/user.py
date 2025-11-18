@@ -190,15 +190,7 @@ def construct_blueprint(
     @bp.get("/full-name")
     @login_required
     def full_name() -> Response:
-        with Session(db.engine) as db_session:
-            user_model = db_session.scalars(
-                select(UserModel).where(UserModel.id == current_user.id)
-            ).first()
-            if user_model is None:
-                abort_with_error(
-                    ErrorCode.USER_NOT_FOUND, f"User {current_user.id} not found."
-                )
-            return jsonify({"full_name": user_model.full_name})
+        return jsonify({"full_name": current_user.full_name})
 
     @bp.post("/device-token")
     @login_required
@@ -352,9 +344,7 @@ def construct_blueprint(
             if "username" in payload:
                 new_username = payload["username"]
                 if new_username:
-                    wallet_uma = db_session.scalars(
-                        select(Uma).where(Uma.id == wallet.uma_id)
-                    ).first()
+                    wallet_uma = wallet.uma
                     if wallet_uma is None:
                         abort_with_error(
                             ErrorCode.INVALID_INPUT, "Wallet UMA record not found."

@@ -4,9 +4,8 @@ from OpenSSL import crypto
 from uuid import uuid4
 import os
 
-
 def get_vasp_domain() -> str:
-    return "fancy-donkey-splendid.ngrok-free.app" #current_app.config.get("VASP_DOMAIN", "localhost")
+    return current_app.config.get("VASP_DOMAIN", "localhost")
 
 
 def cert_gen(
