@@ -295,9 +295,14 @@ class ReceivingVasp:
             # Populate payee_data with wallet values for each requested field
             for field_name, is_required in requested_fields_dict.items():
                 if is_required:
-                    value = get_wallet_data_for_payee_field(receiver_wallet, field_name)
-                    if value is not None:
-                        payee_data[field_name] = value
+                    # Handle identifier specially - use receiver_uma directly
+                    # to avoid SQLAlchemy DetachedInstanceError
+                    if field_name == "identifier":
+                        payee_data[field_name] = receiver_uma
+                    else:
+                        value = get_wallet_data_for_payee_field(receiver_wallet, field_name)
+                        if value is not None:
+                            payee_data[field_name] = value
         else:
             # Fallback to basic fields if no specific fields were requested
             payee_data = {

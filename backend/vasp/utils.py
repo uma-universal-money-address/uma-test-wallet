@@ -6,7 +6,7 @@ import os
 
 
 def get_vasp_domain() -> str:
-    return current_app.config.get("VASP_DOMAIN", "localhost")
+    return "fancy-donkey-splendid.ngrok-free.app" #current_app.config.get("VASP_DOMAIN", "localhost")
 
 
 def cert_gen(
@@ -110,7 +110,6 @@ REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE = {
 
 def get_wallet_data_for_payee_field(wallet, field_name: str):
     field_mapping = {
-        "identifier": lambda w: get_uma_from_username(w.uma.username) if w.uma else None,
         "name": lambda w: w.full_name,
         "email": lambda w: w.email_address,
         "birthDate": lambda w: w.birthday.isoformat() if w.birthday else None,
