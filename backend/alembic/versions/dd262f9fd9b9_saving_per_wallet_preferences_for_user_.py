@@ -47,29 +47,29 @@ def upgrade() -> None:
             UPDATE wallet
             SET
                 country_of_residence = (
-                    SELECT user.country_of_residence
-                    FROM user
-                    WHERE user.id = wallet.user_id
+                    SELECT "user".country_of_residence
+                    FROM "user"
+                    WHERE "user".id = wallet.user_id
                 ),
                 birthday = (
-                    SELECT user.birthday
-                    FROM user
-                    WHERE user.id = wallet.user_id
+                    SELECT "user".birthday
+                    FROM "user"
+                    WHERE "user".id = wallet.user_id
                 ),
                 kyc_status = (
-                    SELECT user.kyc_status
-                    FROM user
-                    WHERE user.id = wallet.user_id
+                    SELECT "user".kyc_status
+                    FROM "user"
+                    WHERE "user".id = wallet.user_id
                 ),
                 email_address = (
-                    SELECT user.email_address
-                    FROM user
-                    WHERE user.id = wallet.user_id
+                    SELECT "user".email_address
+                    FROM "user"
+                    WHERE "user".id = wallet.user_id
                 ),
                 full_name = (
-                    SELECT user.full_name
-                    FROM user
-                    WHERE user.id = wallet.user_id
+                    SELECT "user".full_name
+                    FROM "user"
+                    WHERE "user".id = wallet.user_id
                 )
         """
         )
@@ -92,19 +92,31 @@ def downgrade() -> None:
         "VERIFIED", "NOT_VERIFIED", "PENDING", "UNKNOWN", name="kycstatus"
     )
 
-    # Recreate columns on user table
-    op.add_column(
-        "user",
-        sa.Column(
-            "kyc_status", kyc_status_enum, nullable=False, server_default="VERIFIED"
-        ),
-    )
-    op.add_column("user", sa.Column("email_address", sa.String(), nullable=True))
-    op.add_column("user", sa.Column("full_name", sa.String(), nullable=True))
-    op.add_column(
-        "user", sa.Column("country_of_residence", sa.String(length=2), nullable=True)
-    )
-    op.add_column("user", sa.Column("birthday", sa.Date(), nullable=True))
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    columns = [c["name"] for c in inspector.get_columns("user")]  # pyre-ignore[16]
+
+    if "kyc_status" not in columns:
+        op.add_column(
+            "user",
+            sa.Column(
+                "kyc_status",
+                kyc_status_enum,
+                nullable=False,
+                server_default="VERIFIED",
+            ),
+        )
+    if "email_address" not in columns:
+        op.add_column("user", sa.Column("email_address", sa.String(), nullable=True))
+    if "full_name" not in columns:
+        op.add_column("user", sa.Column("full_name", sa.String(), nullable=True))
+    if "country_of_residence" not in columns:
+        op.add_column(
+            "user",
+            sa.Column("country_of_residence", sa.String(length=2), nullable=True),
+        )
+    if "birthday" not in columns:
+        op.add_column("user", sa.Column("birthday", sa.Date(), nullable=True))
 
     conn = op.get_bind()
     conn.execute(
@@ -126,7 +138,7 @@ def downgrade() -> None:
                        wallet.birthday
                 FROM wallet
                 JOIN uma ON uma.wallet_id = wallet.id
-                WHERE uma.default = 1
+                WHERE uma."default" = 1
             ) AS wallet_data
             WHERE wallet_data.user_id = "user".id
         """
