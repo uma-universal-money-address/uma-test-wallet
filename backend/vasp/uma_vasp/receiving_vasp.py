@@ -42,6 +42,7 @@ from vasp.models.Transaction import Transaction
 from vasp.models.Uma import Uma
 from vasp.models.Wallet import BankAccountNameMatchingStatus
 from uma import (
+    CounterpartyDataOptions,
     ErrorCode,
     INonceCache,
     InvoiceCurrency,
@@ -282,15 +283,8 @@ class ReceivingVasp:
         if request.requested_payee_data:
             # requested_payee_data is a CounterpartyDataOptions object with fields as attributes
             # Each field that was requested (value = True) should be populated from wallet
-            requested_fields = request.requested_payee_data
-            
-            # Try to get the dict representation if it's an object with to_dict method
-            if hasattr(requested_fields, 'to_dict'):
-                requested_fields_dict = requested_fields.to_dict()
-            elif hasattr(requested_fields, '__dict__'):
-                requested_fields_dict = requested_fields.__dict__
-            else:
-                requested_fields_dict = requested_fields
+            requested_fields: CounterpartyDataOptions = request.requested_payee_data
+            requested_fields_dict = requested_fields.to_dict()
             
             # Populate payee_data with wallet values for each requested field
             for field_name, is_required in requested_fields_dict.items():
