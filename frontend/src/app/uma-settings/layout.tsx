@@ -9,9 +9,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center h-full">
+    <div className="flex flex-col h-full">
       <Header />
-      {children}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
+        {children}
+      </main>
     </div>
   );
 }

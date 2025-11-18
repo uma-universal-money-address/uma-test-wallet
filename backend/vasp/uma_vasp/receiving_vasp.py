@@ -2,7 +2,7 @@
 
 import json
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -18,7 +18,13 @@ from lightspark import (
     IncomingPayment,
 )
 from vasp.db import db
-from vasp.utils import get_vasp_domain, get_username_from_uma, get_uma_from_username
+from vasp.utils import (
+    get_vasp_domain,
+    get_username_from_uma,
+    get_uma_from_username,
+    REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE,
+    get_wallet_data_for_payee_field,
+)
 from vasp.uma_vasp.address_helpers import get_domain_from_uma_address
 from vasp.uma_vasp.config import Config
 from vasp.uma_vasp.interfaces.compliance_service import IComplianceService
@@ -34,13 +40,14 @@ from vasp.uma_vasp.user import User
 from vasp.models.PayReqResponse import PayReqResponse as PayReqResponseModel
 from vasp.models.Transaction import Transaction
 from vasp.models.Uma import Uma
+from vasp.models.Wallet import BankAccountNameMatchingStatus
 from uma import (
+    CounterpartyDataOptions,
     ErrorCode,
     INonceCache,
     InvoiceCurrency,
     IPublicKeyCache,
     IUmaInvoiceCreator,
-    KycStatus,
     LnurlpResponse,
     PayReqResponse,
     PayRequest,
@@ -129,13 +136,25 @@ class ReceivingVasp:
             )
 
         metadata = self._create_metadata(username)
+
+        # Get the wallet for this UMA to retrieve required counterparty fields
+        user = self.user_service.get_user_from_uma(username)
+        if not user:
+            abort_with_error(ErrorCode.USER_NOT_FOUND, f"Cannot find user {username}")
+        receiver_wallet = user.get_wallet_for_uma(username)
+
+        # Build payer_data_dict from wallet's required counterparty fields
+        # Initialize with identifier and compliance always required
         payer_data_dict = {
-            "name": False,
-            "email": False,
             "identifier": True,
-            "accountIdentifier": False,
             "compliance": True,
         }
+
+        # Add fields from wallet's required counterparty data
+        for field in receiver_wallet.required_counterparty_fields:
+            camel_case_name = REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE.get(field.value)
+            if camel_case_name:
+                payer_data_dict[camel_case_name] = True
         user_currencies = self.currency_service.get_uma_currencies_for_uma(username)
         if any(
             currency.code in POSTAL_ADDRESS_REQUIRED_CURRENCIES
@@ -157,10 +176,21 @@ class ReceivingVasp:
             max_sendable_sats=10_000_000,
             payer_data_options=payer_data_options,
             currency_options=self.currency_service.get_uma_currencies_for_uma(username),
-            receiver_kyc_status=KycStatus.VERIFIED,
+            receiver_kyc_status=receiver_wallet.kyc_status,
         )
 
-        return response.to_dict()
+        response_dict = response.to_dict()
+
+        # Add bank account name matching status if not UNKNOWN
+        if (
+            receiver_wallet.bank_account_name_matching_status
+            != BankAccountNameMatchingStatus.UNKNOWN
+        ):
+            response_dict["compliance"][
+                "bankAccountNameMatchingStatus"
+            ] = receiver_wallet.bank_account_name_matching_status.value
+
+        return response_dict
 
     def _handle_non_uma_lnurlp_request(self, username: str) -> LnurlpResponse:
         metadata = self._create_metadata(username)
@@ -183,6 +213,7 @@ class ReceivingVasp:
         user = self.user_service.get_user_from_uma(username)
         if not user:
             abort_with_error(ErrorCode.USER_NOT_FOUND, f"Cannot find user {username}")
+        receiver_wallet = user.get_wallet_for_uma(username)
 
         request: PayRequest
         try:
@@ -252,6 +283,34 @@ class ReceivingVasp:
 
         node = get_node(self.lightspark_client, self.config.node_id)
 
+        # Build payee_data dynamically based on requested_payee_data from the request
+        payee_data = {}
+        if request.requested_payee_data:
+            requested_fields: Union[CounterpartyDataOptions, Dict[str, Any]] = (
+                request.requested_payee_data
+            )
+            if isinstance(requested_fields, dict):
+                requested_fields_dict = requested_fields
+
+            # Populate payee_data with wallet values for each requested field
+            for field_name, is_required in requested_fields_dict.items():
+                if is_required:
+                    # Handle identifier specially - use receiver_uma directly
+                    # to avoid SQLAlchemy DetachedInstanceError
+                    if field_name == "identifier":
+                        payee_data[field_name] = receiver_uma
+                    else:
+                        value = get_wallet_data_for_payee_field(
+                            receiver_wallet, field_name
+                        )
+                        if value is not None:
+                            payee_data[field_name] = value
+        else:
+            # Fallback to basic fields if no specific fields were requested
+            payee_data = {
+                "identifier": receiver_uma,
+            }
+
         # Doesn't have access to invoice data's payment_hash but we need it to save the pay req response to be matched later
         pay_req_response = create_pay_req_response(
             request=request,
@@ -271,28 +330,7 @@ class ReceivingVasp:
             ),
             payee_identifier=receiver_uma,
             signing_private_key=self.config.get_signing_privkey(),
-            payee_data={
-                "identifier": receiver_uma,
-                "name": user.full_name,
-                "email": user.email_address,
-                "userType": "INDIVIDUAL",
-                **(
-                    {"countryOfResidence": user.country_of_residence}
-                    if user.country_of_residence
-                    else {}
-                ),
-                **(
-                    {"nationality": user.country_of_residence}
-                    if user.country_of_residence
-                    else {}
-                ),
-                **(
-                    {"ultimateInstitutionCountry": user.country_of_residence}
-                    if user.country_of_residence
-                    else {}
-                ),
-                **({"birthDate": user.birthday.isoformat()} if user.birthday else {}),
-            },
+            payee_data=payee_data,
         )
 
         if pay_req_response.payment_info is None:
@@ -384,6 +422,9 @@ class ReceivingVasp:
                     ErrorCode.USER_NOT_FOUND, f"Cannot find UMA for user {user_id}"
                 )
 
+        # Get the wallet for this UMA to retrieve required counterparty fields and KYC status
+        receiver_wallet = user.get_wallet_for_uma(username)
+
         flask_request_data = flask_request.json
         amount = flask_request_data.get("amount")
 
@@ -415,13 +456,18 @@ class ReceivingVasp:
             get_vasp_domain(), f"{PAY_REQUEST_CALLBACK}{user.id}"
         )
 
+        # Build payer_data_dict from wallet's required counterparty fields
         payer_data_dict = {
-            "name": False,
-            "email": False,
             "identifier": True,
-            "accountIdentifier": False,
             "compliance": True,
         }
+
+        # Add fields from wallet's required counterparty data
+        for field in receiver_wallet.required_counterparty_fields:
+            camel_case_name = REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE.get(field.value)
+            if camel_case_name:
+                payer_data_dict[camel_case_name] = True
+
         if currency.code in POSTAL_ADDRESS_REQUIRED_CURRENCIES:
             payer_data_dict["postalAddress"] = True
         payer_data_options = create_counterparty_data_options(payer_data_dict)
@@ -435,7 +481,7 @@ class ReceivingVasp:
             is_subject_to_travel_rule=True,
             signing_private_key=self.config.get_signing_privkey(),
             required_payer_data=payer_data_options,
-            receiver_kyc_status=KycStatus.VERIFIED,
+            receiver_kyc_status=receiver_wallet.kyc_status,
         )
         return invoice.to_bech32_string()
 
@@ -452,6 +498,9 @@ class ReceivingVasp:
                     ErrorCode.USER_NOT_FOUND, f"Cannot find UMA for user {user_id}"
                 )
 
+        # Get the wallet for this UMA to retrieve required counterparty fields and KYC status
+        receiver_wallet = user.get_wallet_for_uma(username)
+
         flask_request_data = flask_request.json
         amount = flask_request_data.get("amount")
 
@@ -483,12 +532,18 @@ class ReceivingVasp:
             get_vasp_domain(), f"{PAY_REQUEST_CALLBACK}{user.id}"
         )
 
+        # Build payer_data_dict from wallet's required counterparty fields
         payer_data_dict = {
-            "name": False,
-            "email": False,
             "identifier": True,
             "compliance": True,
         }
+
+        # Add fields from wallet's required counterparty data
+        for field in receiver_wallet.required_counterparty_fields:
+            camel_case_name = REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE.get(field.value)
+            if camel_case_name:
+                payer_data_dict[camel_case_name] = True
+
         if currency.code in POSTAL_ADDRESS_REQUIRED_CURRENCIES:
             payer_data_dict["postalAddress"] = True
         payer_data_options = create_counterparty_data_options(payer_data_dict)
@@ -506,7 +561,7 @@ class ReceivingVasp:
             is_subject_to_travel_rule=True,
             signing_private_key=self.config.get_signing_privkey(),
             required_payer_data=payer_data_options,
-            receiver_kyc_status=KycStatus.VERIFIED,
+            receiver_kyc_status=receiver_wallet.kyc_status,
             sender_uma=sender_uma,
         )
 

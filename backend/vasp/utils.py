@@ -3,6 +3,10 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from OpenSSL import crypto
 from uuid import uuid4
 import os
+from typing import TYPE_CHECKING, Optional, Union, Dict, Any
+
+if TYPE_CHECKING:
+    from vasp.models.Wallet import Wallet
 
 
 def get_vasp_domain() -> str:
@@ -84,3 +88,50 @@ def get_frontend_allowed_origins(frontend_domain: str) -> list[str]:
 
 
 is_dev: bool = os.environ.get("FLASK_ENV") == "development"
+
+
+# Mapping from RequiredCounterpartyField enum values (UPPER_SNAKE_CASE) to
+# UMA protocol counterparty data field names (camelCase)
+REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE = {
+    "FULL_NAME": "name",
+    "BIRTH_DATE": "birthDate",
+    "NATIONALITY": "nationality",
+    "PHONE_NUMBER": "phoneNumber",
+    "EMAIL": "email",
+    "POSTAL_ADDRESS": "postalAddress",
+    "TAX_ID": "taxId",
+    "REGISTRATION_NUMBER": "registrationNumber",
+    "USER_TYPE": "userType",
+    "COUNTRY_OF_RESIDENCE": "countryOfResidence",
+    "ACCOUNT_IDENTIFIER": "accountIdentifier",
+    "FI_LEGAL_ENTITY_NAME": "fiLegalEntityName",
+    "FI_ADDRESS": "fiAddress",
+    "PURPOSE_OF_PAYMENT": "purposeOfPayment",
+    "ULTIMATE_INSTITUTION_COUNTRY": "ultimateInstitutionCountry",
+    "IDENTIFIER": "identifier",
+}
+
+
+def get_wallet_data_for_payee_field(
+    wallet: "Wallet", field_name: str
+) -> Optional[Union[str, Dict[str, Any]]]:
+
+    field_mapping = {
+        "name": lambda w: w.full_name,
+        "email": lambda w: w.email_address,
+        "birthDate": lambda w: w.birthday.isoformat() if w.birthday else None,
+        "nationality": lambda w: w.nationality,
+        "phoneNumber": lambda w: w.phone_number,
+        "postalAddress": lambda w: w.address,
+        "taxId": lambda w: w.tax_id,
+        "countryOfResidence": lambda w: w.country_of_residence,
+        "accountIdentifier": lambda w: w.account_identifier,
+        "fiLegalEntityName": lambda w: w.fi_legal_entity_name,
+        "userType": lambda w: w.user_type.value if w.user_type else None,
+        "ultimateInstitutionCountry": lambda w: w.ultimate_institution_country,
+    }
+
+    getter = field_mapping.get(field_name)
+    if getter:
+        return getter(wallet)
+    return None

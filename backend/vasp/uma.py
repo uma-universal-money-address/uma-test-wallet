@@ -4,7 +4,6 @@ import random
 from datetime import date, timedelta
 from typing import TYPE_CHECKING, List
 from uuid import uuid4
-
 from flask import Blueprint, Response, jsonify, request
 from flask_login import current_user, login_user, login_required
 from sqlalchemy import exc, func, select
@@ -71,11 +70,6 @@ def register_uma(
                 else:
                     user = UserModel(
                         id=str(uuid4()),
-                        kyc_status=kyc_status.value,
-                        email_address=f"{uma_user_name}@test.uma.me",
-                        full_name=uma_user_name,
-                        country_of_residence=_generate_random_country(),
-                        birthday=_generate_random_birthday(),
                     )
                     db_session.add(user)
 
@@ -84,6 +78,11 @@ def register_uma(
                     user_id=user.id,
                     amount_in_lowest_denom=initial_amount,
                     color=Color.ONE,
+                    kyc_status=kyc_status,
+                    email_address=f"{uma_user_name}@test.uma.me",
+                    full_name=uma_user_name,
+                    country_of_residence=_generate_random_country(),
+                    birthday=_generate_random_birthday(),
                 )
                 new_uma = UmaModel(
                     user_id=user.id,

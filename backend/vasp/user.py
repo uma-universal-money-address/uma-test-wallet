@@ -1,5 +1,6 @@
 import base64
-from typing import TYPE_CHECKING, Dict
+from datetime import date
+from typing import TYPE_CHECKING, Dict, Optional
 
 from flask import Blueprint, Response, jsonify, request
 from flask_login import current_user, login_required
@@ -12,14 +13,19 @@ from vasp.models.Preference import Preference, PreferenceType
 from vasp.models.Transaction import Transaction
 from vasp.models.Uma import Uma
 from vasp.models.User import User as UserModel
-from vasp.models.Wallet import Wallet
+from vasp.models.Wallet import (
+    BankAccountNameMatchingStatus,
+    Color,
+    Wallet,
+    WalletUserType,
+)
 from vasp.models.WebAuthnCredential import WebAuthnCredential
 from vasp.uma_vasp.config import Config
 from vasp.uma_vasp.currencies import CURRENCIES
 from vasp.uma_vasp.interfaces.currency_service import ICurrencyService
 from vasp.uma_vasp.interfaces.ledger_service import ILedgerService
 from vasp.uma_vasp.uma_exception import abort_with_error
-from uma import ErrorCode
+from uma import ErrorCode, KycStatus
 from vasp.uma_vasp.user import User
 from vasp.utils import get_uma_from_username, get_username_from_uma, get_vasp_domain
 
@@ -51,9 +57,6 @@ def construct_blueprint(
                 "google_id": current_user.google_id,
                 "phone_number": current_user.phone_number,
                 "webauthn_id": current_user.webauthn_id,
-                "kyc_status": current_user.kyc_status.value,
-                "email_address": current_user.email_address,
-                "full_name": current_user.full_name,
             }
         )
 
@@ -184,27 +187,10 @@ def construct_blueprint(
                 else:
                     return jsonify({"avatar": None})
 
-    @bp.route("/full-name", methods=["GET", "POST"])
+    @bp.get("/full-name")
     @login_required
     def full_name() -> Response:
-        with Session(db.engine) as db_session:
-            user_model = db_session.scalars(
-                select(UserModel).where(UserModel.id == current_user.id)
-            ).first()
-            if user_model is None:
-                abort_with_error(
-                    ErrorCode.USER_NOT_FOUND, f"User {current_user.id} not found."
-                )
-
-            if request.method == "GET":
-                return jsonify({"full_name": user_model.full_name})
-            else:
-                request_json = request.json
-                user_model.full_name = request_json.get("full_name")
-                db_session.commit()
-                response = jsonify({"full_name": user_model.full_name})
-                response.status_code = 201
-                return response
+        return jsonify({"full_name": current_user.full_name})
 
     @bp.post("/device-token")
     @login_required
@@ -240,87 +226,144 @@ def construct_blueprint(
                 .order_by(Wallet.created_at.asc())
             ).all()
 
-            return jsonify(
-                {
-                    "wallets": [
-                        {
-                            "id": wallet.id,
-                            "amount_in_lowest_denom": wallet.amount_in_lowest_denom,
-                            "color": wallet.color.value,
-                            "device_token": wallet.device_token,
-                            "uma": wallet.uma.to_dict(),
-                            "currency": {
-                                "code": wallet.currency.code,
-                                "name": CURRENCIES[wallet.currency.code].name,
-                                "symbol": CURRENCIES[wallet.currency.code].symbol,
-                                "decimals": CURRENCIES[wallet.currency.code].decimals,
-                            },
-                        }
-                        for wallet in wallets
-                    ]
-                }
-            )
+            return jsonify({"wallets": [wallet.to_dict() for wallet in wallets]})
 
-    @bp.put("/wallet/<wallet_id>")
+    @bp.get("/wallets/<wallet_id>")
+    @login_required
+    def get_wallet(wallet_id: str) -> Response:
+        with Session(db.engine) as db_session:
+            wallet = _get_wallet_for_current_user(db_session, wallet_id)
+            return jsonify(wallet.to_dict())
+
+    @bp.route("/wallets/<wallet_id>", methods=["POST", "PUT", "PATCH"])
     @login_required
     def update_wallet(wallet_id: str) -> Response:
+        if not request.is_json:
+            abort_with_error(ErrorCode.INVALID_INPUT, "Request must be JSON.")
+        payload = request.get_json() or {}
+        if not isinstance(payload, dict):
+            abort_with_error(ErrorCode.INVALID_INPUT, "Request body must be an object.")
+
+        simple_string_fields = [
+            "device_token",
+            "email_address",
+            "full_name",
+            "country_of_residence",
+            "phone_number",
+            "nationality",
+            "tax_id",
+            "financial_institution_lei",
+            "account_name",
+            "account_identifier",
+            "fi_legal_entity_name",
+            "ultimate_institution_country",
+        ]
+
         with Session(db.engine) as db_session:
-            wallet = db_session.scalars(
-                select(Wallet).where(Wallet.id == wallet_id)
-            ).first()
-            if wallet is None:
-                abort_with_error(
-                    ErrorCode.INVALID_INPUT, f"Wallet {wallet_id} not found."
-                )
-            request_json = request.json
+            wallet = _get_wallet_for_current_user(db_session, wallet_id)
 
-            color = request_json.get("color")
-            if color:
-                wallet.color = color
-
-            currency_code = request_json.get("currencyCode")
-            if currency_code:
-                currency = Currency(
-                    wallet_id=wallet.id,
-                    code=currency_code,
-                )
-                db_session.delete(wallet.currency)
-                db_session.add(currency)
-                wallet.currency = currency
-
-            new_username = request_json.get("username")
-            if new_username:
-                wallet_uma = db_session.scalars(
-                    select(Uma).where(Uma.id == wallet.uma_id)
-                ).first()
-                if wallet_uma.username != new_username:
-                    existing_uma = db_session.scalars(
-                        select(Uma).where(Uma.username == new_username)
-                    ).first()
-                    if existing_uma:
+            for field in simple_string_fields:
+                if field in payload:
+                    value = payload[field]
+                    if value is not None and not isinstance(value, str):
                         abort_with_error(
-                            ErrorCode.INVALID_INPUT, "Username already taken"
+                            ErrorCode.INVALID_INPUT,
+                            f"{field} must be a string or null.",
                         )
-                    wallet_uma.username = new_username
+                    setattr(wallet, field, value)
+
+            if "address" in payload:
+                address_value = payload["address"]
+                if address_value is not None and not isinstance(address_value, dict):
+                    abort_with_error(
+                        ErrorCode.INVALID_INPUT, "address must be an object or null."
+                    )
+                wallet.address = address_value
+
+            if "birthday" in payload:
+                wallet.birthday = _parse_optional_date(payload["birthday"])
+
+            if "kyc_status" in payload:
+                status_value = payload["kyc_status"]
+                if status_value is None:
+                    abort_with_error(
+                        ErrorCode.INVALID_INPUT, "kyc_status cannot be null."
+                    )
+                wallet.kyc_status = KycStatus(status_value)
+
+            if "bank_account_name_matching_status" in payload:
+                status_value = payload["bank_account_name_matching_status"]
+                wallet.bank_account_name_matching_status = (
+                    BankAccountNameMatchingStatus(status_value)
+                    if status_value is not None
+                    else BankAccountNameMatchingStatus.UNKNOWN
+                )
+
+            if "user_type" in payload:
+                user_type_value = payload["user_type"]
+                wallet.user_type = (
+                    WalletUserType(user_type_value)
+                    if user_type_value is not None
+                    else WalletUserType.INDIVIDUAL
+                )
+
+            if "required_counterparty_fields" in payload:
+                fields_value = payload["required_counterparty_fields"]
+                if fields_value is None:
+                    wallet.required_counterparty_fields = []
+                elif not isinstance(fields_value, list):
+                    abort_with_error(
+                        ErrorCode.INVALID_INPUT,
+                        "required_counterparty_fields must be an array.",
+                    )
+                else:
+                    wallet.required_counterparty_fields = fields_value
+
+            if "color" in payload:
+                color_value = payload["color"]
+                if color_value is not None:
+                    try:
+                        wallet.color = Color(color_value)
+                    except ValueError:
+                        abort_with_error(
+                            ErrorCode.INVALID_INPUT, f"Invalid color {color_value}."
+                        )
+
+            if "currencyCode" in payload:
+                currency_code = payload["currencyCode"]
+                if currency_code:
+                    if wallet.currency:
+                        db_session.delete(wallet.currency)
+                    currency = Currency(
+                        wallet_id=wallet.id,
+                        code=currency_code,
+                    )
+                    db_session.add(currency)
+                    wallet.currency = currency
+
+            if "username" in payload:
+                new_username = payload["username"]
+                if new_username:
+                    wallet_uma = wallet.uma
+                    if wallet_uma is None:
+                        abort_with_error(
+                            ErrorCode.INVALID_INPUT, "Wallet UMA record not found."
+                        )
+                    if wallet_uma.username != new_username:
+                        existing_uma = db_session.scalars(
+                            select(Uma).where(Uma.username == new_username)
+                        ).first()
+                        if existing_uma:
+                            abort_with_error(
+                                ErrorCode.INVALID_INPUT, "Username already taken"
+                            )
+                        wallet_uma.username = new_username
 
             db_session.commit()
+            db_session.refresh(wallet)
 
-            response = jsonify(
-                {
-                    "id": wallet.id,
-                    "amount_in_lowest_denom": wallet.amount_in_lowest_denom,
-                    "color": wallet.color.value,
-                    "device_token": wallet.device_token,
-                    "uma": wallet.uma.to_dict(),
-                    "currency": {
-                        "code": wallet.currency.code,
-                        "name": CURRENCIES[wallet.currency.code].name,
-                        "symbol": CURRENCIES[wallet.currency.code].symbol,
-                        "decimals": CURRENCIES[wallet.currency.code].decimals,
-                    },
-                }
-            )
-            response.status_code = 201
+            response = jsonify(wallet.to_dict())
+            response.status_code = 201 if request.method == "PUT" else 200
             return response
 
     @bp.delete("/wallet/<wallet_id>")
@@ -533,3 +576,25 @@ def construct_blueprint(
     bp.register_blueprint(notifications.construct_blueprint(config=config))
 
     return bp
+
+
+def _get_wallet_for_current_user(db_session: Session, wallet_id: str) -> Wallet:
+    wallet = db_session.get(Wallet, wallet_id)
+    if wallet is None:
+        abort_with_error(ErrorCode.USER_NOT_FOUND, "Wallet not found.")
+    if not current_user.is_authenticated or wallet.user_id != current_user.id:
+        abort_with_error(ErrorCode.FORBIDDEN, "Not authorized to access this wallet.")
+    return wallet
+
+
+def _parse_optional_date(value: Optional[str]) -> Optional[date]:
+    if value in (None, ""):
+        return None
+    if not isinstance(value, str):
+        abort_with_error(ErrorCode.INVALID_INPUT, "birthday must be a string or null.")
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        abort_with_error(
+            ErrorCode.INVALID_INPUT, "birthday must be in ISO 8601 format (YYYY-MM-DD)."
+        )
