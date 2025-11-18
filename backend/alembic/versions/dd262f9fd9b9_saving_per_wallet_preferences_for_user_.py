@@ -47,29 +47,29 @@ def upgrade() -> None:
             UPDATE wallet
             SET
                 country_of_residence = (
-                    SELECT user.country_of_residence
-                    FROM user
-                    WHERE user.id = wallet.user_id
+                    SELECT "user".country_of_residence
+                    FROM "user"
+                    WHERE "user".id = wallet.user_id
                 ),
                 birthday = (
-                    SELECT user.birthday
-                    FROM user
-                    WHERE user.id = wallet.user_id
+                    SELECT "user".birthday
+                    FROM "user"
+                    WHERE "user".id = wallet.user_id
                 ),
                 kyc_status = (
-                    SELECT user.kyc_status
-                    FROM user
-                    WHERE user.id = wallet.user_id
+                    SELECT "user".kyc_status
+                    FROM "user"
+                    WHERE "user".id = wallet.user_id
                 ),
                 email_address = (
-                    SELECT user.email_address
-                    FROM user
-                    WHERE user.id = wallet.user_id
+                    SELECT "user".email_address
+                    FROM "user"
+                    WHERE "user".id = wallet.user_id
                 ),
                 full_name = (
-                    SELECT user.full_name
-                    FROM user
-                    WHERE user.id = wallet.user_id
+                    SELECT "user".full_name
+                    FROM "user"
+                    WHERE "user".id = wallet.user_id
                 )
         """
         )
