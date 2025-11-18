@@ -23,6 +23,7 @@ from vasp.utils import (
     get_username_from_uma,
     get_uma_from_username,
     REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE,
+    get_wallet_data_for_payee_field,
 )
 from vasp.uma_vasp.address_helpers import get_domain_from_uma_address
 from vasp.uma_vasp.config import Config
@@ -46,7 +47,6 @@ from uma import (
     InvoiceCurrency,
     IPublicKeyCache,
     IUmaInvoiceCreator,
-    KycStatus,
     LnurlpResponse,
     PayReqResponse,
     PayRequest,
@@ -277,6 +277,33 @@ class ReceivingVasp:
 
         node = get_node(self.lightspark_client, self.config.node_id)
 
+        # Build payee_data dynamically based on requested_payee_data from the request
+        payee_data = {}
+        if request.requested_payee_data:
+            # requested_payee_data is a CounterpartyDataOptions object with fields as attributes
+            # Each field that was requested (value = True) should be populated from wallet
+            requested_fields = request.requested_payee_data
+            
+            # Try to get the dict representation if it's an object with to_dict method
+            if hasattr(requested_fields, 'to_dict'):
+                requested_fields_dict = requested_fields.to_dict()
+            elif hasattr(requested_fields, '__dict__'):
+                requested_fields_dict = requested_fields.__dict__
+            else:
+                requested_fields_dict = requested_fields
+            
+            # Populate payee_data with wallet values for each requested field
+            for field_name, is_required in requested_fields_dict.items():
+                if is_required:
+                    value = get_wallet_data_for_payee_field(receiver_wallet, field_name)
+                    if value is not None:
+                        payee_data[field_name] = value
+        else:
+            # Fallback to basic fields if no specific fields were requested
+            payee_data = {
+                "identifier": receiver_uma,
+            }
+
         # Doesn't have access to invoice data's payment_hash but we need it to save the pay req response to be matched later
         pay_req_response = create_pay_req_response(
             request=request,
@@ -296,32 +323,7 @@ class ReceivingVasp:
             ),
             payee_identifier=receiver_uma,
             signing_private_key=self.config.get_signing_privkey(),
-            payee_data={
-                "identifier": receiver_uma,
-                "name": receiver_wallet.full_name,
-                "email": receiver_wallet.email_address,
-                "userType": "INDIVIDUAL",
-                **(
-                    {"countryOfResidence": receiver_wallet.country_of_residence}
-                    if receiver_wallet.country_of_residence
-                    else {}
-                ),
-                **(
-                    {"nationality": receiver_wallet.country_of_residence}
-                    if receiver_wallet.country_of_residence
-                    else {}
-                ),
-                **(
-                    {"ultimateInstitutionCountry": receiver_wallet.country_of_residence}
-                    if receiver_wallet.country_of_residence
-                    else {}
-                ),
-                **(
-                    {"birthDate": receiver_wallet.birthday.isoformat()}
-                    if receiver_wallet.birthday
-                    else {}
-                ),
-            },
+            payee_data=payee_data,
         )
 
         if pay_req_response.payment_info is None:
@@ -413,6 +415,9 @@ class ReceivingVasp:
                     ErrorCode.USER_NOT_FOUND, f"Cannot find UMA for user {user_id}"
                 )
 
+        # Get the wallet for this UMA to retrieve required counterparty fields and KYC status
+        receiver_wallet = user.get_wallet_for_uma(username)
+
         flask_request_data = flask_request.json
         amount = flask_request_data.get("amount")
 
@@ -444,13 +449,18 @@ class ReceivingVasp:
             get_vasp_domain(), f"{PAY_REQUEST_CALLBACK}{user.id}"
         )
 
+        # Build payer_data_dict from wallet's required counterparty fields
         payer_data_dict = {
-            "name": False,
-            "email": False,
             "identifier": True,
-            "accountIdentifier": False,
             "compliance": True,
         }
+        
+        # Add fields from wallet's required counterparty data
+        for field in receiver_wallet.required_counterparty_fields:
+            camel_case_name = REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE.get(field.value)
+            if camel_case_name:
+                payer_data_dict[camel_case_name] = True
+                
         if currency.code in POSTAL_ADDRESS_REQUIRED_CURRENCIES:
             payer_data_dict["postalAddress"] = True
         payer_data_options = create_counterparty_data_options(payer_data_dict)
@@ -464,7 +474,7 @@ class ReceivingVasp:
             is_subject_to_travel_rule=True,
             signing_private_key=self.config.get_signing_privkey(),
             required_payer_data=payer_data_options,
-            receiver_kyc_status=KycStatus.VERIFIED,
+            receiver_kyc_status=receiver_wallet.kyc_status,
         )
         return invoice.to_bech32_string()
 
@@ -481,6 +491,9 @@ class ReceivingVasp:
                     ErrorCode.USER_NOT_FOUND, f"Cannot find UMA for user {user_id}"
                 )
 
+        # Get the wallet for this UMA to retrieve required counterparty fields and KYC status
+        receiver_wallet = user.get_wallet_for_uma(username)
+
         flask_request_data = flask_request.json
         amount = flask_request_data.get("amount")
 
@@ -512,12 +525,18 @@ class ReceivingVasp:
             get_vasp_domain(), f"{PAY_REQUEST_CALLBACK}{user.id}"
         )
 
+        # Build payer_data_dict from wallet's required counterparty fields
         payer_data_dict = {
-            "name": False,
-            "email": False,
             "identifier": True,
             "compliance": True,
         }
+        
+        # Add fields from wallet's required counterparty data
+        for field in receiver_wallet.required_counterparty_fields:
+            camel_case_name = REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE.get(field.value)
+            if camel_case_name:
+                payer_data_dict[camel_case_name] = True
+                
         if currency.code in POSTAL_ADDRESS_REQUIRED_CURRENCIES:
             payer_data_dict["postalAddress"] = True
         payer_data_options = create_counterparty_data_options(payer_data_dict)
@@ -535,7 +554,7 @@ class ReceivingVasp:
             is_subject_to_travel_rule=True,
             signing_private_key=self.config.get_signing_privkey(),
             required_payer_data=payer_data_options,
-            receiver_kyc_status=KycStatus.VERIFIED,
+            receiver_kyc_status=receiver_wallet.kyc_status,
             sender_uma=sender_uma,
         )
 

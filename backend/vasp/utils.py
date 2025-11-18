@@ -106,3 +106,26 @@ REQUIRED_COUNTERPARTY_FIELD_TO_CAMEL_CASE = {
     "ULTIMATE_INSTITUTION_COUNTRY": "ultimateInstitutionCountry",
     "IDENTIFIER": "identifier",
 }
+
+
+def get_wallet_data_for_payee_field(wallet, field_name: str):
+    field_mapping = {
+        "identifier": lambda w: get_uma_from_username(w.uma.username) if w.uma else None,
+        "name": lambda w: w.full_name,
+        "email": lambda w: w.email_address,
+        "birthDate": lambda w: w.birthday.isoformat() if w.birthday else None,
+        "nationality": lambda w: w.nationality,
+        "phoneNumber": lambda w: w.phone_number,
+        "postalAddress": lambda w: w.address,
+        "taxId": lambda w: w.tax_id,
+        "countryOfResidence": lambda w: w.country_of_residence,
+        "accountIdentifier": lambda w: w.account_identifier,
+        "fiLegalEntityName": lambda w: w.fi_legal_entity_name,
+        "userType": lambda w: w.user_type.value if w.user_type else None,
+        "ultimateInstitutionCountry": lambda w: w.ultimate_institution_country,
+    }
+    
+    getter = field_mapping.get(field_name)
+    if getter:
+        return getter(wallet)
+    return None

@@ -80,7 +80,7 @@ class Wallet(Base):
     birthday: Mapped[Optional[date]] = mapped_column(Date)
     _required_counterparty_fields: Mapped[List[str]] = mapped_column(
         "required_counterparty_fields",
-        MutableList.as_mutable(JSON),
+        MutableList.as_mutable(JSON()),
         nullable=False,
         default=list,
     )
@@ -94,7 +94,7 @@ class Wallet(Base):
     phone_number: Mapped[Optional[str]] = mapped_column(String)
     nationality: Mapped[Optional[str]] = mapped_column(String(2))
     address: Mapped[Optional[Dict[str, Any]]] = mapped_column(
-        MutableDict.as_mutable(JSON)
+        MutableDict.as_mutable(JSON())
     )
     tax_id: Mapped[Optional[str]] = mapped_column(String)
     financial_institution_lei: Mapped[Optional[str]] = mapped_column(String)
