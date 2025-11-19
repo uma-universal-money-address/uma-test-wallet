@@ -33,11 +33,11 @@ def upgrade() -> None:
         "BUSINESS",
         name="walletusertype",
     )
-    
+
     # Create the enum types in the database
     bank_account_name_matching_status_enum.create(op.get_bind(), checkfirst=True)
     wallet_user_type_enum.create(op.get_bind(), checkfirst=True)
-    
+
     with op.batch_alter_table("wallet", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column(
@@ -108,5 +108,5 @@ def downgrade() -> None:
     # Drop enum types after dropping the columns
     sa.Enum(name="walletusertype").drop(op.get_bind(), checkfirst=True)
     sa.Enum(name="bankaccountnamematchingstatus").drop(op.get_bind(), checkfirst=True)
-    
+
     # ### end Alembic commands ###
