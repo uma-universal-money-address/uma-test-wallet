@@ -117,7 +117,7 @@ export default function Page() {
     if (!currentWallet) return;
     try {
       const updatedWallet = await updateWallet(currentWallet.id, {
-        userType: value as WalletUserType,
+        userType: value === "" ? undefined : (value as WalletUserType),
       });
       setCurrentWallet(updatedWallet);
     } catch (e) {
@@ -185,10 +185,11 @@ export default function Page() {
         <RadioGroupWrapper
           label="User Type"
           options={[
+            { value: "", label: "Not specified" },
             { value: "INDIVIDUAL", label: "Individual" },
             { value: "BUSINESS", label: "Business" },
           ]}
-          value={currentWallet?.userType || "INDIVIDUAL"}
+          value={currentWallet?.userType || ""}
           onChange={handleUserTypeChange}
           disabled={!currentWallet}
         />
