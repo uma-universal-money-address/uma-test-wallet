@@ -89,7 +89,7 @@ export interface Wallet {
   financialInstitutionLei?: string | null;
   accountName?: string | null;
   accountIdentifier?: string | null;
-  userType: WalletUserType;
+  userType: WalletUserType | null;
   fiLegalEntityName?: string | null;
   ultimateInstitutionCountry?: string | null;
   kycStatus: KycStatus;
@@ -180,7 +180,7 @@ export const mapRawWalletToWallet = (rawWallet: RawWallet): Wallet => {
     financialInstitutionLei: rawWallet.financial_institution_lei ?? "",
     accountName: rawWallet.account_name ?? "",
     accountIdentifier: rawWallet.account_identifier ?? "",
-    userType: rawWallet.user_type ?? "INDIVIDUAL",
+    userType: rawWallet.user_type ?? null,
     fiLegalEntityName: rawWallet.fi_legal_entity_name ?? "",
     ultimateInstitutionCountry: rawWallet.ultimate_institution_country ?? "",
     kycStatus: rawWallet.kyc_status ?? "UNKNOWN",
