@@ -23,7 +23,7 @@ from vasp.models.Currency import Currency
 from vasp.models.Preference import Preference
 from vasp.models.Uma import Uma as UmaModel
 from vasp.models.User import User as UserModel
-from vasp.models.Wallet import Color
+from vasp.models.Wallet import Color, WalletUserType
 from vasp.models.Wallet import Wallet as WalletModel
 from vasp.uma_vasp.currencies import CURRENCIES
 from vasp.uma_vasp.uma_exception import abort_with_error
@@ -83,6 +83,7 @@ def register_uma(
                     full_name=uma_user_name,
                     country_of_residence=_generate_random_country(),
                     birthday=_generate_random_birthday(),
+                    user_type=WalletUserType.INDIVIDUAL,
                 )
                 new_uma = UmaModel(
                     user_id=user.id,
