@@ -186,20 +186,6 @@ CURRENCIES: dict[str, Currency] = {
         max_sendable=10000000,
         decimals=2,
     ),
-    "BYN": Currency(
-        name="Belarusian Ruble",
-        symbol="Br",
-        min_sendable=1,
-        max_sendable=10000000,
-        decimals=2,
-    ),
-    "BYR": Currency(
-        name="Belarusian Ruble",
-        symbol="Br",
-        min_sendable=1,
-        max_sendable=10000000,
-        decimals=0,
-    ),
     "BZD": Currency(
         name="Belize Dollar",
         symbol="$",
@@ -228,13 +214,6 @@ CURRENCIES: dict[str, Currency] = {
         max_sendable=10000000,
         decimals=2,
     ),
-    "CLF": Currency(
-        name="Unidad de Fomento",
-        symbol="UF",
-        min_sendable=1,
-        max_sendable=10000000,
-        decimals=4,
-    ),
     "CLP": Currency(
         name="Chilean Peso",
         symbol="$",
@@ -259,13 +238,6 @@ CURRENCIES: dict[str, Currency] = {
     "CRC": Currency(
         name="Costa Rican Colón",
         symbol="₡",
-        min_sendable=1,
-        max_sendable=10000000,
-        decimals=2,
-    ),
-    "CUC": Currency(
-        name="Cuban Convertible Peso",
-        symbol="$",
         min_sendable=1,
         max_sendable=10000000,
         decimals=2,
@@ -857,13 +829,6 @@ CURRENCIES: dict[str, Currency] = {
         min_sendable=1,
         max_sendable=10000000,
         decimals=2,
-    ),
-    "SLL": Currency(
-        name="Sierra Leonean Leone",
-        symbol="Le",
-        min_sendable=1,
-        max_sendable=10000000,
-        decimals=0,
     ),
     "SOS": Currency(
         name="Somali Shilling",
