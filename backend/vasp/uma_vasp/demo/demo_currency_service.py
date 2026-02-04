@@ -39,6 +39,17 @@ class DemoCurrencyService(ICurrencyService):
             raise ValueError("No conversion rates found.")
         return self.conversion_rates
 
+    def _get_supported_currency_codes(self) -> set[str]:
+        """Returns the set of currency codes supported by both our system and the exchange rate API."""
+        conversion_rates = self.get_conversion_rates()
+        # SAT is always supported (handled specially in get_currency_multiplier)
+        supported = {"SAT"}
+        # Add currencies that exist in both our CURRENCIES dict and the API response
+        for code in CURRENCIES:
+            if code in conversion_rates:
+                supported.add(code)
+        return supported
+
     def get_uma_currency(self, currency_code: str) -> Currency:
         return Currency(
             code=currency_code,
@@ -74,7 +85,14 @@ class DemoCurrencyService(ICurrencyService):
                 .join(UmaModel)
                 .where(UmaModel.username == username)
             ).all()
-            return [self.get_uma_currency(currency.code) for currency in currencies]
+
+            # Filter to only currencies supported by the exchange rate API
+            supported_currencies = self._get_supported_currency_codes()
+            return [
+                self.get_uma_currency(currency.code)
+                for currency in currencies
+                if currency.code in supported_currencies
+            ]
 
     def get_currency_multiplier(self, currency_options: CurrencyOptions) -> float:
         conversion_rates = self.get_conversion_rates()
