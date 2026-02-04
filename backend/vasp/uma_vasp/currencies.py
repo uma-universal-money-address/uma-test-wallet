@@ -480,13 +480,6 @@ CURRENCIES: dict[str, Currency] = {
         max_sendable=10000000,
         decimals=3,
     ),
-    "IRR": Currency(
-        name="Iranian Rial",
-        symbol="﷼",
-        min_sendable=1,
-        max_sendable=10000000,
-        decimals=0,
-    ),
     "ISK": Currency(
         name="Icelandic Króna",
         symbol="kr",
@@ -532,13 +525,6 @@ CURRENCIES: dict[str, Currency] = {
     "KHR": Currency(
         name="Cambodian Riel",
         symbol="៛",
-        min_sendable=1,
-        max_sendable=10000000,
-        decimals=0,
-    ),
-    "KPW": Currency(
-        name="North Korean Won",
-        symbol="₩",
         min_sendable=1,
         max_sendable=10000000,
         decimals=0,
@@ -889,13 +875,6 @@ CURRENCIES: dict[str, Currency] = {
     "SRD": Currency(
         name="Surinamese Dollar",
         symbol="$",
-        min_sendable=1,
-        max_sendable=10000000,
-        decimals=2,
-    ),
-    "SYP": Currency(
-        name="Syrian Pound",
-        symbol="ل.س",
         min_sendable=1,
         max_sendable=10000000,
         decimals=2,

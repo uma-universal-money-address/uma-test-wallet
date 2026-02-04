@@ -96,7 +96,12 @@ class DemoCurrencyService(ICurrencyService):
         if to_currency_rate and from_currency_rate:
             return float(to_currency_rate) / float(from_currency_rate)
         else:
-            raise ValueError("Invalid currency code provided.")
+            raise ValueError(
+                "Invalid currency code provided."
+                + currency_options.to_currency_code
+                + " "
+                + currency_options.from_currency_code
+            )
 
     def get_smallest_unit_multiplier(self, currency_options: CurrencyOptions) -> float:
         base_multiplier = self.get_currency_multiplier(currency_options)
