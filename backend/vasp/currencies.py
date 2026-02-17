@@ -22,7 +22,9 @@ def construct_blueprint(
             try:
                 response.append(currency_service.get_uma_currency(currency))
             except ValueError:
-                logger.warning("Skipping currency %s: no exchange rate available", currency)
+                logger.warning(
+                    "Skipping currency %s: no exchange rate available", currency
+                )
         return jsonify(response)
 
     return bp
