@@ -15,4 +15,5 @@ export const AVAILABLE_CURRENCIES = new Set([
   "EUR",
   "PHP",
   "SAT",
+  "INR",
 ]);

@@ -1,0 +1,28 @@
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_inr)">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M-2.90906 -0.181885H18.9091V16.1818H-2.90906V-0.181885Z" fill="#FFFFFF"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M-2.90906 -0.181885H18.9091V5.27266H-2.90906V-0.181885Z" fill="#FF9933"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M-2.90906 10.7273H18.9091V16.1818H-2.90906V10.7273Z" fill="#138808"/>
+<circle cx="8" cy="8" r="2.2" stroke="#000080" stroke-width="0.35" fill="none"/>
+<circle cx="8" cy="8" r="0.45" fill="#000080"/>
+<g stroke="#000080" stroke-width="0.18">
+<line x1="8" y1="5.85" x2="8" y2="10.15"/>
+<line x1="5.85" y1="8" x2="10.15" y2="8"/>
+<line x1="6.483" y1="6.483" x2="9.517" y2="9.517"/>
+<line x1="9.517" y1="6.483" x2="6.483" y2="9.517"/>
+<line x1="7.44" y1="5.9" x2="8.56" y2="10.1"/>
+<line x1="8.56" y1="5.9" x2="7.44" y2="10.1"/>
+<line x1="5.9" y1="7.44" x2="10.1" y2="8.56"/>
+<line x1="5.9" y1="8.56" x2="10.1" y2="7.44"/>
+<line x1="6.95" y1="6.1" x2="9.05" y2="9.9"/>
+<line x1="9.05" y1="6.1" x2="6.95" y2="9.9"/>
+<line x1="6.1" y1="6.95" x2="9.9" y2="9.05"/>
+<line x1="6.1" y1="9.05" x2="9.9" y2="6.95"/>
+</g>
+</g>
+<defs>
+<clipPath id="clip0_inr">
+<rect width="21.8182" height="16.3636" fill="white" transform="translate(-2.90906 -0.181885)"/>
+</clipPath>
+</defs>
+</svg>
