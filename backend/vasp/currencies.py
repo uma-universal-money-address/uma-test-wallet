@@ -1,9 +1,13 @@
+import logging
+
 from flask import Blueprint, Response, jsonify
 
 from vasp.uma_vasp.interfaces.currency_service import (
     ICurrencyService,
 )
 from vasp.uma_vasp.currencies import CURRENCIES
+
+logger = logging.getLogger(__name__)
 
 
 def construct_blueprint(
@@ -13,9 +17,12 @@ def construct_blueprint(
 
     @bp.get("/")
     def get_all() -> Response:
-        response = [
-            currency_service.get_uma_currency(currency) for currency in CURRENCIES
-        ]
+        response = []
+        for currency in CURRENCIES:
+            try:
+                response.append(currency_service.get_uma_currency(currency))
+            except ValueError:
+                logger.warning("Skipping currency %s: no exchange rate available", currency)
         return jsonify(response)
 
     return bp

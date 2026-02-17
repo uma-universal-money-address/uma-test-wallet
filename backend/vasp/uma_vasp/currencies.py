@@ -193,13 +193,6 @@ CURRENCIES: dict[str, Currency] = {
         max_sendable=10000000,
         decimals=2,
     ),
-    "BYR": Currency(
-        name="Belarusian Ruble",
-        symbol="Br",
-        min_sendable=1,
-        max_sendable=10000000,
-        decimals=0,
-    ),
     "BZD": Currency(
         name="Belize Dollar",
         symbol="$",
