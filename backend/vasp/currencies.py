@@ -7,7 +7,7 @@ from vasp.uma_vasp.interfaces.currency_service import (
 )
 from vasp.uma_vasp.currencies import CURRENCIES
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 def construct_blueprint(
