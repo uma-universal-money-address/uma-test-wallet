@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: "self-hosted"
+    runs-on: "arc-runner-2"
     environment: prod
     permissions:
       id-token: write
