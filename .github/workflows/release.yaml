@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: "arc-runner-2"
+    runs-on: [servitor, kube, arm64, cpu-0.5, ram-1, disk-10, "event=${{ github.event_name }}"]
     environment: prod
     permissions:
       id-token: write
